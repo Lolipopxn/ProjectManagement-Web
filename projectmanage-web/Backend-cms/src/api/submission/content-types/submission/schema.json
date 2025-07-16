@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "submissions",
+  "info": {
+    "singularName": "submission",
+    "pluralName": "submissions",
+    "displayName": "Submission"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "task_id": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::task.task"
+    },
+    "submitted_by_user_id": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "submission_date": {
+      "type": "datetime"
+    },
+    "file_url": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "comments": {
+      "type": "text"
+    }
+  }
+}

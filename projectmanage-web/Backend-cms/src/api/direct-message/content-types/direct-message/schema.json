@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "direct_messages",
+  "info": {
+    "singularName": "direct-message",
+    "pluralName": "direct-messages",
+    "displayName": "DirectMessage"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "sender_user_id": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "receiver_user_id": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "message_content": {
+      "type": "text",
+      "required": true
+    },
+    "sent_at": {
+      "type": "datetime",
+      "required": true
+    }
+  }
+}

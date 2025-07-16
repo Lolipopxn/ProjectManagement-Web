@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "projects",
+  "info": {
+    "singularName": "project",
+    "pluralName": "projects",
+    "displayName": "Project"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "project_name": {
+      "type": "string",
+      "maxLength": 255,
+      "required": true
+    },
+    "description": {
+      "type": "text",
+      "required": false
+    },
+    "start_date": {
+      "type": "date",
+      "required": true
+    },
+    "end_date": {
+      "type": "date"
+    },
+    "project_status": {
+      "type": "string",
+      "maxLength": 50,
+      "required": true
+    },
+    "created_by_user_id": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

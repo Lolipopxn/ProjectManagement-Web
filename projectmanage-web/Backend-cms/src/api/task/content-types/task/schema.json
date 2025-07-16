@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tasks",
+  "info": {
+    "singularName": "task",
+    "pluralName": "tasks",
+    "displayName": "Task"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "project_id": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::project.project"
+    },
+    "task_name": {
+      "type": "string",
+      "maxLength": 255,
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "assigned_to_user_ids": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "plugin::users-permissions.user",
+      "mappedBy": "task_id"
+    },
+    "due_date": {
+      "type": "datetime"
+    },
+    "task_status": {
+      "type": "string",
+      "maxLength": 50,
+      "required": true
+    }
+  }
+}

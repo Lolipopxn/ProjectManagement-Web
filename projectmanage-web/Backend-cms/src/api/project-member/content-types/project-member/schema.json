@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "project_members",
+  "info": {
+    "singularName": "project-member",
+    "pluralName": "project-members",
+    "displayName": "ProjectMember"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "role_in_project": {
+      "type": "string",
+      "maxLength": 50,
+      "required": true
+    },
+    "join_date": {
+      "type": "datetime",
+      "required": true
+    },
+    "project_id": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::project.project"
+    },
+    "user_ids": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "plugin::users-permissions.user",
+      "mappedBy": "project_member"
+    }
+  }
+}
