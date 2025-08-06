@@ -36,6 +36,10 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "plugin::users-permissions.user"
+    },
+    "created_by_user": {
+      "type": "integer",
+      "required": false
     }
   }
 }

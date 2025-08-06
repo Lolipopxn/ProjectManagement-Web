@@ -20,6 +20,14 @@
       "type": "datetime",
       "required": true
     },
+    "project_id_number": {
+      "type": "integer",
+      "required": true
+    },
+    "user_id_in_project": {
+      "type": "integer",
+      "required": true
+    },
     "project_id": {
       "type": "relation",
       "relation": "oneToOne",

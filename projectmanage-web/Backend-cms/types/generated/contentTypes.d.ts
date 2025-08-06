@@ -465,6 +465,7 @@ export interface ApiProjectMemberProjectMember
     > &
       Schema.Attribute.Private;
     project_id: Schema.Attribute.Relation<'oneToOne', 'api::project.project'>;
+    project_id_number: Schema.Attribute.Integer & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
     role_in_project: Schema.Attribute.String &
       Schema.Attribute.Required &
@@ -474,6 +475,7 @@ export interface ApiProjectMemberProjectMember
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    user_id_in_project: Schema.Attribute.Integer & Schema.Attribute.Required;
     user_ids: Schema.Attribute.Relation<
       'oneToMany',
       'plugin::users-permissions.user'
@@ -495,6 +497,7 @@ export interface ApiProjectProject extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    created_by_user: Schema.Attribute.Integer;
     created_by_user_id: Schema.Attribute.Relation<
       'oneToOne',
       'plugin::users-permissions.user'

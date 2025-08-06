@@ -23,18 +23,21 @@ export async function login(prevState: FormState, formData: FormData) {
     });
 
     if (response.data?.jwt) {
+      console.log('Login successful, setting token cookie'); // Debug log
       (await cookies()).set("token", response.data.jwt, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 วัน
       });
-      
+      console.log('Token cookie set successfully'); // Debug log
     } else {
       return { message: "Login failed. JWT not received." };
     }
   } catch (error: any) {
+    console.error('Login error:', error.response?.data || error.message); // Debug log
     return { message: error?.response?.data?.error?.message || error.message || "Login failed." };
   }
   
-  redirect("/test");
+  redirect("/overview");
 }
