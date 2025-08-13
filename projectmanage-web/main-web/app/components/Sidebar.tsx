@@ -89,20 +89,20 @@ export default function Sidebar() {
             href="/overview"
             className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors text-center"
           >
-            📊 ภาพรวม
+            Overview
           </a>
           <a 
             href="/create-project"
             className="bg-green-100 text-green-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-green-200 transition-colors text-center"
           >
-            ➕ สร้างโปรเจ็กต์
+            + Create Project
           </a>
-          <button 
+          {/* <button 
             className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
             disabled
           >
-            🚧 ฟีเจอร์อื่นๆ
-          </button>
+            
+          </button> */}
         </div>
 
         {/* My Project Section */}
@@ -111,7 +111,7 @@ export default function Sidebar() {
             onClick={() => setMyProjectOpen(!myProjectOpen)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
           >
-            <span>📁 โปรเจ็กต์ของฉัน</span>
+            <span>My Projects</span>
             <svg 
               className={`w-4 h-4 transition-transform ${myProjectOpen ? 'rotate-90' : ''}`}
               fill="none" 
@@ -149,7 +149,7 @@ export default function Sidebar() {
             onClick={() => setMyTaskOpen(!myTaskOpen)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
           >
-            <span>📋 งานของฉัน</span>
+            <span>My Tasks</span>
             <svg 
               className={`w-4 h-4 transition-transform ${myTaskOpen ? 'rotate-90' : ''}`}
               fill="none" 

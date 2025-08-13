@@ -20,11 +20,7 @@ export default function Navbar({ user }: NavbarProps) {
         {/* Left side - App name and user greeting */}
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-semibold">Project Management</h1>
-          {user && (
-            <div className="text-sm text-blue-100">
-              สวัสดี, {user.username}
-            </div>
-          )}
+          
         </div>
 
         {/* Center - Search bar */}
@@ -34,16 +30,6 @@ export default function Navbar({ user }: NavbarProps) {
 
         {/* Right side - Actions */}
         <div className="flex items-center space-x-4">
-          <a 
-            href="/projects/new"
-            className="bg-blue-500 hover:bg-blue-400 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>New</span>
-          </a>
-          
           <button className="p-2 hover:bg-blue-500 rounded-lg transition-colors relative">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z" />

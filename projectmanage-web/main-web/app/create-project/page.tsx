@@ -47,6 +47,8 @@ export default function CreateProjectPage() {
   const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | ''>('');
   const [selectedRole, setSelectedRole] = useState('member');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // ตรวจสอบ authentication เมื่อ component โหลด
   useEffect(() => {
@@ -91,6 +93,13 @@ export default function CreateProjectPage() {
   // ฟังก์ชันสำหรับเพิ่มสมาชิกในรายการ
   const addMember = () => {
     if (selectedUserId && selectedRole) {
+      // ตรวจสอบว่าไม่ใช่ตัวเอง
+      if (selectedUserId === currentUserId) {
+        setError('คุณไม่สามารถเพิ่มตัวเองเป็นสมาชิกได้ เนื่องจากคุณเป็นหัวหน้าโปรเจ็กต์อยู่แล้ว');
+        return;
+      }
+
+      // ตรวจสอบว่าไม่ได้เป็นสมาชิกอยู่แล้ว
       const isAlreadyAdded = projectMembers.some(member => member.userId === selectedUserId);
       if (isAlreadyAdded) {
         setError('ผู้ใช้นี้เป็นสมาชิกของโปรเจ็กต์แล้ว');
@@ -102,6 +111,8 @@ export default function CreateProjectPage() {
         roleInProject: selectedRole
       }]);
       setSelectedUserId('');
+      setSearchTerm('');
+      setShowDropdown(false);
       setError('');
     } else {
       setError('กรุณาเลือกผู้ใช้และกำหนดบทบาท');
@@ -125,6 +136,14 @@ export default function CreateProjectPage() {
     const user = users.find(u => u.id === userId);
     return user ? user.username : 'Unknown User';
   };
+
+  // ฟังก์ชันกรองผู้ใช้ตามคำค้นหา
+  const filteredUsers = users.filter(user => 
+    user.id !== currentUserId && // กรองตัวเองออก
+    !projectMembers.some(member => member.userId === user.id) && // กรองสมาชิกที่เพิ่มแล้วออก
+    (user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   // แสดง loading ถ้ายังตรวจสอบ auth อยู่
   if (isCheckingAuth) {
@@ -447,6 +466,77 @@ export default function CreateProjectPage() {
                   <h2 className="text-xl font-semibold text-gray-900 mb-2">สมาชิกโปรเจ็กต์</h2>
                   <p className="text-sm text-gray-600">เพิ่มสมาชิกเข้าร่วมโปรเจ็กต์ (คุณจะเป็นหัวหน้าโปรเจ็กต์อัตโนมัติ)</p>
                 </div>
+
+                {/* User Search Dropdown */}
+                <div className="mb-4 relative">
+                  <label htmlFor="user-search" className="block text-sm font-medium text-gray-700 mb-2">
+                    ค้นหาผู้ใช้
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="user-search"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setShowDropdown(true);
+                      }}
+                      onFocus={() => setShowDropdown(true)}
+                      placeholder="พิมพ์ชื่อหรืออีเมลเพื่อค้นหาผู้ใช้"
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+
+                    {/* Dropdown */}
+                    {showDropdown && searchTerm && filteredUsers.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {filteredUsers.map((user) => (
+                          <div
+                            key={user.id}
+                            onClick={() => {
+                              setSelectedUserId(user.id);
+                              setSearchTerm(user.username);
+                              setShowDropdown(false);
+                            }}
+                            className="flex items-center px-4 py-3 cursor-pointer hover:bg-blue-50 transition-colors"
+                          >
+                            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">{user.username}</div>
+                              <div className="text-sm text-gray-500">{user.email}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* No results message */}
+                    {showDropdown && searchTerm && filteredUsers.length === 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                        <div className="px-4 py-3 text-gray-500 text-center">
+                          ไม่พบผู้ใช้ที่ค้นหา
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Close dropdown when clicking outside */}
+                  {showDropdown && (
+                    <div 
+                      className="fixed inset-0 z-0" 
+                      onClick={() => setShowDropdown(false)}
+                    />
+                  )}
+                </div>
+
                 {/* Role Selection */}
                 <div className="mb-4">
                   <label htmlFor="selectedRole" className="block text-sm font-medium text-gray-700 mb-2">
@@ -466,124 +556,82 @@ export default function CreateProjectPage() {
                   </select>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex space-x-2 mb-4">
+                {/* Action Button */}
+                <div className="mb-6">
                   <button
                     type="button"
                     onClick={addMember}
-                    className="bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded-md font-medium transition-colors flex items-center space-x-2"
+                    disabled={!selectedUserId}
+                    className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded-md font-medium transition-colors flex items-center justify-center space-x-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <span>เพิ่มสมาชิก</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (selectedUserId) {
-                        removeMember(selectedUserId as number);
-                      }
-                    }}
-                    className="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-md font-medium transition-colors flex items-center space-x-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    <span>ลบสมาชิก</span>
+                    <span>เพิ่มสมาชิกในโปรเจ็กต์</span>
                   </button>
                 </div>
 
-                {/* Users List Box */}
-                <div className="bg-gray-50 border border-gray-300 rounded-md h-64 overflow-y-auto mb-4">
-                  {users.length > 0 ? (
-                    <div className="divide-y divide-gray-200">
-                      {users.map((user) => {
-                        const isSelected = projectMembers.some(member => member.userId === user.id);
-                        const isCurrentlySelected = selectedUserId === user.id;
-                        
-                        return (
-                          <div
-                            key={user.id}
-                            onClick={() => setSelectedUserId(user.id)}
-                            className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${
-                              isCurrentlySelected 
-                                ? 'bg-blue-100 border-l-4 border-blue-500' 
-                                : isSelected 
-                                  ? 'bg-green-50' 
-                                  : 'hover:bg-gray-100'
-                            }`}
-                          >
-                            <div className="flex items-center space-x-3 flex-1">
-                              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900">{user.username}</div>
-                                <div className="text-sm text-gray-500">{user.email}</div>
-                              </div>
-                              {isSelected && (
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                    {projectMembers.find(m => m.userId === user.id)?.roleInProject}
-                                  </span>
-                                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                </div>
-                              )}
+                {/* Current Project Members */}
+                {projectMembers.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-3">สมาชิกในโปรเจ็กต์</h3>
+                    <div className="space-y-2">
+                      {projectMembers.map((member) => (
+                        <div key={member.userId} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center">
+                              <svg className="w-5 h-5 text-green-700" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{getUserName(member.userId)}</div>
+                              <div className="text-sm text-green-700">{member.roleInProject}</div>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      <div className="text-center">
-                        <svg className="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <p>กำลังโหลดรายชื่อผู้ใช้...</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Selected User Info */}
-                {selectedUserId && (
-                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm font-medium text-blue-900">
-                          ผู้ใช้ที่เลือก: {getUserName(selectedUserId as number)}
-                        </span>
-                        {projectMembers.some(member => member.userId === selectedUserId) && (
-                          <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                            เป็นสมาชิกแล้ว
-                          </span>
-                        )}
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() => removeMember(member.userId)}
+                            className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                            title="ลบสมาชิก"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
                 {/* Summary */}
                 <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 mb-2">
                     <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
                     </svg>
                     <span className="font-medium text-blue-900">
-                      จำนวนสมาชิกทั้งหมด: {projectMembers.length + 1} คน
+                      สรุปสมาชิกโปรเจ็กต์
                     </span>
                   </div>
-                  <div className="mt-1 text-xs text-blue-700">
-                    • คุณ (หัวหน้าโปรเจ็กต์)
-                    {projectMembers.length > 0 && (
-                      <span> • สมาชิกเพิ่มเติม {projectMembers.length} คน</span>
-                    )}
+                  <div className="text-sm text-blue-800">
+                    <div className="mb-1">
+                      <strong>จำนวนสมาชิกทั้งหมด:</strong> {projectMembers.length + 1} คน
+                    </div>
+                    <div className="space-y-1 text-xs text-blue-700">
+                      <div>• คุณ - หัวหน้าโปรเจ็กต์ (เพิ่มอัตโนมัติ)</div>
+                      {projectMembers.length > 0 && 
+                        projectMembers.map((member, index) => (
+                          <div key={member.userId}>
+                            • {getUserName(member.userId)} - {member.roleInProject}
+                          </div>
+                        ))
+                      }
+                      {projectMembers.length === 0 && (
+                        <div className="text-gray-500">• ยังไม่มีสมาชิกเพิ่มเติม</div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

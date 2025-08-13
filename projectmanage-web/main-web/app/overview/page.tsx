@@ -190,10 +190,7 @@ export default function OverviewPage() {
           {/* Projects Section */}
           <div>
             <h2 className="text-xl font-semibold text-blue-700 mb-4">
-              โปรเจ็กต์ที่ฉันเป็นสมาชิก
-              <span className="text-sm text-gray-500 ml-2">
-                ({safeUserProjects.length} โปรเจ็กต์)
-              </span>
+              My Projects
             </h2>
             <div className="space-y-4">
               {safeUserProjects.length > 0 ? (
