@@ -62,3 +62,115 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// POST - เพิ่มสมาชิกใหม่
+export async function POST(request: NextRequest) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'No token found' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { 
+      project_document_id, 
+      project_id_number, 
+      user_id_in_project, 
+      role_in_project = 'Member' 
+    } = body;
+
+    // Validate required fields
+    if (!project_document_id || !project_id_number || !user_id_in_project) {
+      return NextResponse.json(
+        { success: false, message: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // เพิ่มสมาชิกใหม่
+    const response = await axios.post(
+      `${process.env.STRAPI_BASE_URL}/api/project-members`,
+      {
+        data: {
+          project_document_id,
+          project_id_number: parseInt(project_id_number),
+          user_id_in_project: parseInt(user_id_in_project),
+          role_in_project,
+          join_date: new Date().toISOString()
+        }
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    return NextResponse.json({ 
+      projectMember: response.data.data,
+      success: true,
+      message: 'Member added successfully'
+    });
+  } catch (error: any) {
+    console.error('Error adding project member:', error.response?.data || error.message);
+    return NextResponse.json(
+      { 
+        error: error.response?.data?.error?.message || 'Failed to add project member',
+        details: error.response?.data,
+        success: false
+      }, 
+      { status: error.response?.status || 500 }
+    );
+  }
+}
+
+// DELETE - ลบสมาชิก
+export async function DELETE(request: NextRequest) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'No token found' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const memberId = searchParams.get('memberId');
+
+    if (!memberId) {
+      return NextResponse.json(
+        { success: false, message: 'Member ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // ลบสมาชิก
+    await axios.delete(
+      `${process.env.STRAPI_BASE_URL}/api/project-members/${memberId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    return NextResponse.json({ 
+      success: true,
+      message: 'Member removed successfully'
+    });
+  } catch (error: any) {
+    console.error('Error removing project member:', error.response?.data || error.message);
+    return NextResponse.json(
+      { 
+        error: error.response?.data?.error?.message || 'Failed to remove project member',
+        details: error.response?.data,
+        success: false
+      }, 
+      { status: error.response?.status || 500 }
+    );
+  }
+}

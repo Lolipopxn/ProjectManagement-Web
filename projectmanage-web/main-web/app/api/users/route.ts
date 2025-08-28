@@ -11,21 +11,43 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No token found' }, { status: 401 });
     }
 
-    // ดึงรายการผู้ใช้ทั้งหมด
-    const response = await axios.get(
-      `${process.env.STRAPI_BASE_URL}/api/users`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        }
-      }
-    );
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
 
-    return NextResponse.json({ 
-      users: response.data,
-      success: true 
-    });
+    if (userId) {
+      // ดึงข้อมูลผู้ใช้ตาม ID
+      const response = await axios.get(
+        `${process.env.STRAPI_BASE_URL}/api/users/${userId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
+      return NextResponse.json({ 
+        user: response.data,
+        success: true 
+      });
+    } else {
+      // ดึงรายการผู้ใช้ทั้งหมด
+      const response = await axios.get(
+        `${process.env.STRAPI_BASE_URL}/api/users`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
+      return NextResponse.json({ 
+        users: response.data,
+        success: true 
+      });
+    }
   } catch (error: any) {
     console.error('Error fetching users:', error.response?.data || error.message);
     return NextResponse.json(

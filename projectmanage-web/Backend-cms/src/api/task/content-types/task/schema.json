@@ -35,6 +35,10 @@
       "required": true,
       "maxLength": 255
     },
+    "project_id_number": {
+      "type": "integer",
+      "required": true
+    },
     "assigned_to_user_ids_number": {
       "type": "integer",
       "required": true

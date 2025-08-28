@@ -602,6 +602,7 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
         maxLength: 255;
       }>;
     project_id: Schema.Attribute.Relation<'oneToOne', 'api::project.project'>;
+    project_id_number: Schema.Attribute.Integer & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
     task_name: Schema.Attribute.String &
       Schema.Attribute.Required &
