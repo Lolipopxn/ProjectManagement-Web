@@ -9,6 +9,7 @@ import ProjectCard from '../components/ProjectCard';
 // Interface สำหรับ project data
 interface Project {
   id: number;
+  documentId?: string; // Document ID จาก Strapi v5
   project_name: string;
   description: string;
   start_date: string;

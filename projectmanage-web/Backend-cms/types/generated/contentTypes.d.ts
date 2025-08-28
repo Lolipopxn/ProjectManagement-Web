@@ -381,7 +381,7 @@ export interface ApiChatChat extends Struct.CollectionTypeSchema {
     singularName: 'chat';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
@@ -451,7 +451,7 @@ export interface ApiProjectMemberProjectMember
     singularName: 'project-member';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
@@ -464,6 +464,11 @@ export interface ApiProjectMemberProjectMember
       'api::project-member.project-member'
     > &
       Schema.Attribute.Private;
+    project_document_id: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
     project_id: Schema.Attribute.Relation<'oneToOne', 'api::project.project'>;
     project_id_number: Schema.Attribute.Integer & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
@@ -491,7 +496,7 @@ export interface ApiProjectProject extends Struct.CollectionTypeSchema {
     singularName: 'project';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
@@ -574,13 +579,15 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
     singularName: 'task';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     assigned_to_user_ids: Schema.Attribute.Relation<
       'oneToMany',
       'plugin::users-permissions.user'
     >;
+    assigned_to_user_ids_number: Schema.Attribute.Integer &
+      Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -589,6 +596,11 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::task.task'> &
       Schema.Attribute.Private;
+    project_document_id: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
     project_id: Schema.Attribute.Relation<'oneToOne', 'api::project.project'>;
     publishedAt: Schema.Attribute.DateTime;
     task_name: Schema.Attribute.String &

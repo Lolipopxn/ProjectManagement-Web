@@ -5,6 +5,7 @@ import axios from 'axios';
 // Interface สำหรับ project data
 interface Project {
   id: number;
+  documentId?: string; // เพิ่ม documentId สำหรับ Strapi v5
   project_name: string;
   description: string;
   start_date: string;

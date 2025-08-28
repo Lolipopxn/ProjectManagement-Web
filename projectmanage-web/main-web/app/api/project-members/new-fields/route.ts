@@ -11,11 +11,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No token found' }, { status: 401 });
     }
 
-    const { project_id_number, user_id_in_project, role_in_project, join_date } = await request.json();
+    const { project_id_number, user_id_in_project, role_in_project, join_date, project_document_id } = await request.json();
 
-    if (!project_id_number || !user_id_in_project || !role_in_project) {
+    if (!project_id_number || !user_id_in_project || !role_in_project || !project_document_id) {
       return NextResponse.json({ 
-        error: 'Missing required fields: project_id_number, user_id_in_project, role_in_project' 
+        error: 'Missing required fields: project_id_number, user_id_in_project, role_in_project, project_document_id' 
       }, { status: 400 });
     }
 
@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
       project_id_number, 
       user_id_in_project, 
       role_in_project,
-      join_date 
+      join_date,
+      project_document_id
     });
 
     // สร้าง project member โดยใช้ field ใหม่ แทน relations
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest) {
       user_id_in_project: user_id_in_project,
       role_in_project: role_in_project,
       join_date: join_date || new Date().toISOString(),
+      project_document_id: project_document_id, // เพิ่ม document ID
       publishedAt: new Date().toISOString()
     };
 

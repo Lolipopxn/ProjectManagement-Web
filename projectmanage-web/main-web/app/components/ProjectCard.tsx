@@ -1,5 +1,6 @@
 interface Project {
   id: number;
+  documentId?: string; // Document ID จาก Strapi v5
   project_name: string;
   description: string;
   start_date: string;
@@ -143,8 +144,17 @@ export default function ProjectCard({ project, status }: ProjectCardProps) {
 
   const statusConfig = getStatusConfig(projectStatus);
 
+  // Handler สำหรับคลิกไปยังหน้า project detail
+  const handleProjectClick = () => {
+    const projectIdentifier = project.documentId || project.id;
+    window.location.href = `/projects/${projectIdentifier}`;
+  };
+
   return (
-    <div className={`${statusConfig.bgColor} ${statusConfig.borderColor} border-2 rounded-lg p-6 mb-4`}>
+    <div 
+      className={`${statusConfig.bgColor} ${statusConfig.borderColor} border-2 rounded-lg p-6 mb-4 cursor-pointer hover:shadow-lg transition-shadow`}
+      onClick={handleProjectClick}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className={`${statusConfig.titleColor} font-semibold text-lg`}>
@@ -215,10 +225,16 @@ export default function ProjectCard({ project, status }: ProjectCardProps) {
               </div>
             </div>
 
-            {/* Project ID */}
+            {/* Document ID - ใช้ documentId จาก Strapi v5 */}
             <div className="text-gray-500 text-xs mt-1">
-              Project ID: {project.id}
+              Document ID: {project.documentId || project.id}
             </div>
+            {/* Project ID - สำหรับ reference */}
+            {project.documentId && (
+              <div className="text-gray-400 text-xs">
+                Project ID: {project.id}
+              </div>
+            )}
           </div>
         </div>
       </div>

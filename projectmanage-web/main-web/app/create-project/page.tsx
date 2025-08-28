@@ -202,18 +202,22 @@ export default function CreateProjectPage() {
       console.log('Response data:', response.data); // Debug log
 
       if (response.status === 200) {
-        const createdProjectId = response.data.project?.data?.id;
+        // ใน Strapi v5 ใช้ documentId แทน id
+        const createdProjectDocumentId = response.data.project?.data?.documentId;
+        const createdProjectId = response.data.project?.data?.id; // เก็บ id ไว้สำหรับ project_members
         
-        if (createdProjectId && currentUserId) {
+        if (createdProjectDocumentId && currentUserId) {
           try {
             console.log(`Adding project creator as leader: ${currentUserId}`);
             
             // เพิ่มผู้สร้างโปรเจ็กต์เป็นหัวหน้าโปรเจ็กต์ก่อน
+            // ใช้ createdProjectId (numeric ID) สำหรับ project_members table
             const creatorResponse = await axios.post('/api/project-members/new-fields', {
-              project_id_number: createdProjectId,
+              project_id_number: createdProjectId, // ใช้ numeric ID สำหรับ project_members
               user_id_in_project: currentUserId,
               role_in_project: 'leader', // ผู้สร้างเป็นหัวหน้าโปรเจ็กต์
-              join_date: new Date().toISOString()
+              join_date: new Date().toISOString(),
+              project_document_id: createdProjectDocumentId // ใช้ document ID จาก Strapi v5
             });
             
             console.log('Successfully added project creator as leader:', creatorResponse.data);
@@ -228,7 +232,8 @@ export default function CreateProjectPage() {
                     project_id_number: createdProjectId,
                     user_id_in_project: member.userId,
                     role_in_project: member.roleInProject,
-                    join_date: new Date().toISOString()
+                    join_date: new Date().toISOString(),
+                    project_document_id: createdProjectDocumentId // เพิ่ม document ID
                   });
                   
                   console.log(`Successfully added member ${member.userId}:`, memberResponse.data);
@@ -246,11 +251,11 @@ export default function CreateProjectPage() {
         }
 
         // แสดงข้อความสำเร็จ
-        setSuccess('สร้างโปรเจ็กต์สำเร็จแล้ว! คุณได้เป็นหัวหน้าโปรเจ็กต์ กำลังนำคุณไปหน้า Overview...');
+        setSuccess(`สร้างโปรเจ็กต์สำเร็จแล้ว! Document ID: ${createdProjectDocumentId} กำลังนำคุณไปหน้าโปรเจ็กต์...`);
         
-        // รอ 2 วินาทีแล้วไปหน้า overview
+        // รอ 2 วินาทีแล้วไปหน้าโปรเจ็กต์ที่สร้าง (ใช้ documentId)
         setTimeout(() => {
-          router.push('/overview');
+          router.push(`/projects/${createdProjectDocumentId}`);
         }, 2000);
       } else {
         setError('ไม่สามารถสร้างโปรเจ็กต์ได้ กรุณาลองใหม่อีกครั้ง');
