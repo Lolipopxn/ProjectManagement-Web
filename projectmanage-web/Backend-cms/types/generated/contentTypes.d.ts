@@ -384,20 +384,19 @@ export interface ApiChatChat extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    author: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    content: Schema.Attribute.Text & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::chat.chat'> &
       Schema.Attribute.Private;
-    message_content: Schema.Attribute.Text & Schema.Attribute.Required;
-    project_id: Schema.Attribute.Relation<'oneToOne', 'api::project.project'>;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
     publishedAt: Schema.Attribute.DateTime;
-    sent_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
-    sent_by_user_id: Schema.Attribute.Relation<
-      'oneToOne',
-      'plugin::users-permissions.user'
-    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -464,6 +463,8 @@ export interface ApiProjectMemberProjectMember
       'api::project-member.project-member'
     > &
       Schema.Attribute.Private;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'> &
+      Schema.Attribute.Required;
     project_document_id: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -472,6 +473,8 @@ export interface ApiProjectMemberProjectMember
     project_id: Schema.Attribute.Relation<'oneToOne', 'api::project.project'>;
     project_id_number: Schema.Attribute.Integer & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
+    role: Schema.Attribute.Enumeration<['owner', 'admin', 'member']> &
+      Schema.Attribute.DefaultTo<'member'>;
     role_in_project: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -480,6 +483,11 @@ export interface ApiProjectMemberProjectMember
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    > &
+      Schema.Attribute.Required;
     user_id_in_project: Schema.Attribute.Integer & Schema.Attribute.Required;
     user_ids: Schema.Attribute.Relation<
       'oneToMany',
@@ -515,6 +523,11 @@ export interface ApiProjectProject extends Struct.CollectionTypeSchema {
       'api::project.project'
     > &
       Schema.Attribute.Private;
+    memberships: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::project-member.project-member'
+    >;
+    messages: Schema.Attribute.Relation<'oneToMany', 'api::chat.chat'>;
     project_name: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -526,6 +539,9 @@ export interface ApiProjectProject extends Struct.CollectionTypeSchema {
         maxLength: 50;
       }>;
     publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'name'> &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
     start_date: Schema.Attribute.Date & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1094,6 +1110,7 @@ export interface PluginUsersPermissionsUser
       'plugin::users-permissions.user'
     > &
       Schema.Attribute.Private;
+    messages: Schema.Attribute.Relation<'oneToMany', 'api::chat.chat'>;
     password: Schema.Attribute.Password &
       Schema.Attribute.Private &
       Schema.Attribute.SetMinMaxLength<{

@@ -2,6 +2,31 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
+const STRAPI_BASE_URL = process.env.STRAPI_BASE_URL;
+
+// helper: ดึง documentId ของ user จาก numeric id (users-permissions)
+// กรณีคุณมีแต่ user_id_in_project (เลข id เดิม)
+async function getUserDocumentIdById(userId: number, token: string) {
+  // Strapi v5 (users-permissions) รองรับ path /api/users/:id
+  // ขอเฉพาะ field documentId ก็พอ (ลด payload)
+  const res = await axios.get(
+    `${STRAPI_BASE_URL}/api/users/${userId}?fields=documentId`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  // รูปแบบของ /api/users จะคืน object ตรงๆ (ไม่ห่อด้วย {data:{}})
+  // ให้เช็ค res.data.documentId
+  const docId = res.data?.documentId;
+  if (!docId) {
+    throw new Error(`Cannot resolve documentId for user id=${userId}`);
+  }
+  return docId as string;
+}
+
+
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -11,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No token found' }, { status: 401 });
     }
 
-    const { project_id_number, user_id_in_project, role_in_project, join_date, project_document_id } = await request.json();
+    const { project_id_number, user_id_in_project, role_in_project, join_date, project_document_id, user_document_id } = await request.json();
 
     if (!project_id_number || !user_id_in_project || !role_in_project || !project_document_id) {
       return NextResponse.json({ 
@@ -24,8 +49,22 @@ export async function POST(request: NextRequest) {
       user_id_in_project, 
       role_in_project,
       join_date,
-      project_document_id
+      project_document_id,
     });
+
+    let userDocId: string | null = null;
+
+    if (project_document_id && typeof user_document_id === 'string') {
+      userDocId = user_document_id;
+    } else if (user_id_in_project) {
+      // resolve documentId จาก numeric id ของ user
+      userDocId = await getUserDocumentIdById(Number(user_id_in_project), token);
+    } else {
+      return NextResponse.json(
+        { error: 'Missing user identifier: provide user_document_id or user_id_in_project' },
+        { status: 400 }
+      );
+    }
 
     // สร้าง project member โดยใช้ field ใหม่ แทน relations
     const projectMemberData = {
@@ -34,7 +73,10 @@ export async function POST(request: NextRequest) {
       role_in_project: role_in_project,
       join_date: join_date || new Date().toISOString(),
       project_document_id: project_document_id, // เพิ่ม document ID
-      publishedAt: new Date().toISOString()
+      publishedAt: new Date().toISOString(),
+      //relations
+      project: { connect: [project_document_id] },
+      user: { connect: [user_id_in_project] },
     };
 
     console.log('Project member payload:', projectMemberData);

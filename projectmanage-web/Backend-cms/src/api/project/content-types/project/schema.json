@@ -40,6 +40,24 @@
     "created_by_user": {
       "type": "integer",
       "required": false
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true,
+      "unique": true
+    },
+    "memberships": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::project-member.project-member",
+      "mappedBy": "project"
+    },
+    "messages": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::chat.chat",
+      "mappedBy": "project"
     }
   }
 }

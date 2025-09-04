@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
       end_date: projectData.end_date,
       project_status: projectData.project_status,
       created_by_user: currentUser.id, // ใส่ user ID ของผู้สร้างลงในฟิลด์ใหม่
-      publishedAt: new Date().toISOString()
+      publishedAt: new Date().toISOString(),
+      slug: projectData.slug
     };
 
     console.log('Creating project with payload:', projectPayload); // Debug log

@@ -11,23 +11,21 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "project_id": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::project.project"
-    },
-    "message_content": {
+    "content": {
       "type": "text",
       "required": true
     },
-    "sent_by_user_id": {
+    "project": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "plugin::users-permissions.user"
+      "relation": "manyToOne",
+      "target": "api::project.project",
+      "inversedBy": "messages"
     },
-    "sent_at": {
-      "type": "datetime",
-      "required": true
+    "author": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "messages"
     }
   }
 }

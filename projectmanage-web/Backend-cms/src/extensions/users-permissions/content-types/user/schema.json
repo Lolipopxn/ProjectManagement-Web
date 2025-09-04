@@ -77,6 +77,12 @@
       "relation": "manyToOne",
       "target": "api::task.task",
       "inversedBy": "assigned_to_user_ids"
+    },
+    "messages": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::chat.chat",
+      "mappedBy": "author"
     }
   }
 }

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import { v4 as uuidv4 } from 'uuid';
+import { UUID } from 'crypto';
 
 // โปรเจ็กต์นี้ใช้ field created_by_user แทน relation เพื่อเก็บ user ID ของผู้สร้าง
 // สำหรับ project members ใช้ field ใหม่ project_idnumber และ user_id_in_project แทน relations
@@ -16,6 +18,7 @@ interface ProjectFormData {
   start_date: string;
   end_date: string;
   project_status: string;
+  slug: string;
 }
 
 interface ProjectMember {
@@ -36,7 +39,8 @@ export default function CreateProjectPage() {
     description: '',
     start_date: '',
     end_date: '',
-    project_status: 'active'
+    project_status: 'active',
+    slug: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -195,7 +199,8 @@ export default function CreateProjectPage() {
         description: formData.description,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        project_status: formData.project_status
+        project_status: formData.project_status,
+        slug: uuidv4(),
       });
 
       console.log('Response status:', response.status); // Debug log
