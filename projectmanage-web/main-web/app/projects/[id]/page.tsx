@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import axios from 'axios';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
+import ProjectChatPopup from "../../components/ProjectChat";
 
 // Interface สำหรับ project data
 interface Project {
@@ -18,6 +19,7 @@ interface Project {
   created_by_user_id: any;
   created_by_user: number;
   created_by_user_info?: any;
+  slug: string;
 }
 
 // Interface สำหรับ task data จาก Strapi
@@ -77,6 +79,8 @@ export default function ProjectDetailPage() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -273,6 +277,11 @@ export default function ProjectDetailPage() {
     if (projectId) {
       fetchProjectData();
     }
+
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => setToken(data.token));
+
   }, [projectId]);
 
   // Create task function
@@ -1100,12 +1109,20 @@ export default function ProjectDetailPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </button>
-                    <button className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <button onClick={() => setOpen(true)} className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.474L3 21l2.474-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
                       </svg>
                       <span>Chat</span>
                     </button>
+                    <ProjectChatPopup
+                      projectSlug={project.slug}
+                      projectName={project.project_name}
+                      getToken={token}
+                      open={open}
+                      onOpenChange={setOpen}
+                      currentUserId={user?.id}
+                    />
                     <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
                       More Info
                     </button>
