@@ -17,10 +17,25 @@ export default function Navbar({ user }: NavbarProps) {
   return (
     <nav className="bg-blue-600 text-white px-4 py-3 shadow-lg">
       <div className="flex items-center justify-between">
-        {/* Left side - App name and user greeting */}
-        <div className="flex items-center space-x-4">
+        {/* Left side - App name and navigation */}
+        <div className="flex items-center space-x-6">
           <h1 className="text-xl font-semibold">Project Management</h1>
           
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center space-x-4">
+            <a 
+              href="/dashboard"
+              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 transition-colors"
+            >
+              📊 Dashboard
+            </a>
+            <a 
+              href="/overview"
+              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 transition-colors"
+            >
+              📁 Projects
+            </a>
+          </div>
         </div>
 
         {/* Center - Search bar */}

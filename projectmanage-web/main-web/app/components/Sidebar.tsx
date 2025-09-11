@@ -86,6 +86,12 @@ export default function Sidebar() {
         {/* Action Buttons */}
         <div className="grid grid-cols-1 gap-2 mb-6">
           <a 
+            href="/dashboard"
+            className="bg-purple-100 text-purple-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-purple-200 transition-colors text-center flex items-center justify-center"
+          >
+            📊 Dashboard
+          </a>
+          <a 
             href="/overview"
             className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors text-center"
           >
