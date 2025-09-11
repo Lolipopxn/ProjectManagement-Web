@@ -64,7 +64,7 @@ interface User {
 
 export default function ProjectDetailPage() {
   const params = useParams();
-  const projectId = params.id as string;
+  const projectId = params?.id as string;
   
   const [project, setProject] = useState<Project | null>(null);
   const [user, setUser] = useState<User | null>(null);
