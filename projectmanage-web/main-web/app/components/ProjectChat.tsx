@@ -8,10 +8,10 @@ import { fetchMessages } from "../lib/strapi";
 export type ProjectChatPopupProps = {
   projectSlug: string;
   projectName: string;
-  getToken: string | null; 
-  open: boolean;   
+  getToken: string | null;
+  open: boolean;
   onOpenChange?: (open: boolean) => void;
-  currentUserId?: number;  
+  currentUserId?: number;
 };
 
 export default function ProjectChatPopup({
@@ -113,11 +113,13 @@ export default function ProjectChatPopup({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="w-[96vw] max-w-[600px] h-[86vh] max-h-[880px] md:w-[90vw] md:h-[84vh] rounded-2xl overflow-hidden shadow-2xl bg-white flex flex-col">
+    <div className="fixed -inset-20 z-50 flex items-center justify-center bg-black/30">
+      <div className="w-[96vw] max-w-[45vw] h-[86vh] max-h-[880px] md:w-[90vw] md:h-[84vh] rounded-2xl overflow-hidden shadow-2xl bg-white flex flex-col">
         {/* header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-[#2E5077] text-white">
-          <div className="font-semibold truncate">Project Chat - {projectName}</div>
+        <div className="flex items-center justify-between px-6 py-3 bg-[#2E5077] text-white">
+          <div className="font-semibold truncate">
+            Project Chat - {projectName}
+          </div>
           <button
             onClick={() => onOpenChange?.(false)}
             className="p-1 rounded hover:bg-white/20"
@@ -132,7 +134,7 @@ export default function ProjectChatPopup({
           ref={listRef}
           className="flex-1 overflow-y-auto p-3 flex flex-col gap-2"
         >
-          {messages.map((m) => {
+          {messages.map((m, idx) => {
             const isMe =
               typeof m.isMine === "boolean"
                 ? m.isMine
@@ -140,31 +142,61 @@ export default function ProjectChatPopup({
                 ? m.author?.id === currentUserId
                 : false;
 
+            const msgDate = dayjs(m.createdAt).startOf("day");
+            const prevDate =
+              idx > 0
+                ? dayjs(messages[idx - 1].createdAt).startOf("day")
+                : null;
+
+            const isNewDay = !prevDate || !msgDate.isSame(prevDate, "day");
+
             return (
-              <div
-                key={m._key}
-                className={`flex flex-col ${isMe ? "self-end items-end" : "self-start items-start"}`}
-              >
+              <div key={m._key} className="w-full flex flex-col">
+                {isNewDay && (
+                  <div className="flex justify-center my-2">
+                    <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                      {msgDate.isSame(dayjs(), "day")
+                        ? "วันนี้"
+                        : msgDate.format("DD MMM YYYY")}
+                    </span>
+                  </div>
+                )}
+
                 <div
-                  className={`inline-block max-w-[85%] rounded-2xl px-3 py-2 shadow border border-black/5 ${
-                    isMe
-                      ? "bg-[#79D7BE] text-[#2E5077]"
-                      : "bg-white text-gray-800"
+                  className={`flex flex-col ${
+                    isMe ? "self-end items-end" : "self-start items-start"
                   }`}
                 >
-                  <div className="text-sm whitespace-pre-wrap break-words">
-                    {m.content}
+                  <div
+                    className={`max-w-[15vw] rounded-2xl px-3 py-2 shadow border border-black/5 ${
+                      isMe
+                        ? "bg-[#79D7BE] text-[#2E5077]"
+                        : "bg-white text-gray-800"
+                    }`}
+                  >
+                    <div className="text-sm whitespace-pre-wrap break-words">
+                      {m.content}
+                    </div>
                   </div>
-                </div>
-                <div className="text-[10px] text-gray-500 mt-0.5">
-                  {(m.author?.username ?? "user") + " · " + dayjs(m.createdAt).format("HH:mm")}
+                  <div className="text-[10px] text-gray-500 mt-0.5">
+                    {(m.author?.username ?? "user") +
+                      " · " +
+                      dayjs(m.createdAt).format("HH:mm")}
+                  </div>
                 </div>
               </div>
             );
           })}
-          {othersTyping && (
-            <div className="text-xs text-gray-500 px-1">กำลังพิมพ์...</div>
-          )}
+
+          {typing ? (
+            <div className="text-xs text-gray-500 px-1 self-end text-right">
+              กำลังพิมพ์...
+            </div>
+          ) : othersTyping ? (
+            <div className="text-xs text-gray-500 px-1 self-start text-left">
+              กำลังพิมพ์...
+            </div>
+          ) : null}
         </div>
 
         <div className="border-t border-black/10 bg-white p-2 flex items-center gap-2">
