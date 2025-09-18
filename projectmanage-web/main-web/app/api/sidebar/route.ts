@@ -24,16 +24,19 @@ export async function GET() {
     let tasks = [];
 
     // ดึงข้อมูลผู้ใช้ปัจจุบัน
+    let currentUserId: number | null = null;
+    
     try {
       const userResponse = await axios.get(`${process.env.STRAPI_BASE_URL}/api/users/me`, {
         headers
       });
       const currentUser = userResponse.data;
+      currentUserId = currentUser?.id;
 
-      if (currentUser) {
+      if (currentUserId) {
         // ดึงโปรเจ็กต์ที่ user เป็นสมาชิก
         const projectMembersResponse = await axios.get(
-          `${process.env.STRAPI_BASE_URL}/api/project-members?filters[user_id_in_project][$eq]=${currentUser.id}`, 
+          `${process.env.STRAPI_BASE_URL}/api/project-members?filters[user_id_in_project][$eq]=${currentUserId}`, 
           { headers }
         );
 
@@ -48,6 +51,14 @@ export async function GET() {
         const userProjectIds = userProjectMembers.map((member: any) => member.project_id_number);
         projects = allProjects.filter((project: any) => userProjectIds.includes(project.id));
 
+        // ดึงงานที่ถูกมอบหมายให้ user
+        const tasksResponse = await axios.get(
+          `${process.env.STRAPI_BASE_URL}/api/tasks?filters[assigned_to_user_ids_number][$eq]=${currentUser.id}&populate=*`,
+          { headers }
+        );
+
+        tasks = tasksResponse.data.data || [];
+
         console.log('Sidebar API - User project IDs:', userProjectIds);
         console.log('Sidebar API - Filtered projects:', projects.length);
       }
@@ -58,22 +69,61 @@ export async function GET() {
     // ดึงข้อมูล tasks ที่เกี่ยวข้องกับโปรเจ็กต์ที่ user เป็นสมาชิก
     try {
       if (projects.length > 0) {
-        const tasksResponse = await axios.get(`${process.env.STRAPI_BASE_URL}/api/tasks?populate=project`, {
+        // ลองเรียก API โดยไม่ populate ก่อน
+        const tasksResponse = await axios.get(`${process.env.STRAPI_BASE_URL}/api/tasks`, {
           headers
         });
+        
+        console.log('Tasks response status:', tasksResponse.status);
+        console.log('Tasks response data structure:', JSON.stringify(tasksResponse.data, null, 2).substring(0, 500));
+        
         const allTasks = tasksResponse.data.data || [];
         
-        // กรอง tasks ที่เป็นของโปรเจ็กต์ที่ user เป็นสมาชิก
-        const userProjectIds = projects.map((project: any) => project.id);
-        tasks = allTasks.filter((task: any) => {
-          const taskProjectId = task.project?.id;
-          return userProjectIds.includes(taskProjectId);
+        // กรอง tasks ที่ user ได้รับมอบหมาย
+        const userTasks = allTasks.filter((task: any) => {
+          // ตรวจสอบว่า task ถูกมอบหมายให้ user หรือไม่
+          return task.assigned_to_user_ids_number === currentUserId;
         });
+
+        // ถ้ามี tasks ให้ดึงข้อมูล project สำหรับแต่ละ task
+        if (userTasks.length > 0) {
+          const tasksWithProjects = await Promise.all(
+            userTasks.map(async (task: any) => {
+              try {
+                // ดึงข้อมูล project ของ task นี้
+                const projectResponse = await axios.get(
+                  `${process.env.STRAPI_BASE_URL}/api/projects?documentId=${task.project_document_id}`,
+                  { headers }
+                );
+                
+                const projectData = projectResponse.data.data?.[0];
+                return {
+                  ...task,
+                  project: projectData ? {
+                    id: projectData.id,
+                    project_name: projectData.project_name,
+                    documentId: projectData.documentId
+                  } : null
+                };
+              } catch (error) {
+                console.error(`Error fetching project for task ${task.id}:`, error);
+                return task; // คืนค่า task โดยไม่มีข้อมูล project
+              }
+            })
+          );
+          
+          tasks = tasksWithProjects;
+        }
 
         console.log('Sidebar API - User tasks count:', tasks.length);
       }
-    } catch (taskError) {
+    } catch (taskError: any) {
       console.error('Failed to fetch tasks for sidebar:', taskError);
+      console.error('Error details:', {
+        message: taskError?.message,
+        status: taskError?.response?.status,
+        data: taskError?.response?.data
+      });
     }
 
     return NextResponse.json({

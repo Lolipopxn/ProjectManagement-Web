@@ -2,6 +2,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import axios from 'axios';
 
+// helper: ดึง documentId ของ user จาก numeric id (users-permissions)
+async function getUserDocumentIdById(userId: number, token: string) {
+  try {
+    // ขอเฉพาะ field documentId ก็พอ (ลด payload)
+    const res = await axios.get(
+      `${process.env.STRAPI_BASE_URL}/api/users/${userId}?fields=documentId`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    // ให้เช็ค res.data.documentId
+    const docId = res.data?.documentId;
+    if (!docId) {
+      throw new Error(`Cannot resolve documentId for user id=${userId}`);
+    }
+    return docId;
+  } catch (error) {
+    console.error('Error fetching user documentId:', error);
+    throw error;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -33,19 +59,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // เตรียมข้อมูล task พื้นฐาน
+    const taskData: any = {
+      task_name,
+      description: description || '',
+      task_status,
+      due_date,
+      project_document_id,
+      project_id_number: parseInt(project_id_number),
+      assigned_to_user_ids_number: assigned_to_user_ids_number ? parseInt(assigned_to_user_ids_number) : null,
+      publishedAt: new Date().toISOString(),
+      // relations
+      project_id: { connect: [project_document_id] },
+    };
+
+    // เพิ่ม user relation ถ้ามีการมอบหมาย
+    if (assigned_to_user_ids_number) {
+      const userDocumentId = await getUserDocumentIdById(parseInt(assigned_to_user_ids_number), token);
+      taskData.assigned_to_user_ids = { connect: [userDocumentId] };
+    }
+
+    console.log('Task payload:', taskData);
+
     // Create task in Strapi
     const strapiResponse = await axios.post(
       'http://localhost:1337/api/tasks',
       {
-        data: {
-          task_name,
-          description: description || '',
-          task_status,
-          due_date,
-          project_document_id,
-          project_id_number: parseInt(project_id_number),
-          assigned_to_user_ids_number: assigned_to_user_ids_number ? parseInt(assigned_to_user_ids_number) : null
-        }
+        data: taskData
       },
       {
         headers: {
