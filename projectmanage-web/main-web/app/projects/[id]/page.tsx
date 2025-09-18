@@ -85,6 +85,7 @@ export default function ProjectDetailPage() {
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -940,19 +941,33 @@ export default function ProjectDetailPage() {
                     <VoiceRoomButton slug={project.slug}>
                       Voice
                     </VoiceRoomButton>
-                    <button onClick={() => setOpen(true)} className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <button
+                      onClick={() => setOpen(true)}
+                      className="relative flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+                    >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.474L3 21l2.474-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.474L3 21l2.474-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
                       </svg>
                       <span>Chat</span>
+
+                      {unread > 0 && (
+                        <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[10px] leading-none flex items-center justify-center">
+                          {unread > 99 ? "99+" : unread}
+                        </span>
+                      )}
                     </button>
                     <ProjectChatPopup
                       projectSlug={project.slug}
                       projectName={project.project_name}
                       getToken={token}
                       open={open}
-                      onOpenChange={setOpen}
+                      onOpenChange={(o) => {
+                        if (!o) setUnread(0);
+                        setOpen(o);
+                      }}
                       currentUserId={user?.id}
+                      onUnreadChange={setUnread}
                     />
                     <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
                       More Info

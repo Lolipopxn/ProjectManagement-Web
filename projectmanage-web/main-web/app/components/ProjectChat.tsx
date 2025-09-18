@@ -12,6 +12,7 @@ export type ProjectChatPopupProps = {
   open: boolean;
   onOpenChange?: (open: boolean) => void;
   currentUserId?: number;
+  onUnreadChange?: (n: number) => void;
 };
 
 export default function ProjectChatPopup({
@@ -21,6 +22,7 @@ export default function ProjectChatPopup({
   open,
   onOpenChange,
   currentUserId,
+  onUnreadChange,
 }: ProjectChatPopupProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
@@ -29,33 +31,29 @@ export default function ProjectChatPopup({
   const socketRef = useRef<Socket | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  const makeKey = (m: any) =>
-    m.id != null
-      ? `id-${m.id}`
-      : m._key ?? `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const LS_KEY = `chat:lastSeen:${projectSlug}`;
+  const unreadRef = useRef(0);
+  const rawLastSeen = typeof window !== "undefined" ? localStorage.getItem(LS_KEY) : null;
+  const lastSeenRef = useRef<number>(rawLastSeen ? Number(rawLastSeen) : 0);
 
-  // helper: scroll to bottom
+  const makeKey = (m: any) =>
+    m.id != null ? `id-${m.id}` : m._key ?? `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   const scrollToBottom = () => {
     const el = listRef.current;
     if (!el) return;
-    // ใช้ rAF ให้ทำหลัง DOM วาดเสร็จ จะนิ่มกว่า
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
     });
   };
 
-  // create socket only when popup opens
+  // ⬇️ เปิด socket ตลอด (ไม่ผูกกับ open) เพื่อดักข้อความใหม่ตอนปิดอยู่
   useEffect(() => {
-    if (!open) return;
     const token = getToken;
     if (!token) return;
 
-    fetch("/api/socket"); // init server
-
-    const s = io({
-      path: "/api/socket_io",
-      auth: { token, projectSlug },
-    });
+    fetch("/api/socket"); // init server path
+    const s = io({ path: "/api/socket_io", auth: { token, projectSlug } });
     socketRef.current = s;
 
     s.on("message:new", (m: any) => {
@@ -63,8 +61,17 @@ export default function ProjectChatPopup({
       setMessages((prev) => {
         const map = new Map(prev.map((x) => [x.id ?? x._key, x]));
         map.set(withKey.id ?? withKey._key, withKey);
-        return Array.from(map.values());
+        return Array.from(map.values()).sort(
+          (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
       });
+
+      // ถ้าป๊อปอัพปิดอยู่ และข้อความใหม่ใหม่กว่า lastSeen => เพิ่ม unread
+      const created = new Date(m.createdAt).getTime();
+      if (!open && created > lastSeenRef.current) {
+        unreadRef.current += 1;
+        onUnreadChange?.(unreadRef.current);
+      }
     });
 
     s.on("typing", (t: { userId: number; state: boolean }) => {
@@ -75,30 +82,60 @@ export default function ProjectChatPopup({
       s.disconnect();
       socketRef.current = null;
     };
-  }, [open, projectSlug, getToken]);
+  }, [getToken, projectSlug]); // ไม่ขึ้นกับ open
 
-  // initial fetch when opened
+  // ⬇️ ดึงข้อความเริ่มต้นครั้งแรก (หรือเมื่อ slug เปลี่ยน)
   useEffect(() => {
     (async () => {
-      if (!open) return;
       const token = getToken;
       if (!token) return;
       const initial = await fetchMessages(token, projectSlug, 50);
-      setMessages(initial.map((m: any) => ({ ...m, _key: makeKey(m) })));
-    })();
-  }, [open, projectSlug, getToken]);
+      const list = initial
+        .map((m: any) => ({ ...m, _key: makeKey(m) }))
+        .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      setMessages(list);
 
-  // always show the latest at bottom when messages change
+      // คำนวณ unread จาก lastSeen เดิม
+      const lastSeen = lastSeenRef.current || 0;
+      const unread = list.reduce((acc, m) => {
+        const ts = new Date(m.createdAt).getTime();
+        return ts > lastSeen ? acc + 1 : acc;
+      }, 0);
+      unreadRef.current = unread;
+      onUnreadChange?.(unread);
+    })();
+  }, [getToken, projectSlug]);
+
+  // ⬇️ เมื่อเปิดป๊อปอัพ: เลื่อนล่าง + เคลียร์ unread + อัปเดต lastSeen
   useEffect(() => {
     if (!open) return;
     scrollToBottom();
+
+    // เคลียร์ unread ณ ตอนเปิด
+    unreadRef.current = 0;
+    onUnreadChange?.(0);
+
+    // ตั้ง lastSeen = เวลาล่าสุดของข้อความ (หรือ now)
+    const latestTs =
+      messages.length > 0
+        ? new Date(messages[messages.length - 1].createdAt).getTime()
+        : Date.now();
+    lastSeenRef.current = latestTs;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(LS_KEY, String(latestTs));
+    }
+  }, [open, messages]); // เมื่อเปิดหรือข้อความอัปเดต
+
+  // แสดงท้ายเมื่อมีข้อความใหม่ขณะแสดงป๊อปอัพ
+  useEffect(() => {
+    if (open) scrollToBottom();
   }, [messages, open]);
 
   // typing indicator
   useEffect(() => {
-    if (!open || !socketRef.current) return;
+    if (!socketRef.current) return;
     socketRef.current.emit("typing", typing);
-  }, [typing, open]);
+  }, [typing]);
 
   const send = () => {
     const s = socketRef.current;
@@ -117,11 +154,22 @@ export default function ProjectChatPopup({
       <div className="w-[96vw] max-w-[45vw] h-[86vh] max-h-[880px] md:w-[90vw] md:h-[84vh] rounded-2xl overflow-hidden shadow-2xl bg-white flex flex-col">
         {/* header */}
         <div className="flex items-center justify-between px-6 py-3 bg-[#2E5077] text-white">
-          <div className="font-semibold truncate">
-            Project Chat - {projectName}
-          </div>
+          <div className="font-semibold truncate">Project Chat - {projectName}</div>
           <button
-            onClick={() => onOpenChange?.(false)}
+            onClick={() => {
+              // ปิดแล้วถือว่าอ่านแล้ว: อัปเดต lastSeen (กันข้อความท้าย ๆ หลุด)
+              const latestTs =
+                messages.length > 0
+                  ? new Date(messages[messages.length - 1].createdAt).getTime()
+                  : Date.now();
+              lastSeenRef.current = latestTs;
+              if (typeof window !== "undefined") {
+                localStorage.setItem(LS_KEY, String(latestTs));
+              }
+              unreadRef.current = 0;
+              onUnreadChange?.(0);
+              onOpenChange?.(false);
+            }}
             className="p-1 rounded hover:bg-white/20"
             aria-label="Close chat"
           >
@@ -130,10 +178,7 @@ export default function ProjectChatPopup({
         </div>
 
         {/* messages */}
-        <div
-          ref={listRef}
-          className="flex-1 overflow-y-auto p-3 flex flex-col gap-2"
-        >
+        <div ref={listRef} className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
           {messages.map((m, idx) => {
             const isMe =
               typeof m.isMine === "boolean"
@@ -143,11 +188,7 @@ export default function ProjectChatPopup({
                 : false;
 
             const msgDate = dayjs(m.createdAt).startOf("day");
-            const prevDate =
-              idx > 0
-                ? dayjs(messages[idx - 1].createdAt).startOf("day")
-                : null;
-
+            const prevDate = idx > 0 ? dayjs(messages[idx - 1].createdAt).startOf("day") : null;
             const isNewDay = !prevDate || !msgDate.isSame(prevDate, "day");
 
             return (
@@ -155,33 +196,21 @@ export default function ProjectChatPopup({
                 {isNewDay && (
                   <div className="flex justify-center my-2">
                     <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                      {msgDate.isSame(dayjs(), "day")
-                        ? "วันนี้"
-                        : msgDate.format("DD MMM YYYY")}
+                      {msgDate.isSame(dayjs(), "day") ? "วันนี้" : msgDate.format("DD MMM YYYY")}
                     </span>
                   </div>
                 )}
 
-                <div
-                  className={`flex flex-col ${
-                    isMe ? "self-end items-end" : "self-start items-start"
-                  }`}
-                >
+                <div className={`flex flex-col ${isMe ? "self-end items-end" : "self-start items-start"}`}>
                   <div
                     className={`max-w-[15vw] rounded-2xl px-3 py-2 shadow border border-black/5 ${
-                      isMe
-                        ? "bg-[#79D7BE] text-[#2E5077]"
-                        : "bg-white text-gray-800"
+                      isMe ? "bg-[#79D7BE] text-[#2E5077]" : "bg-white text-gray-800"
                     }`}
                   >
-                    <div className="text-sm whitespace-pre-wrap break-words">
-                      {m.content}
-                    </div>
+                    <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
                   </div>
                   <div className="text-[10px] text-gray-500 mt-0.5">
-                    {(m.author?.username ?? "user") +
-                      " · " +
-                      dayjs(m.createdAt).format("HH:mm")}
+                    {(m.author?.username ?? "user") + " · " + dayjs(m.createdAt).format("HH:mm")}
                   </div>
                 </div>
               </div>
@@ -189,13 +218,9 @@ export default function ProjectChatPopup({
           })}
 
           {typing ? (
-            <div className="text-xs text-gray-500 px-1 self-end text-right">
-              กำลังพิมพ์...
-            </div>
+            <div className="text-xs text-gray-500 px-1 self-end text-right">กำลังพิมพ์...</div>
           ) : othersTyping ? (
-            <div className="text-xs text-gray-500 px-1 self-start text-left">
-              กำลังพิมพ์...
-            </div>
+            <div className="text-xs text-gray-500 px-1 self-start text-left">กำลังพิมพ์...</div>
           ) : null}
         </div>
 
@@ -214,10 +239,7 @@ export default function ProjectChatPopup({
             placeholder="พิมพ์ข้อความ..."
             className="flex-1 rounded-xl border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#79D7BE]"
           />
-          <button
-            onClick={send}
-            className="px-3 py-2 rounded-xl bg-[#2E5077] text-[#ffffff] font-medium hover:opacity-90"
-          >
+          <button onClick={send} className="px-3 py-2 rounded-xl bg-[#2E5077] text-[#ffffff] font-medium hover:opacity-90">
             ส่ง
           </button>
         </div>
