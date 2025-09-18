@@ -1,26 +1,25 @@
-import type { IAgoraRTCClient, ILocalAudioTrack } from "agora-rtc-sdk-ng";
-
-export async function getAgora() {
-  const AgoraRTC = (await import("agora-rtc-sdk-ng")).default;
-  return AgoraRTC;
-}
-
-export type VoiceJoinParams = {
+// app/lib/agora.ts
+export async function joinVoice({
+  appId,
+  channelName,
+  token,
+  uid,
+}: {
   appId: string;
   channelName: string;
-  token: string;
-  uid: string;
-};
+  token?: string | null;
+  uid?: string | number | null;
+}) {
+  // dynamic import เพื่อเลี่ยง SSR import time
+  const Agora = await import("agora-rtc-sdk-ng");
+  const AgoraRTC = Agora.default;
 
-export async function joinVoice({
-  appId, channelName, token, uid,
-}: VoiceJoinParams) {
-  const AgoraRTC = await getAgora();
-  const client: IAgoraRTCClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-  await client.join(appId, channelName, token, uid);
+  const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
-  const micTrack: ILocalAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-  await client.publish([micTrack]);
+  await client.join(appId, channelName, token ?? null, uid ?? null);
+
+  const micTrack = await AgoraRTC.createMicrophoneAudioTrack();
+  await client.publish([micTrack]); // สำคัญ! ต้อง publish ไม่งั้นคนอื่นจะไม่ได้ยิน/มองไม่เห็น
 
   return { client, micTrack };
 }
