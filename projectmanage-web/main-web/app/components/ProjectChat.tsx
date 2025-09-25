@@ -151,9 +151,9 @@ export default function ProjectChatPopup({
 
   return (
     <div className="fixed -inset-20 z-50 flex items-center justify-center bg-black/30">
-      <div className="w-[96vw] max-w-[45vw] h-[86vh] max-h-[880px] md:w-[90vw] md:h-[84vh] rounded-2xl overflow-hidden shadow-2xl bg-white flex flex-col">
+      <div className="w-[96vw] max-w-[45vw] h-[86vh] max-h-[880px] md:w-[90vw] md:h-[84vh] rounded-2xl overflow-hidden shadow-2xl bg-[#F9F7F7] flex flex-col">
         {/* header */}
-        <div className="flex items-center justify-between px-6 py-3 bg-[#2E5077] text-white">
+        <div className="flex items-center justify-between px-6 py-3 bg-[#112D4E] text-[#F9F7F7]">
           <div className="font-semibold truncate">Project Chat - {projectName}</div>
           <button
             onClick={() => {
@@ -170,7 +170,7 @@ export default function ProjectChatPopup({
               onUnreadChange?.(0);
               onOpenChange?.(false);
             }}
-            className="p-1 rounded hover:bg-white/20"
+            className="p-1 rounded hover:bg-[#F9F7F7]/20"
             aria-label="Close chat"
           >
             ✕
@@ -195,7 +195,7 @@ export default function ProjectChatPopup({
               <div key={m._key} className="w-full flex flex-col">
                 {isNewDay && (
                   <div className="flex justify-center my-2">
-                    <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    <span className="text-xs text-[#112D4E] bg-[#DBE2EF] px-3 py-1 rounded-full">
                       {msgDate.isSame(dayjs(), "day") ? "วันนี้" : msgDate.format("DD MMM YYYY")}
                     </span>
                   </div>
@@ -203,13 +203,13 @@ export default function ProjectChatPopup({
 
                 <div className={`flex flex-col ${isMe ? "self-end items-end" : "self-start items-start"}`}>
                   <div
-                    className={`max-w-[15vw] rounded-2xl px-3 py-2 shadow border border-black/5 ${
-                      isMe ? "bg-[#79D7BE] text-[#2E5077]" : "bg-white text-gray-800"
+                    className={`max-w-[15vw] rounded-2xl px-3 py-2 shadow border border-[#DBE2EF] ${
+                      isMe ? "bg-[#3F72AF] text-[#F9F7F7]" : "bg-[#DBE2EF] text-[#112D4E]"
                     }`}
                   >
                     <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
                   </div>
-                  <div className="text-[10px] text-gray-500 mt-0.5">
+                  <div className="text-[10px] text-[#112D4E]/70 mt-0.5">
                     {(m.author?.username ?? "user") + " · " + dayjs(m.createdAt).format("HH:mm")}
                   </div>
                 </div>
@@ -218,13 +218,13 @@ export default function ProjectChatPopup({
           })}
 
           {typing ? (
-            <div className="text-xs text-gray-500 px-1 self-end text-right">กำลังพิมพ์...</div>
+            <div className="text-xs text-[#112D4E]/70 px-1 self-end text-right">กำลังพิมพ์...</div>
           ) : othersTyping ? (
-            <div className="text-xs text-gray-500 px-1 self-start text-left">กำลังพิมพ์...</div>
+            <div className="text-xs text-[#112D4E]/70 px-1 self-start text-left">กำลังพิมพ์...</div>
           ) : null}
         </div>
 
-        <div className="border-t border-black/10 bg-white p-2 flex items-center gap-2">
+        <div className="border-t border-[#DBE2EF] bg-[#F9F7F7] p-2 flex items-center gap-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -237,9 +237,9 @@ export default function ProjectChatPopup({
               }
             }}
             placeholder="พิมพ์ข้อความ..."
-            className="flex-1 rounded-xl border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#79D7BE]"
+            className="flex-1 rounded-xl border border-[#DBE2EF] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3F72AF] text-[#112D4E] placeholder-[#112D4E]/50 bg-white"
           />
-          <button onClick={send} className="px-3 py-2 rounded-xl bg-[#2E5077] text-[#ffffff] font-medium hover:opacity-90">
+          <button onClick={send} className="px-3 py-2 rounded-xl bg-[#3F72AF] text-[#F9F7F7] font-medium hover:opacity-90">
             ส่ง
           </button>
         </div>
