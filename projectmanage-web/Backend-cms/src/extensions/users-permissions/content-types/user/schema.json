@@ -89,6 +89,32 @@
       "relation": "oneToMany",
       "target": "api::voice-session.voice-session",
       "mappedBy": "user"
+    },
+    "firstName": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "lastName": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "bio": {
+      "type": "text"
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 20
+    },
+    "position": {
+      "type": "text"
+    },
+    "company": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "location": {
+      "type": "string",
+      "maxLength": 120
     }
   }
 }

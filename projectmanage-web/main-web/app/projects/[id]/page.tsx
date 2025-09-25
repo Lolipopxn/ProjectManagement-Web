@@ -1023,21 +1023,21 @@ export default function ProjectDetailPage() {
                     
                     <div className="flex items-center space-x-4">
                       <span className="w-20 text-xs">Planning</span>
-                      <div className="flex-1 bg-gray-200 rounded h-4 relative">
+                      <div className="flex-1 bg-gray-200 rounded h-4 ">
                         <div className="bg-pink-400 h-4 rounded" style={{ width: '30%' }}></div>
                       </div>
                     </div>
                     
                     <div className="flex items-center space-x-4">
                       <span className="w-20 text-xs">Development</span>
-                      <div className="flex-1 bg-gray-200 rounded h-4 relative">
+                      <div className="flex-1 bg-gray-200 rounded h-4">
                         <div className="bg-blue-400 h-4 rounded" style={{ width: '60%', marginLeft: '30%' }}></div>
                       </div>
                     </div>
                     
                     <div className="flex items-center space-x-4">
                       <span className="w-20 text-xs">Testing</span>
-                      <div className="flex-1 bg-gray-200 rounded h-4 relative">
+                      <div className="flex-1 bg-gray-200 rounded h-4">
                         <div className="bg-purple-400 h-4 rounded" style={{ width: '40%', marginLeft: '60%' }}></div>
                       </div>
                     </div>
