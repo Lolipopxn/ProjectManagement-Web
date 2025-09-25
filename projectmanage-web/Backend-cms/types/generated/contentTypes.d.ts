@@ -580,7 +580,15 @@ export interface ApiSubmissionSubmission extends Struct.CollectionTypeSchema {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
+    submitted_by_user_id_number: Schema.Attribute.Integer &
+      Schema.Attribute.Required;
+    task_document_id: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
     task_id: Schema.Attribute.Relation<'oneToOne', 'api::task.task'>;
+    task_id_number: Schema.Attribute.Integer & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
