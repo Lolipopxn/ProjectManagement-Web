@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "voice_sessions",
+  "info": {
+    "singularName": "voice-session",
+    "pluralName": "voice-sessions",
+    "displayName": "Voice Session"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "agoraUid": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean"
+    },
+    "muted": {
+      "type": "boolean"
+    },
+    "joinedAt": {
+      "type": "datetime"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::project.project",
+      "inversedBy": "voice_sessions"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "voice_sessions"
+    }
+  }
+}

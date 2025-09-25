@@ -43,7 +43,7 @@
       "relation": "oneToMany",
       "target": "plugin::users-permissions.user",
       "mappedBy": "project_member"
-    }, 
+    },
     "role": {
       "type": "enumeration",
       "enum": [
@@ -64,8 +64,7 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::project.project",
-      "inversedBy": "memberships",
-      "required": true
+      "inversedBy": "memberships"
     }
   }
 }

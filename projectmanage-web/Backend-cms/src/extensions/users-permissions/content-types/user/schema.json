@@ -83,6 +83,12 @@
       "relation": "oneToMany",
       "target": "api::chat.chat",
       "mappedBy": "author"
+    },
+    "voice_sessions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::voice-session.voice-session",
+      "mappedBy": "user"
     }
   }
 }

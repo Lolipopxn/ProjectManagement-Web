@@ -43,9 +43,7 @@
     },
     "slug": {
       "type": "uid",
-      "targetField": "name",
-      "required": true,
-      "unique": true
+      "required": true
     },
     "memberships": {
       "type": "relation",
@@ -57,6 +55,12 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::chat.chat",
+      "mappedBy": "project"
+    },
+    "voice_sessions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::voice-session.voice-session",
       "mappedBy": "project"
     }
   }

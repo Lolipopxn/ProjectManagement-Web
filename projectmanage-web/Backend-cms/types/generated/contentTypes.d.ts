@@ -463,8 +463,7 @@ export interface ApiProjectMemberProjectMember
       'api::project-member.project-member'
     > &
       Schema.Attribute.Private;
-    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'> &
-      Schema.Attribute.Required;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
     project_document_id: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -539,13 +538,15 @@ export interface ApiProjectProject extends Struct.CollectionTypeSchema {
         maxLength: 50;
       }>;
     publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID<'name'> &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique;
+    slug: Schema.Attribute.UID & Schema.Attribute.Required;
     start_date: Schema.Attribute.Date & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    voice_sessions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::voice-session.voice-session'
+    >;
   };
 }
 
@@ -641,6 +642,43 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiVoiceSessionVoiceSession
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'voice_sessions';
+  info: {
+    displayName: 'Voice Session';
+    pluralName: 'voice-sessions';
+    singularName: 'voice-session';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    active: Schema.Attribute.Boolean;
+    agoraUid: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    joinedAt: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::voice-session.voice-session'
+    > &
+      Schema.Attribute.Private;
+    muted: Schema.Attribute.Boolean;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
   };
 }
 
@@ -1145,6 +1183,10 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.SetMinMaxLength<{
         minLength: 3;
       }>;
+    voice_sessions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::voice-session.voice-session'
+    >;
   };
 }
 
@@ -1164,6 +1206,7 @@ declare module '@strapi/strapi' {
       'api::project.project': ApiProjectProject;
       'api::submission.submission': ApiSubmissionSubmission;
       'api::task.task': ApiTaskTask;
+      'api::voice-session.voice-session': ApiVoiceSessionVoiceSession;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
