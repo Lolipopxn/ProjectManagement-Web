@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
+import TaskStatusIcon from '../../components/TaskStatusIcon';
 import CreateTaskModal from '../../components/CreateTaskModal';
 import ProjectChatPopup from "../../components/ProjectChat";
 import VoiceRoomButton from "../../components/VoiceRoomButton";
@@ -52,6 +53,7 @@ interface ProjectMember {
   // สำหรับข้อมูลผู้ใช้ที่ถูก populate
   userInfo?: {
     id: number;
+    documentId?: string;
     username: string;
     email?: string;
   };
@@ -60,6 +62,7 @@ interface ProjectMember {
 // Interface สำหรับ user data
 interface User {
   id: number;
+  documentId?: string;
   username: string;
   email: string;
 }
@@ -83,9 +86,15 @@ export default function ProjectDetailPage() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [removeMemberLoading, setRemoveMemberLoading] = useState<number | string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [showTaskManageModal, setShowTaskManageModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [taskManageLoading, setTaskManageLoading] = useState(false);
+  const [showProjectManageModal, setShowProjectManageModal] = useState(false);
+  const [projectManageLoading, setProjectManageLoading] = useState(false);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -150,6 +159,9 @@ export default function ProjectDetailPage() {
             );
             
             setProjectMembers(membersWithUserInfo);
+            
+            // Debug: log member data structure
+            console.log('Member data structure:', membersWithUserInfo[0]);
             
             // ตรวจสอบบทบาทของผู้ใช้หลังจากโหลดข้อมูล project members
             if (currentUser && projectResponse.data.project) {
@@ -331,13 +343,13 @@ export default function ProjectDetailPage() {
         }
         
         setShowCreateTaskModal(false);
-        alert('Task created successfully!');
+        // alert('Task created successfully!');
       } else {
-        alert('Error creating task: ' + response.data.message);
+        // alert('Error creating task: ' + response.data.message);
       }
     } catch (error: any) {
       console.error('Error creating task:', error);
-      alert('Error creating task: ' + (error.response?.data?.message || error.message));
+      // alert('Error creating task: ' + (error.response?.data?.message || error.message));
     } finally {
       setCreateTaskLoading(false);
     }
@@ -413,46 +425,271 @@ export default function ProjectDetailPage() {
     try {
       setAddMemberLoading(true);
       
-      const response = await axios.post('/api/project-members', {
+      const payload = {
         project_document_id: projectId,
         project_id_number: project?.id,
         user_id_in_project: memberData.userId,
-        role_in_project: memberData.role
-      });
+        role_in_project: memberData.role,
+        join_date: new Date().toISOString(),
+        publishedAt: new Date().toISOString()
+      };
+      
+      console.log('Adding member with payload:', payload);
+      
+      const response = await axios.post('/api/project-members', payload);
+
+      console.log('Add member response:', response.data);
 
       if (response.data.success) {
         await refreshProjectMembers();
         setShowAddMemberModal(false);
-        alert('Member added successfully!');
+        console.log('Member added successfully!');
       } else {
-        alert('Error adding member: ' + response.data.message);
+        console.error('Failed to add member:', response.data.message);
+        alert('เกิดข้อผิดพลาดในการเพิ่มสมาชิก: ' + response.data.message);
       }
     } catch (error: any) {
       console.error('Error adding member:', error);
-      alert('Error adding member: ' + (error.response?.data?.message || error.message));
+      console.error('Error response:', error.response?.data);
+      alert('เกิดข้อผิดพลาดในการเพิ่มสมาชิก: ' + (error.response?.data?.message || error.message));
     } finally {
       setAddMemberLoading(false);
     }
   };
 
-  // Remove member function
-  const handleRemoveMember = async (memberId: number, memberName: string) => {
-    if (!confirm(`Are you sure you want to remove ${memberName} from this project?`)) {
+  // Delete task function
+  const handleDeleteTask = async (taskName: string) => {
+    if (!selectedTask) return;
+    
+    if (taskName !== selectedTask.task_name) {
+      // alert('ชื่องานไม่ตรงกัน กรุณาพิมพ์ชื่องานให้ถูกต้อง');
       return;
     }
 
     try {
-      const response = await axios.delete(`/api/project-members?memberId=${memberId}`);
+      setTaskManageLoading(true);
+      
+      const response = await axios.delete(`/api/tasks/${selectedTask.documentId}`);
       
       if (response.data.success) {
-        await refreshProjectMembers();
-        alert('Member removed successfully!');
+        // Refresh tasks data
+        const tasksResponse = await axios.get(`/api/tasks?projectDocumentId=${projectId}`);
+        if (tasksResponse.data.success && tasksResponse.data.tasks) {
+          const allTasks = tasksResponse.data.tasks;
+          const currentUserId = user?.id;
+          
+          if (currentUserId) {
+            const userTasks = allTasks.filter((task: Task) => 
+              task.assigned_to_user_ids_number === currentUserId
+            );
+            const otherUserTasks = allTasks.filter((task: Task) => 
+              task.assigned_to_user_ids_number !== currentUserId
+            );
+            
+            setMyTasks(userTasks);
+            setOtherTasks(otherUserTasks);
+          } else {
+            setOtherTasks(allTasks);
+            setMyTasks([]);
+          }
+        }
+        
+        setShowTaskManageModal(false);
+        setSelectedTask(null);
+        // alert('ลบงานเรียบร้อยแล้ว!');
       } else {
-        alert('Error removing member: ' + response.data.message);
+        // alert('เกิดข้อผิดพลาดในการลบงาน: ' + response.data.message);
+      }
+    } catch (error: any) {
+      console.error('Error deleting task:', error);
+      // alert('เกิดข้อผิดพลาดในการลบงาน: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setTaskManageLoading(false);
+    }
+  };
+
+  // Reassign task function
+  const handleReassignTask = async (newAssigneeId: number) => {
+    if (!selectedTask) return;
+
+    try {
+      setTaskManageLoading(true);
+      
+      console.log('Reassigning task:', selectedTask.documentId, 'to user:', newAssigneeId);
+      
+      const response = await axios.put(`/api/tasks/${selectedTask.documentId}`, {
+        assigned_to_user_ids_number: newAssigneeId
+      });
+      
+      console.log('Reassign response:', response.data);
+      
+      if (response.data.success) {
+        // Refresh tasks data with populated relations
+        const tasksResponse = await axios.get(`/api/tasks?projectDocumentId=${projectId}`);
+        if (tasksResponse.data.success && tasksResponse.data.tasks) {
+          const allTasks = tasksResponse.data.tasks;
+          const currentUserId = user?.id;
+          
+          console.log('Refreshed tasks after reassignment:', allTasks.length);
+          
+          if (currentUserId) {
+            const userTasks = allTasks.filter((task: Task) => 
+              task.assigned_to_user_ids_number === currentUserId
+            );
+            const otherUserTasks = allTasks.filter((task: Task) => 
+              task.assigned_to_user_ids_number !== currentUserId
+            );
+            
+            console.log(`Tasks after reassignment - My tasks: ${userTasks.length}, Other tasks: ${otherUserTasks.length}`);
+            
+            setMyTasks(userTasks);
+            setOtherTasks(otherUserTasks);
+          } else {
+            setOtherTasks(allTasks);
+            setMyTasks([]);
+          }
+        }
+        
+        setShowTaskManageModal(false);
+        setSelectedTask(null);
+        // alert('เปลี่ยนผู้รับผิดชอบงานเรียบร้อยแล้ว! ทั้ง number field และ relation field ได้รับการอัปเดตแล้ว');
+      } else {
+        // alert('เกิดข้อผิดพลาดในการเปลี่ยนผู้รับผิดชอบ: ' + response.data.message);
+      }
+    } catch (error: any) {
+      console.error('Error reassigning task:', error);
+      console.error('Error details:', error.response?.data);
+      // alert('เกิดข้อผิดพลาดในการเปลี่ยนผู้รับผิดชอบ: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setTaskManageLoading(false);
+    }
+  };
+
+  // Update project function
+  const handleUpdateProject = async (projectData: any) => {
+    if (!project) return;
+
+    try {
+      setProjectManageLoading(true);
+      
+      console.log('Updating project:', project.documentId || projectId, 'with data:', projectData);
+      
+      const response = await axios.put(`/api/projects/${project.documentId || projectId}`, {
+        project_name: projectData.projectName,
+        description: projectData.description,
+        start_date: projectData.startDate,
+        end_date: projectData.endDate,
+        project_status: projectData.projectStatus
+      });
+      
+      console.log('Update project response:', response.data);
+      
+      if (response.data.success) {
+        // Update local state
+        setProject(response.data.project);
+        setShowProjectManageModal(false);
+        console.log('Project updated successfully!');
+      } else {
+        console.error('Failed to update project:', response.data.message);
+        alert('เกิดข้อผิดพลาดในการแก้ไขโปรเจค: ' + response.data.message);
+      }
+    } catch (error: any) {
+      console.error('Error updating project:', error);
+      console.error('Error details:', error.response?.data);
+      alert('เกิดข้อผิดพลาดในการแก้ไขโปรเจค: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setProjectManageLoading(false);
+    }
+  };
+
+  // Delete project function
+  const handleDeleteProject = async (projectName: string) => {
+    if (!project) return;
+    
+    if (projectName !== project.project_name) {
+      alert('ชื่อโปรเจคไม่ตรงกัน กรุณาพิมพ์ชื่อโปรเจคให้ถูกต้อง');
+      return;
+    }
+
+    try {
+      setProjectManageLoading(true);
+      
+      const response = await axios.delete(`/api/projects/${project.documentId || projectId}`);
+      
+      if (response.data.success) {
+        console.log('Project deleted successfully');
+        setShowProjectManageModal(false);
+        alert('ลบโปรเจคเรียบร้อยแล้ว!');
+        // Navigate back to overview
+        router.push('/overview');
+      } else {
+        alert('เกิดข้อผิดพลาดในการลบโปรเจค: ' + response.data.message);
+      }
+    } catch (error: any) {
+      console.error('Error deleting project:', error);
+      alert('เกิดข้อผิดพลาดในการลบโปรเจค: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setProjectManageLoading(false);
+    }
+  };
+
+  // Remove member function
+  const handleRemoveMember = async (member: ProjectMember, memberName: string) => {
+    console.log('=== REMOVE MEMBER DEBUG ===');
+    console.log('handleRemoveMember called with member:', JSON.stringify(member, null, 2));
+    console.log('Member name:', memberName);
+    console.log('Project ID:', projectId);
+    
+    if (!confirm(`คุณแน่ใจหรือไม่ที่จะนำ ${memberName} ออกจากโปรเจ็กต์นี้?`)) {
+      console.log('User cancelled deletion');
+      return;
+    }
+
+    try {
+      // Use the member's internal ID for loading state tracking
+      const loadingId = member.id || member.user_id_in_project;
+      console.log('Setting removeMemberLoading to:', loadingId);
+      setRemoveMemberLoading(loadingId);
+      
+      // Use the member's own ID for deletion (simplest approach)
+      let deleteParams = '';
+      
+      // Approach 1: Use member's documentId if available (Strapi v4)
+      if (member.documentId) {
+        deleteParams = `memberId=${member.documentId}`;
+        console.log('Using member documentId:', member.documentId);
+      }
+      // Approach 2: Use member's internal ID
+      else if (member.id) {
+        deleteParams = `memberId=${member.id}`;
+        console.log('Using member ID:', member.id);
+      }
+      // Fallback: Try with project and user info
+      else {
+        deleteParams = `projectDocumentId=${projectId}&userDocumentId=${member.user_id_in_project}`;
+        console.log('Using fallback approach with user_id_in_project:', member.user_id_in_project);
+      }
+      
+      console.log('Making DELETE request with params:', deleteParams);
+      const response = await axios.delete(`/api/project-members?${deleteParams}`);
+      
+      console.log('Delete response:', response.data);
+      
+      if (response.data.success) {
+        console.log('Member deleted successfully, refreshing members...');
+        await refreshProjectMembers();
+        // alert('ลบสมาชิกเรียบร้อยแล้ว!');
+      } else {
+        console.log('Delete failed:', response.data);
+        // alert('เกิดข้อผิดพลาดในการลบสมาชิก: ' + response.data.message);
       }
     } catch (error: any) {
       console.error('Error removing member:', error);
-      alert('Error removing member: ' + (error.response?.data?.message || error.message));
+      console.error('Error response:', error.response?.data);
+      // alert('เกิดข้อผิดพลาดในการลบสมาชิก: ' + (error.response?.data?.message || error.message));
+    } finally {
+      console.log('Setting removeMemberLoading to null');
+      setRemoveMemberLoading(null);
     }
   };
 
@@ -466,44 +703,19 @@ export default function ProjectDetailPage() {
     });
   };
 
-  // Get status config for tasks
+  // Import color utility
+  const { getTaskStatusConfig: getUtilityTaskStatusConfig } = require('../../utils/taskStatusColors');
+  
+  // Get status config for tasks - ใช้ utility function
   const getTaskStatusConfig = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'turn in':
-      case 'completed':
-        return {
-          bgColor: 'bg-green-100',
-          borderColor: 'border-green-200', 
-          textColor: 'text-green-800',
-          statusText: 'Confirm',
-          statusBg: 'bg-green-100 text-green-700'
-        };
-      case 'not turn in':
-      case 'pending':
-        return {
-          bgColor: 'bg-gray-100',
-          borderColor: 'border-gray-200',
-          textColor: 'text-gray-800', 
-          statusText: 'unConfirm',
-          statusBg: 'bg-gray-100 text-gray-700'
-        };
-      case 'overdue':
-        return {
-          bgColor: 'bg-red-100',
-          borderColor: 'border-red-200',
-          textColor: 'text-red-800',
-          statusText: 'เลยกำหนด',
-          statusBg: 'bg-red-100 text-red-700'
-        };
-      default:
-        return {
-          bgColor: 'bg-gray-100',
-          borderColor: 'border-gray-200',
-          textColor: 'text-gray-800',
-          statusText: 'unConfirm',
-          statusBg: 'bg-gray-100 text-gray-700'
-        };
-    }
+    const config = getUtilityTaskStatusConfig(status);
+    return {
+      bgColor: config.lightBgColor,
+      borderColor: config.borderColor,
+      textColor: config.textColor,
+      statusText: config.text,
+      statusBg: `${config.lightBgColor} ${config.textColor}`
+    };
   };
 
   // Render Task Card
@@ -538,55 +750,73 @@ export default function ProjectDetailPage() {
 
     const assigneeInfo = getAssigneeInfo();
     
-    // Simple status configuration
-    const cardBg = task.task_status.toLowerCase() === 'turn in' 
-      ? 'bg-green-50' 
-      : 'bg-white';
-    const borderColor = task.task_status.toLowerCase() === 'turn in'
-      ? 'border-green-200'
-      : 'border-gray-200';
-    const isCompleted = task.task_status.toLowerCase() === 'turn in';
+    // Use utility status configuration for card colors
+    const taskStatusConfig = getTaskStatusConfig(task.task_status);
+    const isCompleted = task.task_status.toLowerCase() === 'completed' || task.task_status.toLowerCase() === 'turn in';
 
     return (
       <div 
         key={task.id} 
-        onClick={() => {
-          if (task.documentId) {
-            router.push(`/projects/${projectId}/tasks/${task.documentId}`);
-          } else {
-            console.warn('Task documentId not found:', task);
-            alert('ไม่พบ documentId ของ Task นี้');
-          }
-        }}
-        className={`${cardBg} ${borderColor} border rounded-lg p-4 mb-3 hover:shadow-md transition-shadow duration-200 cursor-pointer hover:border-blue-300`}
+        className={`bg-white border border-gray-200 rounded-lg p-5 mb-4 hover:shadow-md hover:border-gray-300 transition-all duration-200 relative group`}
       >
-        {/* Task Name */}
-        <div className="mb-3">
-          <h4 className="font-semibold text-gray-900 text-lg">
-            {task.task_name}
-          </h4>
-        </div>
-
-        {/* Task Details */}
-        <div className="space-y-2 text-sm">
-          {/* Assignee and Due Date Row */}
-          <div className="flex justify-between items-center">
-            <div className="text-gray-700">
-              <span className="font-medium">ผู้รับผิดชอบงาน:</span> {assigneeInfo.name}
-            </div>
-            <div className="text-gray-600">
-              <span className="font-medium">ระยะเวลางาน</span> {formatDate(task.due_date)}
-            </div>
+        {/* Task Name with Actions */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h4 
+              className="font-semibold text-gray-900 text-xl cursor-pointer hover:text-blue-600 transition-colors leading-tight"
+              onClick={() => {
+                if (task.documentId) {
+                  router.push(`/projects/${projectId}/tasks/${task.documentId}`);
+                } else {
+                  console.warn('Task documentId not found:', task);
+                  // alert('ไม่พบ documentId ของ Task นี้');
+                }
+              }}
+            >
+              {task.task_name}
+            </h4>
           </div>
           
-          {/* Status Row */}
-          <div className="flex justify-between items-center">
-            <div className="text-gray-700">
-              <span className="font-medium">Status</span> {task.task_status}
-            </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${statusConfig.statusBg}`}>
-              {statusConfig.statusText}
-            </div>
+          {/* Task Management Button - Only for Leaders */}
+          {userRole === 'Leader' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedTask(task);
+                setShowTaskManageModal(true);
+              }}
+              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700 transition-colors"
+              title="จัดการงาน"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Task Details - Compact Layout */}
+        <div className="flex flex-wrap items-center justify-between text-sm text-gray-600 gap-4">
+          {/* Status */}
+          <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium ${taskStatusConfig.bgColor} ${taskStatusConfig.textColor}`}>
+            <TaskStatusIcon status={task.task_status} className="w-4 h-4" />
+            <span>{taskStatusConfig.statusText}</span>
+          </div>
+          
+          {/* Assignee */}
+          <div className="flex items-center space-x-2">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span className="font-medium text-gray-700 text-sm">{assigneeInfo.name}</span>
+          </div>
+          
+          {/* Due Date */}
+          <div className="flex items-center space-x-2">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-gray-700 text-sm">{formatDate(task.due_date)}</span>
           </div>
         </div>
       </div>
@@ -651,6 +881,552 @@ export default function ProjectDetailPage() {
 
   const statusConfig = getTaskStatusConfig(project.project_status || 'pending');
 
+  // TaskManage Modal Component
+  const TaskManageModal = () => {
+    const [action, setAction] = useState<'delete' | 'reassign'>('delete');
+    const [taskNameInput, setTaskNameInput] = useState('');
+    const [newAssigneeId, setNewAssigneeId] = useState<number | null>(null);
+
+    const resetModal = () => {
+      setAction('delete');
+      setTaskNameInput('');
+      setNewAssigneeId(null);
+      setShowTaskManageModal(false);
+      setSelectedTask(null);
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      if (action === 'delete') {
+        handleDeleteTask(taskNameInput);
+      } else if (action === 'reassign' && newAssigneeId) {
+        handleReassignTask(newAssigneeId);
+      }
+    };
+
+    if (!showTaskManageModal || !selectedTask) return null;
+
+    // Get current assignee info
+    const currentAssignee = projectMembers.find(member => 
+      (member.userInfo?.id || member.user_id_in_project) === selectedTask.assigned_to_user_ids_number
+    );
+
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">จัดการงาน</h3>
+                <p className="text-sm text-gray-500 truncate">{selectedTask.task_name}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={resetModal}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              disabled={taskManageLoading}
+            >
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {/* Action Selection */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                เลือกการจัดการ
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
+                  action === 'delete'
+                    ? 'bg-red-50 text-red-800 border-red-200'
+                    : 'border-gray-200 bg-white'
+                }`}>
+                  <input
+                    type="radio"
+                    name="action"
+                    value="delete"
+                    checked={action === 'delete'}
+                    onChange={(e) => setAction(e.target.value as 'delete' | 'reassign')}
+                    className="sr-only"
+                    disabled={taskManageLoading}
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">ลบงาน</div>
+                    <div className="text-xs text-gray-500 mt-1">ลบงานนี้ออกจากโปรเจ็กต์</div>
+                  </div>
+                  {action === 'delete' && (
+                    <div className="w-4 h-4 bg-red-600 rounded-full flex items-center justify-center ml-2">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </label>
+
+                <label className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
+                  action === 'reassign'
+                    ? 'bg-blue-50 text-blue-800 border-blue-200'
+                    : 'border-gray-200 bg-white'
+                }`}>
+                  <input
+                    type="radio"
+                    name="action"
+                    value="reassign"
+                    checked={action === 'reassign'}
+                    onChange={(e) => setAction(e.target.value as 'delete' | 'reassign')}
+                    className="sr-only"
+                    disabled={taskManageLoading}
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">เปลี่ยนผู้รับผิดชอบ</div>
+                    <div className="text-xs text-gray-500 mt-1">มอบหมายงานให้คนใหม่</div>
+                  </div>
+                  {action === 'reassign' && (
+                    <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center ml-2">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            {/* Delete Action */}
+            {action === 'delete' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  พิมพ์ชื่องานเพื่อยืนยันการลบ <span className="text-red-500">*</span>
+                </label>
+                <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-gray-600 mb-1">ชื่องานที่ต้องพิมพ์:</p>
+                  <p className="font-medium text-gray-900">{selectedTask.task_name}</p>
+                </div>
+                <input
+                  type="text"
+                  value={taskNameInput}
+                  onChange={(e) => setTaskNameInput(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none"
+                  placeholder="พิมพ์ชื่องานตรงตามด้านบน"
+                  required
+                  disabled={taskManageLoading}
+                />
+              </div>
+            )}
+
+            {/* Reassign Action */}
+            {action === 'reassign' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  เลือกผู้รับผิดชอบใหม่ <span className="text-red-500">*</span>
+                </label>
+                
+                {/* Current Assignee */}
+                <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-gray-600 mb-1">ผู้รับผิดชอบปัจจุบัน:</p>
+                  <p className="font-medium text-gray-900">
+                    {currentAssignee?.userInfo?.username || `User ${selectedTask.assigned_to_user_ids_number}`}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    User ID: {selectedTask.assigned_to_user_ids_number}
+                  </p>
+                </div>
+
+                <select
+                  value={newAssigneeId || ''}
+                  onChange={(e) => setNewAssigneeId(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                  required
+                  disabled={taskManageLoading}
+                >
+                  <option value="">เลือกผู้รับผิดชอบใหม่</option>
+                  {projectMembers
+                    .filter(member => (member.userInfo?.id || member.user_id_in_project) !== selectedTask.assigned_to_user_ids_number)
+                    .map((member) => (
+                      <option 
+                        key={member.id} 
+                        value={member.userInfo?.id || member.user_id_in_project}
+                      >
+                        {member.userInfo?.username || `User ${member.user_id_in_project}`} ({member.role_in_project})
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={resetModal}
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all"
+                disabled={taskManageLoading}
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                className={`px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
+                  action === 'delete'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
+                    : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
+                }`}
+                disabled={taskManageLoading || (action === 'delete' && taskNameInput !== selectedTask.task_name) || (action === 'reassign' && !newAssigneeId)}
+              >
+                {taskManageLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>{action === 'delete' ? 'กำลังลบ...' : 'กำลังเปลี่ยน...'}</span>
+                  </>
+                ) : (
+                  <>
+                    {action === 'delete' ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>ลบงาน</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        <span>เปลี่ยนผู้รับผิดชอบ</span>
+                      </>
+                    )}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // ProjectManage Modal Component
+  const ProjectManageModal = () => {
+    const [action, setAction] = useState<'edit' | 'delete'>('edit');
+    const [projectNameInput, setProjectNameInput] = useState('');
+    const [formData, setFormData] = useState({
+      projectName: project?.project_name || '',
+      description: project?.description || '',
+      startDate: project?.start_date?.split('T')[0] || '',
+      endDate: project?.end_date?.split('T')[0] || '',
+      projectStatus: project?.project_status || 'active'
+    });
+
+    const resetModal = () => {
+      setAction('edit');
+      setProjectNameInput('');
+      setFormData({
+        projectName: project?.project_name || '',
+        description: project?.description || '',
+        startDate: project?.start_date?.split('T')[0] || '',
+        endDate: project?.end_date?.split('T')[0] || '',
+        projectStatus: project?.project_status || 'active'
+      });
+      setShowProjectManageModal(false);
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      if (action === 'edit') {
+        // Validate form data
+        if (!formData.projectName.trim() || !formData.description.trim()) {
+          alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+          return;
+        }
+        if (new Date(formData.endDate) <= new Date(formData.startDate)) {
+          alert('วันที่สิ้นสุดต้องมาหลังวันที่เริ่มต้น');
+          return;
+        }
+        handleUpdateProject(formData);
+      } else if (action === 'delete') {
+        handleDeleteProject(projectNameInput);
+      }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    };
+
+    if (!showProjectManageModal || !project) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300 max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">จัดการโปรเจค</h3>
+                <p className="text-sm text-gray-500 truncate">{project.project_name}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={resetModal}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              disabled={projectManageLoading}
+            >
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {/* Action Selection */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                เลือกการจัดการ
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
+                  action === 'edit'
+                    ? 'bg-blue-50 text-blue-800 border-blue-200'
+                    : 'border-gray-200 bg-white'
+                }`}>
+                  <input
+                    type="radio"
+                    name="action"
+                    value="edit"
+                    checked={action === 'edit'}
+                    onChange={(e) => setAction(e.target.value as 'edit' | 'delete')}
+                    className="sr-only"
+                    disabled={projectManageLoading}
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">แก้ไขโปรเจค</div>
+                    <div className="text-xs text-gray-500 mt-1">แก้ไขข้อมูลโปรเจค</div>
+                  </div>
+                  {action === 'edit' && (
+                    <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center ml-2">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </label>
+
+                <label className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
+                  action === 'delete'
+                    ? 'bg-red-50 text-red-800 border-red-200'
+                    : 'border-gray-200 bg-white'
+                }`}>
+                  <input
+                    type="radio"
+                    name="action"
+                    value="delete"
+                    checked={action === 'delete'}
+                    onChange={(e) => setAction(e.target.value as 'edit' | 'delete')}
+                    className="sr-only"
+                    disabled={projectManageLoading}
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">ลบโปรเจค</div>
+                    <div className="text-xs text-gray-500 mt-1">ลบโปรเจคทั้งหมด</div>
+                  </div>
+                  {action === 'delete' && (
+                    <div className="w-4 h-4 bg-red-600 rounded-full flex items-center justify-center ml-2">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            {/* Edit Action */}
+            {action === 'edit' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    ชื่อโปรเจค <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="projectName"
+                    value={formData.projectName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                    placeholder="กรอกชื่อโปรเจค"
+                    required
+                    disabled={projectManageLoading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    คำอธิบาย <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none"
+                    placeholder="อธิบายรายละเอียดโปรเจค"
+                    required
+                    disabled={projectManageLoading}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      วันที่เริ่มต้น <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                      required
+                      disabled={projectManageLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      วันที่สิ้นสุด <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={formData.endDate}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                      required
+                      disabled={projectManageLoading}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    สถานะโปรเจค
+                  </label>
+                  <select
+                    name="projectStatus"
+                    value={formData.projectStatus}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                    disabled={projectManageLoading}
+                  >
+                    <option value="active">กำลังดำเนินการ</option>
+                    <option value="completed">เสร็จสิ้น</option>
+                    <option value="on-hold">พักการทำงาน</option>
+                    <option value="cancelled">ยกเลิก</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Delete Action */}
+            {action === 'delete' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  พิมพ์ชื่อโปรเจคเพื่อยืนยันการลบ <span className="text-red-500">*</span>
+                </label>
+                <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-gray-600 mb-1">ชื่อโปรเจคที่ต้องพิมพ์:</p>
+                  <p className="font-medium text-gray-900">{project.project_name}</p>
+                </div>
+                <input
+                  type="text"
+                  value={projectNameInput}
+                  onChange={(e) => setProjectNameInput(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none"
+                  placeholder="พิมพ์ชื่อโปรเจคตรงตามด้านบน"
+                  required
+                  disabled={projectManageLoading}
+                />
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">
+                    <strong>คำเตือน:</strong> การลบโปรเจคจะลบข้อมูลทั้งหมด รวมถึงงาน สมาชิก และไฟล์ที่เกี่ยวข้อง และไม่สามารถกู้คืนได้
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={resetModal}
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all"
+                disabled={projectManageLoading}
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                className={`px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
+                  action === 'edit'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
+                    : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
+                }`}
+                disabled={projectManageLoading || (action === 'delete' && projectNameInput !== project.project_name)}
+              >
+                {projectManageLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>{action === 'edit' ? 'กำลังแก้ไข...' : 'กำลังลบ...'}</span>
+                  </>
+                ) : (
+                  <>
+                    {action === 'edit' ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        <span>บันทึกการแก้ไข</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>ลบโปรเจค</span>
+                      </>
+                    )}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   // AddMember Modal Component
   const AddMemberModal = () => {
     const [userId, setUserId] = useState<number | null>(null);
@@ -686,7 +1462,7 @@ export default function ProjectDetailPage() {
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
       if (!userId) {
-        alert('กรุณาเลือกผู้ใช้');
+        // alert('กรุณาเลือกผู้ใช้');
         return;
       }
       
@@ -915,48 +1691,112 @@ export default function ProjectDetailPage() {
             <span className="text-gray-900 font-medium">{project.project_name}</span>
           </div>
 
+          {/* Project Header - Compact Design */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div className="flex items-center justify-between">
+              {/* Project Info */}
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="flex items-center space-x-3 mb-1">
+                    <h1 className="text-xl font-bold text-gray-900">{project.project_name}</h1>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
+                      {project.project_status}
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      userRole === 'Leader' 
+                        ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                        : 'bg-green-100 text-green-700 border border-green-200'
+                    }`}>
+                      {userRole}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center space-x-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span>{projectMembers.length} สมาชิก</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-2">
+                {/* Project Management Button - Only for Leaders */}
+                {userRole === 'Leader' && (
+                  <button
+                    onClick={() => setShowProjectManageModal(true)}
+                    className="flex items-center space-x-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                    title="จัดการโปรเจค"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    </svg>
+                    <span>จัดการ</span>
+                  </button>
+                )}
+                
+                {/* Project Description Tooltip */}
+                <div className="relative group">
+                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-gray-900 text-white text-sm rounded-lg shadow-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                    <div className="font-medium mb-1">คำอธิบายโปรเจค:</div>
+                    <div className="text-gray-300">{project.description}</div>
+                    <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Tasks */}
             <div className="lg:col-span-2">
-              {/* Project Header */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              {/* Quick Actions Bar */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6">
                 <div className="flex items-center justify-between">
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    ชื่อ {project.project_name} 
-                    <span className={`ml-2 px-3 py-1 rounded-full text-sm font-semibold ${
-                      userRole === 'Leader' 
-                        ? 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300' 
-                        : 'bg-green-100 text-green-700 border border-green-200'
-                    }`}>
-                      {userRole === 'Leader' ? ' Project Leader' : userRole}
-                    </span>
-                  </h1>
-                  <div className="flex items-center space-x-4">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg">
-                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </button>
-                    <VoiceRoomButton slug={project.slug}>
+                  <div className="flex items-center space-x-3">
+                    <h2 className="text-lg font-semibold text-gray-900">การดำเนินงาน</h2>
+                    <span className="text-sm text-gray-500">•</span>
+                    <span className="text-sm text-gray-500">เครื่องมือจัดการโปรเจค</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                     <VoiceRoomButton slug={project.slug}>
                       Voice
                     </VoiceRoomButton>
+                    
                     <button
                       onClick={() => setOpen(true)}
-                      className="relative flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+                      className="relative flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.474L3 21l2.474-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.474L3 21l2.474-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
                       </svg>
                       <span>Chat</span>
-
                       {unread > 0 && (
-                        <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[10px] leading-none flex items-center justify-center">
-                          {unread > 99 ? "99+" : unread}
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                          {unread > 9 ? "9+" : unread}
                         </span>
                       )}
                     </button>
+                    
                     <ProjectChatPopup
                       projectSlug={project.slug}
                       projectName={project.project_name}
@@ -969,41 +1809,79 @@ export default function ProjectDetailPage() {
                       currentUserId={user?.id}
                       onUnreadChange={setUnread}
                     />
-                    <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
-                      More Info
-                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* My Task Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">My Task</h2>
-                  <div className="flex items-center space-x-4">
-                    <button 
-                      onClick={() => setShowCreateTaskModal(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              {/* Tasks Overview */}
+              <div className="space-y-4">
+                {/* My Tasks */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">งานของฉัน</h3>
+                        <p className="text-sm text-gray-500">{myTasks.length} งาน</p>
+                      </div>
+                    </div>
+                    {userRole === 'Leader' && (
+                      <button 
+                        onClick={() => setShowCreateTaskModal(true)}
+                        className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span>สร้างงาน</span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {myTasks.length > 0 ? (
+                      myTasks.map(task => renderTaskCard(task, true))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <p className="text-sm">ยังไม่มีงานที่มอบหมายให้คุณ</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Other Members Tasks */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      <span>Create Task</span>
-                    </button>
-                    
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">งานสมาชิกอื่น</h3>
+                      <p className="text-sm text-gray-500">{otherTasks.length} งาน</p>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="space-y-3">
-                  {myTasks.map(task => renderTaskCard(task, true))}
-                </div>
-              </div>
-
-              {/* Others Member Task Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Others Member Task</h2>
-                <div className="space-y-3">
-                  {otherTasks.map(task => renderTaskCard(task, false))}
+                  
+                  <div className="space-y-2">
+                    {otherTasks.length > 0 ? (
+                      otherTasks.map(task => renderTaskCard(task, false))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <p className="text-sm">ยังไม่มีงานของสมาชิกคนอื่น</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1023,7 +1901,7 @@ export default function ProjectDetailPage() {
                     
                     <div className="flex items-center space-x-4">
                       <span className="w-20 text-xs">Planning</span>
-                      <div className="flex-1 bg-gray-200 rounded h-4 ">
+                      <div className="flex-1 bg-gray-200 rounded h-4">
                         <div className="bg-pink-400 h-4 rounded" style={{ width: '30%' }}></div>
                       </div>
                     </div>
@@ -1047,73 +1925,154 @@ export default function ProjectDetailPage() {
 
               {/* Members */}
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">สมาชิก</h3>
-                  <div className="flex items-center space-x-2">
-                    <button 
-                      onClick={() => setShowAddMemberModal(true)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm flex items-center space-x-1"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      <span>Add</span>
-                    </button>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">สมาชิกทีม</h3>
+                      <p className="text-sm text-gray-500">จัดการสมาชิกในโปรเจ็กต์</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 text-sm px-3 py-2 rounded-full font-medium border border-blue-300">
+                      {projectMembers.length} สมาชิก
+                    </span>
                     <button
                       onClick={refreshProjectMembers}
                       disabled={membersLoading}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-                      title="Refresh members"
+                      title="รีเฟรชข้อมูลสมาชิก"
                     >
                       <svg className={`w-4 h-4 text-gray-600 ${membersLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     </button>
-                    <span className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
-                      {projectMembers.length} คน
-                    </span>
+                    {userRole === 'Leader' && (
+                      <button 
+                        onClick={() => setShowAddMemberModal(true)}
+                        className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2 shadow-md hover:shadow-lg transition-all"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        <span>เพิ่มสมาชิก</span>
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="space-y-3">
+                
+                <div className="space-y-2">
                   {membersLoading ? (
-                    <div className="text-center text-gray-500 py-4">
-                      <div className="animate-spin mx-auto w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
-                      <p className="text-sm">กำลังโหลดข้อมูลสมาชิก...</p>
+                    <div className="text-center text-gray-500 py-12">
+                      <div className="animate-spin mx-auto w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mb-4"></div>
+                      <p className="text-base font-medium">กำลังโหลดข้อมูลสมาชิก</p>
+                      <p className="text-sm text-gray-400">กรุณารอสักครู่...</p>
                     </div>
                   ) : projectMembers.length > 0 ? (
-                    projectMembers.map((member) => (
-                      <div key={member.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                          <span className="text-gray-600 text-sm font-medium">
-                            {(member.userInfo?.username || `User ${member.user_id_in_project}`).charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900 text-sm">
-                            {member.userInfo?.username || `User ${member.user_id_in_project}`}
+                    projectMembers.map((member) => {
+                      const getRoleColor = (role: string) => {
+                        switch (role.toLowerCase()) {
+                          case 'leader': return 'bg-purple-100 text-purple-800 border-purple-200';
+                          case 'manager': return 'bg-blue-100 text-blue-800 border-blue-200';
+                          case 'developer': return 'bg-green-100 text-green-800 border-green-200';
+                          default: return 'bg-gray-100 text-gray-800 border-gray-200';
+                        }
+                      };
+
+                      const getAvatarColor = (role: string) => {
+                        switch (role.toLowerCase()) {
+                          case 'leader': return 'bg-gradient-to-br from-purple-400 to-purple-600';
+                          case 'manager': return 'bg-gradient-to-br from-blue-400 to-blue-600';
+                          case 'developer': return 'bg-gradient-to-br from-green-400 to-green-600';
+                          default: return 'bg-gradient-to-br from-gray-400 to-gray-600';
+                        }
+                      };
+
+                      const isRemoving = removeMemberLoading === (member.userInfo?.documentId || member.userInfo?.id || member.user_id_in_project);
+                      
+                      return (
+                        <div key={member.id} className="group bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg p-3 transition-all duration-200 hover:shadow-sm">
+                          <div className="flex items-center space-x-3">
+                            {/* Avatar */}
+                            <div className={`w-8 h-8 ${getAvatarColor(member.role_in_project)} rounded-full flex items-center justify-center text-white text-sm font-semibold`}>
+                              {(member.userInfo?.username || `User ${member.user_id_in_project}`).charAt(0).toUpperCase()}
+                            </div>
+                            
+                            {/* Member Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <h4 className="font-medium text-gray-900 text-sm truncate">
+                                  {member.userInfo?.username || `User ${member.user_id_in_project}`}
+                                </h4>
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${getRoleColor(member.role_in_project)}`}>
+                                  {member.role_in_project}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-3 text-xs text-gray-500">
+                                <span>ID: {member.user_id_in_project}</span>
+                                <span>•</span>
+                                <span>{formatDate(member.join_date)}</span>
+                                {member.userInfo?.email && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="truncate max-w-20">{member.userInfo.email}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Actions */}
+                            <div className="flex items-center space-x-2">
+                              {userRole === 'Leader' && (
+                                <button
+                                  onClick={() => handleRemoveMember(
+                                    member, 
+                                    member.userInfo?.username || `User ${member.user_id_in_project}`
+                                  )}
+                                  disabled={isRemoving}
+                                  className="p-2 hover:bg-red-100 rounded-lg text-red-600 hover:text-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group-hover:bg-red-50"
+                                  title="ลบสมาชิกออกจากโปรเจ็กต์"
+                                >
+                                  {isRemoving ? (
+                                    <div className="animate-spin w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
+                                  ) : (
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  )}
+                                </button>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {member.role_in_project} • เข้าร่วมเมื่อ {formatDate(member.join_date)}
-                          </div>
                         </div>
-                        <button
-                          onClick={() => handleRemoveMember(
-                            member.id, 
-                            member.userInfo?.username || `User ${member.user_id_in_project}`
-                          )}
-                          className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-700 transition-colors"
-                          title="Remove member"
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+                      <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                        </div>
+                        <h3 className="font-semibold text-gray-700 mb-2">ยังไม่มีสมาชิกในโปรเจ็กต์</h3>
+                        <p className="text-sm text-gray-500 mb-4 max-w-sm">
+                          เริ่มต้นโดยการเพิ่มสมาชิกเข้ามาร่วมงานในโปรเจ็กต์นี้
+                        </p>
+                        <button 
+                          onClick={() => setShowAddMemberModal(true)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm flex items-center space-x-2 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                           </svg>
+                          <span>เพิ่มสมาชิกแรก</span>
                         </button>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center text-gray-500 py-4">
-                      <p>ไม่พบสมาชิกในโปรเจ็กต์นี้</p>
-                      <p className="text-sm">หรือกำลังโหลดข้อมูล...</p>
                     </div>
                   )}
                 </div>
@@ -1123,17 +2082,25 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
-      {/* Create Task Modal */}
-      <CreateTaskModal 
-        isOpen={showCreateTaskModal}
-        onClose={() => setShowCreateTaskModal(false)}
-        onSubmit={handleCreateTask}
-        projectMembers={projectMembers}
-        isLoading={createTaskLoading}
-      />
+      {/* Create Task Modal - Only for Leaders */}
+      {userRole === 'Leader' && (
+        <CreateTaskModal 
+          isOpen={showCreateTaskModal}
+          onClose={() => setShowCreateTaskModal(false)}
+          onSubmit={handleCreateTask}
+          projectMembers={projectMembers}
+          isLoading={createTaskLoading}
+        />
+      )}
 
-      {/* Add Member Modal */}
-      <AddMemberModal />
+      {/* Add Member Modal - Only for Leaders */}
+      {userRole === 'Leader' && <AddMemberModal />}
+
+      {/* Task Manage Modal - Only for Leaders */}
+      {userRole === 'Leader' && <TaskManageModal />}
+
+      {/* Project Manage Modal - Only for Leaders */}
+      {userRole === 'Leader' && <ProjectManageModal />}
     </div>
   );
 }

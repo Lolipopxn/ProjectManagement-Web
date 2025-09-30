@@ -141,6 +141,16 @@ export default function CreateProjectPage() {
     return user ? user.username : 'Unknown User';
   };
 
+  // ฟังก์ชันสำหรับแปลงวันที่ให้อ่านง่าย
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'ไม่ระบุ';
+    return new Date(dateString).toLocaleDateString('th-TH', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+  };
+
   // ฟังก์ชันกรองผู้ใช้ตามคำค้นหา
   const filteredUsers = users.filter(user => 
     user.id !== currentUserId && // กรองตัวเองออก
@@ -193,37 +203,100 @@ export default function CreateProjectPage() {
     }
 
     try {
-      // ส่งข้อมูลไปยัง API route
+      // สร้าง slug และเตรียมข้อมูลสำหรับโปรเจ็กต์
+      const projectSlug = uuidv4();
+      const currentDateTime = new Date().toISOString();
+
+      // ส่งข้อมูลไปยัง API route พร้อมข้อมูลครบถ้วน
       const response = await axios.post('/api/projects/create', {
         project_name: formData.project_name,
         description: formData.description,
         start_date: formData.start_date,
         end_date: formData.end_date,
         project_status: formData.project_status,
-        slug: uuidv4(),
+        slug: projectSlug,
+        created_by_user_id: currentUserId, // เพิ่ม user ID ของผู้สร้าง
+        created_by_user: currentUserId, // เพิ่มฟิลด์สำรอง
+        createdAt: currentDateTime,
+        updatedAt: currentDateTime,
+        publishedAt: currentDateTime,
+        // เพิ่มข้อมูล metadata
+        metadata: {
+          totalMembers: projectMembers.length + 1, // รวมผู้สร้างด้วย
+          membersList: [
+            {
+              userId: currentUserId,
+              role: 'Leader',
+              isCreator: true
+            },
+            ...projectMembers.map(member => ({
+              userId: member.userId,
+              role: member.roleInProject,
+              isCreator: false
+            }))
+          ]
+        }
       });
 
       console.log('Response status:', response.status); // Debug log
       console.log('Response data:', response.data); // Debug log
+      console.log('Project creation summary:', {
+        projectName: formData.project_name,
+        totalMembers: projectMembers.length + 1,
+        memberRoles: [
+          { userId: currentUserId, role: 'Leader', isCreator: true },
+          ...projectMembers.map(m => ({ userId: m.userId, role: m.roleInProject, isCreator: false }))
+        ],
+        dateRange: `${formData.start_date} to ${formData.end_date}`,
+        status: formData.project_status
+      });
 
       if (response.status === 200) {
         // ใน Strapi v5 ใช้ documentId แทน id
         const createdProjectDocumentId = response.data.project?.data?.documentId;
         const createdProjectId = response.data.project?.data?.id; // เก็บ id ไว้สำหรับ project_members
         
+        console.log('Project creation response data:', {
+          fullResponse: response.data,
+          documentId: createdProjectDocumentId,
+          numericId: createdProjectId,
+          currentUserId: currentUserId
+        });
+        
         if (createdProjectDocumentId && currentUserId) {
           try {
             console.log(`Adding project creator as leader: ${currentUserId}`);
+            console.log('Project data for creator:', {
+              project_id_number: createdProjectId,
+              user_id_in_project: currentUserId,
+              project_document_id: createdProjectDocumentId
+            });
             
             // เพิ่มผู้สร้างโปรเจ็กต์เป็นหัวหน้าโปรเจ็กต์ก่อน
-            // ใช้ createdProjectId (numeric ID) สำหรับ project_members table
-            const creatorResponse = await axios.post('/api/project-members/new-fields', {
-              project_id_number: createdProjectId, // ใช้ numeric ID สำหรับ project_members
-              user_id_in_project: currentUserId,
-              role_in_project: 'leader', // ผู้สร้างเป็นหัวหน้าโปรเจ็กต์
-              join_date: new Date().toISOString(),
-              project_document_id: createdProjectDocumentId // ใช้ document ID จาก Strapi v5
-            });
+            // ส่งข้อมูลตาม project-member schema ที่ถูกต้อง
+            const creatorMemberData = {
+              role_in_project: 'Leader', // string, required
+              join_date: currentDateTime, // datetime, required
+              project_id_number: createdProjectId, // integer, required
+              user_id_in_project: currentUserId, // integer, required
+              project_document_id: createdProjectDocumentId // string, required
+              // role enumeration และ relations จะถูกจัดการใน API route
+            };
+            
+            console.log('Creator member data to send:', JSON.stringify(creatorMemberData, null, 2));
+            
+            // Validate data before sending
+            if (!creatorMemberData.project_id_number || !creatorMemberData.user_id_in_project || 
+                !creatorMemberData.role_in_project || !creatorMemberData.project_document_id) {
+              throw new Error(`Missing required fields in creator data: ${JSON.stringify({
+                project_id_number: !!creatorMemberData.project_id_number,
+                user_id_in_project: !!creatorMemberData.user_id_in_project,
+                role_in_project: !!creatorMemberData.role_in_project,
+                project_document_id: !!creatorMemberData.project_document_id
+              })}`);
+            }
+            
+            const creatorResponse = await axios.post('/api/project-members', creatorMemberData);
             
             console.log('Successfully added project creator as leader:', creatorResponse.data);
             
@@ -233,35 +306,74 @@ export default function CreateProjectPage() {
               
               for (const member of projectMembers) {
                 try {
-                  const memberResponse = await axios.post('/api/project-members/new-fields', {
-                    project_id_number: createdProjectId,
-                    user_id_in_project: member.userId,
-                    role_in_project: member.roleInProject,
-                    join_date: new Date().toISOString(),
-                    project_document_id: createdProjectDocumentId // เพิ่ม document ID
-                  });
+                  // เตรียมข้อมูลสมาชิกตาม schema ที่ถูกต้อง
+                  const memberData = {
+                    role_in_project: member.roleInProject, // string, required  
+                    join_date: currentDateTime, // datetime, required
+                    project_id_number: createdProjectId, // integer, required
+                    user_id_in_project: member.userId, // integer, required
+                    project_document_id: createdProjectDocumentId // string, required
+                    // role enumeration และ relations จะถูกจัดการใน API route
+                  };
+                  
+                  console.log(`Attempting to add member:`, memberData);
+                  
+                  const memberResponse = await axios.post('/api/project-members', memberData);
                   
                   console.log(`Successfully added member ${member.userId}:`, memberResponse.data);
                 } catch (memberError: any) {
-                  console.error(`Failed to add member ${member.userId}:`, memberError.response?.data || memberError.message);
+                  console.error(`Failed to add member ${member.userId}:`, {
+                    error: memberError.message,
+                    status: memberError.response?.status,
+                    data: memberError.response?.data
+                  });
+                  
+                  // ยังคงดำเนินการต่อแม้จะเพิ่มสมาชิกคนหนึ่งไม่ได้
                 }
               }
             }
             
             console.log('Finished processing all project members');
+            console.log('Project creation completed successfully:', {
+              projectId: createdProjectId,
+              documentId: createdProjectDocumentId,
+              totalMembersAdded: projectMembers.length + 1,
+              creatorAdded: true,
+              additionalMembersAdded: projectMembers.length
+            });
           } catch (memberError: any) {
-            console.error('Error in member processing:', memberError);
+            console.error('Error in member processing:', {
+              error: memberError.message,
+              status: memberError.response?.status,
+              data: memberError.response?.data,
+              url: memberError.config?.url
+            });
+            
+            // แสดง error ให้ผู้ใช้เห็นว่าไม่สามารถเพิ่มสมาชิกได้
+            if (memberError.response?.status === 404) {
+              setError('โปรเจคสร้างสำเร็จแล้ว แต่ไม่สามารถเพิ่มสมาชิกได้ เนื่องจากไม่พบ API endpoint สำหรับเพิ่มสมาชิก');
+            } else {
+              setError(`โปรเจคสร้างสำเร็จแล้ว แต่เกิดข้อผิดพลาดในการเพิ่มสมาชิก: ${memberError.response?.data?.message || memberError.message}`);
+            }
             // ไม่ให้ error นี้หยุดการสร้างโปรเจ็กต์
           }
         }
 
-        // แสดงข้อความสำเร็จ
-        setSuccess(`สร้างโปรเจ็กต์สำเร็จแล้ว! Document ID: ${createdProjectDocumentId} กำลังนำคุณไปหน้าโปรเจ็กต์...`);
+        // แสดงข้อความสำเร็จพร้อมสรุปข้อมูล
+        const totalMembers = projectMembers.length + 1; // รวมผู้สร้างด้วย
+        const successMessage = `สร้างโปรเจ็กต์ "${formData.project_name}" สำเร็จแล้ว! 
+          รวมสมาชิก ${totalMembers} คน 
+          คุณเป็น Project Leader 
+          สถานะ: ${formData.project_status}
+          ระยะเวลา: ${formatDate(formData.start_date)} - ${formatDate(formData.end_date)}
+        กำลังนำคุณไปหน้าโปรเจ็กต์...`;
         
-        // รอ 2 วินาทีแล้วไปหน้าโปรเจ็กต์ที่สร้าง (ใช้ documentId)
+        setSuccess(successMessage);
+        
+        // รอ 3 วินาทีแล้วไปหน้าโปรเจ็กต์ที่สร้าง (ใช้ documentId)
         setTimeout(() => {
           router.push(`/projects/${createdProjectDocumentId}`);
-        }, 2000);
+        }, 3000);
       } else {
         setError('ไม่สามารถสร้างโปรเจ็กต์ได้ กรุณาลองใหม่อีกครั้ง');
       }
@@ -616,31 +728,61 @@ export default function CreateProjectPage() {
                 )}
 
                 {/* Summary */}
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
                     </svg>
-                    <span className="font-medium text-blue-900">
-                      สรุปสมาชิกโปรเจ็กต์
+                    <span className="font-semibold text-blue-900">
+                      สรุปข้อมูลโปรเจ็กต์
                     </span>
                   </div>
-                  <div className="text-sm text-blue-800">
-                    <div className="mb-1">
-                      <strong>จำนวนสมาชิกทั้งหมด:</strong> {projectMembers.length + 1} คน
+                  <div className="text-sm text-blue-800 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <strong>จำนวนสมาชิก:</strong> {projectMembers.length + 1} คน
+                      </div>
+                      <div>
+                        <strong>สถานะ:</strong> {
+                          formData.project_status === 'active' ? 'กำลังดำเนินการ' :
+                          formData.project_status === 'completed' ? 'เสร็จสิ้น' :
+                          formData.project_status === 'on-hold' ? 'พักการทำงาน' :
+                          formData.project_status === 'cancelled' ? 'ยกเลิก' : formData.project_status
+                        }
+                      </div>
                     </div>
-                    <div className="space-y-1 text-xs text-blue-700">
-                      <div>• คุณ - หัวหน้าโปรเจ็กต์ (เพิ่มอัตโนมัติ)</div>
-                      {projectMembers.length > 0 && 
-                        projectMembers.map((member, index) => (
-                          <div key={member.userId}>
-                            • {getUserName(member.userId)} - {member.roleInProject}
-                          </div>
-                        ))
-                      }
-                      {projectMembers.length === 0 && (
-                        <div className="text-gray-500">• ยังไม่มีสมาชิกเพิ่มเติม</div>
-                      )}
+                    
+                    {formData.start_date && formData.end_date && (
+                      <div>
+                        <strong>ระยะเวลา:</strong> {formatDate(formData.start_date)} - {formatDate(formData.end_date)}
+                      </div>
+                    )}
+                    
+                    <div className="border-t border-blue-200 pt-2 mt-2">
+                      <div className="font-medium mb-1">รายชื่อสมาชิก:</div>
+                      <div className="space-y-1 text-xs text-blue-700">
+                        <div className="flex items-center space-x-1">
+                          <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                          <span>คุณ - หัวหน้าโปรเจ็กต์ (ผู้สร้าง)</span>
+                        </div>
+                        {projectMembers.length > 0 && 
+                          projectMembers.map((member, index) => (
+                            <div key={member.userId} className="flex items-center space-x-1">
+                              <span className={`w-2 h-2 rounded-full ${
+                                member.roleInProject.toLowerCase() === 'leader' ? 'bg-purple-400' :
+                                member.roleInProject.toLowerCase() === 'developer' ? 'bg-green-400' :
+                                member.roleInProject.toLowerCase() === 'designer' ? 'bg-pink-400' :
+                                member.roleInProject.toLowerCase() === 'tester' ? 'bg-orange-400' :
+                                'bg-gray-400'
+                              }`}></span>
+                              <span>{getUserName(member.userId)} - {member.roleInProject}</span>
+                            </div>
+                          ))
+                        }
+                        {projectMembers.length === 0 && (
+                          <div className="text-gray-500 italic">• ยังไม่มีสมาชิกเพิ่มเติม</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

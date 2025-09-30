@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     const currentUser = userResponse.data;
 
-    // เตรียมข้อมูลสำหรับสร้างโปรเจ็กต์ - รวม user ID เข้าไปตั้งแต่ตอนสร้าง
+    // เตรียมข้อมูลสำหรับสร้างโปรเจ็กต์ - รวม user ID และ relations
     const projectPayload = {
       project_name: projectData.project_name,
       description: projectData.description,
@@ -32,8 +32,9 @@ export async function POST(request: NextRequest) {
       end_date: projectData.end_date,
       project_status: projectData.project_status,
       created_by_user: currentUser.id, // ใส่ user ID ของผู้สร้างลงในฟิลด์ใหม่
-      publishedAt: new Date().toISOString(),
-      slug: projectData.slug
+      slug: projectData.slug,
+      // เพิ่ม relation สำหรับ created_by_user_id
+      created_by_user_id: { connect: [currentUser.documentId] }
     };
 
     console.log('Creating project with payload:', projectPayload); // Debug log
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Project created successfully:', response.data); // Debug log
 
+    // ไม่สร้าง project member ที่นี่ เพราะจะถูกจัดการในหน้า create project แล้ว
     return NextResponse.json({ 
       project: response.data,
       success: true 

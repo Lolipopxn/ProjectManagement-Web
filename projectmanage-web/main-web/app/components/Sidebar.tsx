@@ -86,24 +86,36 @@ export default function Sidebar() {
 
   // เรียง task ตาม due_date ก่อน แล้วค่อยจัดกลุ่ม เพื่อลิสต์สวย ๆ
   const groupedTasks = useMemo(() => {
-    const byProject: Record<string, Task[]> = {};
+    const byProject: Record<string, { tasks: Task[], projectInfo: Project | null }> = {};
     const sorted = [...tasks].sort((a, b) => {
       const ta = new Date(a.due_date).getTime();
       const tb = new Date(b.due_date).getTime();
       return (Number.isNaN(ta) ? Infinity : ta) - (Number.isNaN(tb) ? Infinity : tb);
     });
+    
     for (const t of sorted) {
-      if (t.project?.project_name) {
-        const name = t.project.project_name;
-        if (!byProject[name]) byProject[name] = [];
-        byProject[name].push(t);
+      // หา project ที่ตรงกับ task โดยเช็คจาก project_document_id หรือ project_id_number
+      const matchedProject = projects.find(p => 
+        (t.project_document_id && (p.documentId === t.project_document_id || p.id.toString() === t.project_document_id)) ||
+        (t.project_id_number && p.id === t.project_id_number)
+      );
+      
+      if (matchedProject) {
+        const projectKey = matchedProject.documentId ?? matchedProject.id.toString();
+        if (!byProject[projectKey]) {
+          byProject[projectKey] = { tasks: [], projectInfo: matchedProject };
+        }
+        byProject[projectKey].tasks.push(t);
       } else {
-        if (!byProject['tasks']) byProject['tasks'] = [];
-        byProject['tasks'].push(t);
+        // ถ้าหา project ไม่เจอให้ใส่ในกลุ่ม no-project
+        if (!byProject['no-project']) {
+          byProject['no-project'] = { tasks: [], projectInfo: null };
+        }
+        byProject['no-project'].tasks.push(t);
       }
     }
     return byProject;
-  }, [tasks]);
+  }, [tasks, projects]);
 
   const totalTasks = tasks.length;
   const totalProjects = projects.length;
@@ -233,14 +245,14 @@ export default function Sidebar() {
                   ))}
                 </div>
               ) : Object.keys(groupedTasks).length > 0 ? (
-                Object.entries(groupedTasks).map(([projectName, projectTasks]) => {
-                  // ลิงก์โปรเจ็กต์: ใช้ documentId จาก task.project ถ้ามี
-                  const sample = projectTasks[0]?.project;
-                  const projHref = sample ? `/projects/${sample.documentId ?? sample.id}` : undefined;
+                Object.entries(groupedTasks).map(([projectKey, projectData]) => {
+                  // ลิงก์โปรเจ็กต์: ใช้ documentId จาก projectInfo ถ้ามี
+                  const projHref = projectData.projectInfo ? `/projects/${projectData.projectInfo.documentId ?? projectData.projectInfo.id}` : undefined;
+                  const projectName = projectData.projectInfo?.project_name ?? 'งานอื่นๆ';
 
                   return (
-                    <div key={projectName} className="bg-gray-50 p-2 rounded-lg">
-                      {projectName !== 'tasks' && (
+                    <div key={projectKey} className="bg-gray-50 p-2 rounded-lg">
+                      {projectKey !== 'no-project' && (
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center space-x-2 text-blue-600 font-medium text-sm px-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,13 +266,13 @@ export default function Sidebar() {
                               <span>{projectName}</span>
                             )}
                           </div>
-                          <span className="text-[11px] text-gray-500 mr-2">ทั้งหมด {projectTasks.length} งาน</span>
+                          <span className="text-[11px] text-gray-500 mr-2">ทั้งหมด {projectData.tasks.length} งาน</span>
                         </div>
                       )}
 
                       <div className="space-y-0.5">
-                        {projectTasks.map((task) => {
-                          const projectKey = task.project?.documentId ?? task.project?.id ?? task.project_document_id;
+                        {projectData.tasks.map((task) => {
+                          const projectKey = projectData.projectInfo?.documentId ?? projectData.projectInfo?.id ?? task.project_document_id;
                           const taskKey = task.documentId ?? task.id;
                           const href = `/projects/${projectKey}/tasks/${taskKey}`;
                           const isOverdue =

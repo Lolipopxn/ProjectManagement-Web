@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import TaskStatusIcon from '../components/TaskStatusIcon';
 
 // Types
 interface User {
@@ -209,74 +210,36 @@ export default function DashboardPage() {
     }
   };
 
-  // ฟังก์ชันกำหนดสีของสถานะ
+  // Import color utility
+  const { getTaskStatusConfig } = require('../utils/taskStatusColors');
+  
+  // ฟังก์ชันกำหนดสีของสถานะ - ใช้ utility function
   const getStatusConfig = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'turn in':
-      case 'completed':
-        return {
-          text: 'เสร็จแล้ว',
-          bgColor: 'bg-green-100',
-          textColor: 'text-green-800',
-          badgeColor: 'bg-green-500'
-        };
-      case 'not turn in':
-      case 'pending':
-        return {
-          text: 'ยังไม่เสร็จ',
-          bgColor: 'bg-gray-100',
-          textColor: 'text-gray-800',
-          badgeColor: 'bg-gray-400'
-        };
-      case 'overdue':
-        return {
-          text: 'เลยกำหนด',
-          bgColor: 'bg-red-100',
-          textColor: 'text-red-800',
-          badgeColor: 'bg-red-500'
-        };
-      default:
-        return {
-          text: 'ยังไม่เสร็จ',
-          bgColor: 'bg-gray-100',
-          textColor: 'text-gray-800',
-          badgeColor: 'bg-gray-400'
-        };
-    }
+    const config = getTaskStatusConfig(status);
+    return {
+      text: config.text,
+      bgColor: config.lightBgColor,
+      textColor: config.textColor,
+      badgeColor: config.badgeColor
+    };
   };
 
   // ฟังก์ชันแสดง task card แบบกระชับ พร้อมสีตามประเภทคอลัมน์
-  const renderCompactTaskCard = (task: Task, columnType: 'overdue' | 'urgent' | 'normal' | 'completed') => {
+  const renderCompactTaskCard = (task: Task, columnType: 'overdue' | 'urgent' | 'normal' | 'pending_review' | 'rejected' | 'completed') => {
     const statusConfig = getStatusConfig(task.task_status);
     const daysRemaining = getDaysRemaining(task.due_date);
     const countdown = getDetailedCountdown(task.due_date);
-    const isCompleted = task.task_status.toLowerCase() === 'turn in';
+    const isCompleted = task.task_status.toLowerCase() === 'completed';
+    const isPendingReview = task.task_status.toLowerCase() === 'pending_review' || task.task_status.toLowerCase() === 'turn in';
+    const isRejected = task.task_status.toLowerCase() === 'rejected';
 
-    // กำหนดสีตามประเภทคอลัมน์ - เฉพาะส่วนเวลา
-    let statusIndicatorColor = '';
-    let countdownStyle = '';
+    // Import column type colors utility
+    const { getColumnTypeColors } = require('../utils/taskStatusColors');
     
-    switch (columnType) {
-      case 'overdue':
-        statusIndicatorColor = 'bg-red-500';
-        countdownStyle = 'bg-red-100 text-red-700';
-        break;
-      case 'urgent':
-        statusIndicatorColor = 'bg-orange-500';
-        countdownStyle = 'bg-orange-100 text-orange-700';
-        break;
-      case 'normal':
-        statusIndicatorColor = 'bg-blue-500';
-        countdownStyle = 'bg-blue-100 text-blue-700';
-        break;
-      case 'completed':
-        statusIndicatorColor = 'bg-green-500';
-        countdownStyle = 'bg-green-100 text-green-700';
-        break;
-      default:
-        statusIndicatorColor = 'bg-gray-400';
-        countdownStyle = 'bg-gray-100 text-gray-700';
-    }
+    // กำหนดสีตามประเภทคอลัมน์ - ใช้ utility function
+    const columnColors = getColumnTypeColors(columnType);
+    const statusIndicatorColor = columnColors.statusIndicatorColor;
+    const countdownStyle = columnColors.countdownStyle;
 
     return (
       <div 
@@ -309,17 +272,29 @@ export default function DashboardPage() {
           })}
         </div>
         
-        {/* Countdown - เฉพาะงานที่ยังไม่เสร็จ */}
-        {!isCompleted && (
-          <div className={`text-center py-2 px-3 rounded text-xs font-medium ${countdownStyle}`}>
-            {countdown.isOverdue ? (columnType === 'overdue' ? `เลยกำหนดมา ${countdown.text}` : `เลย ${countdown.text}`) : `เหลือ ${countdown.text}`}
-          </div>
-        )}
-        
-        {/* Status for completed tasks */}
+        {/* Status and Countdown */}
         {isCompleted && (
           <div className={`text-center py-2 px-3 rounded text-xs font-medium ${countdownStyle}`}>
             ✓ เสร็จแล้ว
+          </div>
+        )}
+        
+        {isPendingReview && (
+          <div className={`text-center py-2 px-3 rounded text-xs font-medium ${countdownStyle}`}>
+            ⏳ รอตรวจสอบ
+          </div>
+        )}
+        
+        {isRejected && (
+          <div className={`text-center py-2 px-3 rounded text-xs font-medium ${countdownStyle}`}>
+            ❌ ไม่ผ่าน - ต้องแก้ไข
+          </div>
+        )}
+        
+        {/* Countdown - เฉพาะงานที่ยังไม่เสร็จ, ไม่รอตรวจ, ไม่ถูกปฏิเสธ */}
+        {!isCompleted && !isPendingReview && !isRejected && (
+          <div className={`text-center py-2 px-3 rounded text-xs font-medium ${countdownStyle}`}>
+            {countdown.isOverdue ? (columnType === 'overdue' ? `เลยกำหนดมา ${countdown.text}` : `เลย ${countdown.text}`) : `เหลือ ${countdown.text}`}
           </div>
         )}
       </div>
@@ -363,26 +338,39 @@ export default function DashboardPage() {
     );
   }
 
-  // สถิติสรุป - คำนวณให้ตรงกับการแบ่งช่อง
-  const completedTasks = tasks.filter(task => task.task_status.toLowerCase() === 'turn in');
+  // สถิติสรุป - คำนวณให้ตรงกับการแบ่งช่องตามสถานะใหม่
+  const completedTasks = tasks.filter(task => task.task_status.toLowerCase() === 'completed');
   
-  // งานที่เลยกำหนด (ยังไม่เสร็จ + เลยกำหนดแล้ว)
+  const pendingReviewTasks = tasks.filter(task => 
+    task.task_status.toLowerCase() === 'pending_review' || task.task_status.toLowerCase() === 'turn in'
+  );
+  
+  const rejectedTasks = tasks.filter(task => task.task_status.toLowerCase() === 'rejected');
+  
+  // งานที่เลยกำหนด (ยังไม่ส่ง + เลยกำหนดแล้ว)
   const overdueTasksOnly = tasks.filter(task => {
-    if (task.task_status.toLowerCase() === 'turn in') return false;
+    const isNotSubmitted = task.task_status.toLowerCase() === 'not turn in' || 
+                          task.task_status.toLowerCase() === 'pending' ||
+                          task.task_status.toLowerCase() === 'overdue';
+    if (!isNotSubmitted) return false;
     const remaining = getDaysRemaining(task.due_date);
-    return remaining.status === 'overdue';
+    return remaining.status === 'overdue' || task.task_status.toLowerCase() === 'overdue';
   });
   
-  // งานที่ใกล้ถึงกำหนด (ยังไม่เสร็จ + เหลือเวลา 0-3 วัน)
+  // งานที่ใกล้ถึงกำหนด (ยังไม่ส่ง + เหลือเวลา 0-3 วัน)
   const urgentAndTodayTasks = tasks.filter(task => {
-    if (task.task_status.toLowerCase() === 'turn in') return false;
+    const isNotSubmitted = task.task_status.toLowerCase() === 'not turn in' || 
+                          task.task_status.toLowerCase() === 'pending';
+    if (!isNotSubmitted) return false;
     const remaining = getDaysRemaining(task.due_date);
     return remaining.status === 'urgent' || remaining.status === 'today';
   });
   
-  // งานที่ยังมีเวลา (ยังไม่เสร็จ + เหลือเวลามากกว่า 3 วัน)
+  // งานที่ยังมีเวลา (ยังไม่ส่ง + เหลือเวลามากกว่า 3 วัน)
   const normalTasks = tasks.filter(task => {
-    if (task.task_status.toLowerCase() === 'turn in') return false;
+    const isNotSubmitted = task.task_status.toLowerCase() === 'not turn in' || 
+                          task.task_status.toLowerCase() === 'pending';
+    if (!isNotSubmitted) return false;
     const remaining = getDaysRemaining(task.due_date);
     return remaining.status === 'normal' || remaining.status === 'soon';
   });
@@ -418,17 +406,17 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Statistics Cards - Compact Version */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {/* Statistics Cards - Updated with new statuses */}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             {/* Overdue Tasks */}
             <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow duration-200 border border-red-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-red-700 mb-1">เลยกำหนด</h3>
+                  <h3 className="text-sm font-bold text-red-700 mb-1">เลยกำหนด</h3>
                   <p className="text-2xl font-bold text-red-600">{overdueTasksOnly.length}</p>
                 </div>
-                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                  <div className="w-5 h-5 bg-red-600 rounded"></div>
+                <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-red-600 rounded"></div>
                 </div>
               </div>
             </div>
@@ -437,24 +425,50 @@ export default function DashboardPage() {
             <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow duration-200 border border-orange-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-orange-700 mb-1">ใกล้กำหนด</h3>
+                  <h3 className="text-sm font-bold text-orange-700 mb-1">ใกล้กำหนด</h3>
                   <p className="text-2xl font-bold text-orange-600">{urgentAndTodayTasks.length}</p>
                 </div>
-                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <div className="w-5 h-5 bg-orange-600 rounded"></div>
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-orange-600 rounded"></div>
                 </div>
               </div>
             </div>
 
             {/* Normal Tasks - ยังมีเวลา */}
+            <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow duration-200 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-700 mb-1">ยังมีเวลา</h3>
+                  <p className="text-2xl font-bold text-gray-600">{normalTasks.length}</p>
+                </div>
+                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-gray-600 rounded"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pending Review Tasks */}
             <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow duration-200 border border-blue-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-blue-700 mb-1">ยังมีเวลา</h3>
-                  <p className="text-2xl font-bold text-blue-600">{normalTasks.length}</p>
+                  <h3 className="text-sm font-bold text-blue-700 mb-1">รอตรวจสอบ</h3>
+                  <p className="text-2xl font-bold text-blue-600">{pendingReviewTasks.length}</p>
                 </div>
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <div className="w-5 h-5 bg-blue-600 rounded"></div>
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-blue-600 rounded"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rejected Tasks */}
+            <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow duration-200 border border-orange-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-orange-700 mb-1">ไม่ผ่าน</h3>
+                  <p className="text-2xl font-bold text-orange-600">{rejectedTasks.length}</p>
+                </div>
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-orange-600 rounded"></div>
                 </div>
               </div>
             </div>
@@ -463,27 +477,28 @@ export default function DashboardPage() {
             <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow duration-200 border border-green-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-green-700 mb-1">เสร็จแล้ว</h3>
+                  <h3 className="text-sm font-bold text-green-700 mb-1">เสร็จแล้ว</h3>
                   <p className="text-2xl font-bold text-green-600">{completedTasks.length}</p>
                 </div>
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <div className="w-5 h-5 bg-green-600 rounded"></div>
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-green-600 rounded"></div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Four Columns Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Six Columns Section - Updated with new statuses */}
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
             {/* งานที่เลยกำหนด */}
-            <div className="bg-white rounded-lg shadow-sm p-5">
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h3 className="text-sm font-bold text-red-700 mb-3 border-b border-red-200 pb-2">เลยกำหนด</h3>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {overdueTasksOnly.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                      <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+                  <div className="text-center py-6">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
                     </div>
-                    <p className="text-gray-500 text-sm">ไม่มีงานค้าง</p>
+                    <p className="text-gray-500 text-xs">ไม่มีงานค้าง</p>
                   </div>
                 ) : (
                   overdueTasksOnly.map(task => renderCompactTaskCard(task, 'overdue'))
@@ -492,14 +507,15 @@ export default function DashboardPage() {
             </div>
 
             {/* งานที่ใกล้ถึงกำหนด */}
-            <div className="bg-white rounded-lg shadow-sm p-5">
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h3 className="text-sm font-bold text-orange-700 mb-3 border-b border-orange-200 pb-2">ใกล้กำหนด</h3>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {urgentAndTodayTasks.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                      <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+                  <div className="text-center py-6">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
                     </div>
-                    <p className="text-gray-500 text-sm">ไม่มีงานเร่งด่วน</p>
+                    <p className="text-gray-500 text-xs">ไม่มีงานเร่งด่วน</p>
                   </div>
                 ) : (
                   urgentAndTodayTasks.map(task => renderCompactTaskCard(task, 'urgent'))
@@ -508,14 +524,15 @@ export default function DashboardPage() {
             </div>
 
             {/* งานที่ยังมีเวลา */}
-            <div className="bg-white rounded-lg shadow-sm p-5">
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h3 className="text-sm font-bold text-gray-700 mb-3 border-b border-gray-200 pb-2">ยังมีเวลา</h3>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {normalTasks.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                      <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+                  <div className="text-center py-6">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
                     </div>
-                    <p className="text-gray-500 text-sm">ไม่มีงานในช่วงนี้</p>
+                    <p className="text-gray-500 text-xs">ไม่มีงานในช่วงนี้</p>
                   </div>
                 ) : (
                   normalTasks.map(task => renderCompactTaskCard(task, 'normal'))
@@ -523,15 +540,50 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* งานที่เสร็จแล้ว */}
-            <div className="bg-white rounded-lg shadow-sm p-5">
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                {completedTasks.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                      <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+            {/* งานที่รอตรวจสอบ */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h3 className="text-sm font-bold text-blue-700 mb-3 border-b border-blue-200 pb-2">รอตรวจสอบ</h3>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {pendingReviewTasks.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
                     </div>
-                    <p className="text-gray-500 text-sm">ยังไม่มีงานเสร็จ</p>
+                    <p className="text-gray-500 text-xs">ไม่มีงานรอตรวจ</p>
+                  </div>
+                ) : (
+                  pendingReviewTasks.map(task => renderCompactTaskCard(task, 'pending_review'))
+                )}
+              </div>
+            </div>
+
+            {/* งานที่ไม่ผ่าน */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h3 className="text-sm font-bold text-orange-700 mb-3 border-b border-orange-200 pb-2">ไม่ผ่าน</h3>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {rejectedTasks.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <p className="text-gray-500 text-xs">ไม่มีงานถูกปฏิเสธ</p>
+                  </div>
+                ) : (
+                  rejectedTasks.map(task => renderCompactTaskCard(task, 'rejected'))
+                )}
+              </div>
+            </div>
+
+            {/* งานที่เสร็จแล้ว */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h3 className="text-sm font-bold text-green-700 mb-3 border-b border-green-200 pb-2">เสร็จแล้ว</h3>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {completedTasks.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <p className="text-gray-500 text-xs">ยังไม่มีงานเสร็จ</p>
                   </div>
                 ) : (
                   completedTasks.map(task => renderCompactTaskCard(task, 'completed'))

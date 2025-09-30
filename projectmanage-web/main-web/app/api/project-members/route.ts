@@ -35,28 +35,40 @@ export async function GET(request: NextRequest) {
       queryParams += '&' + filters.join('&');
     }
 
-    // ดึงข้อมูล project members
-    const response = await axios.get(
-      `${process.env.STRAPI_BASE_URL}/api/project-members?${queryParams}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        }
-      }
-    );
+    const url = `${process.env.STRAPI_BASE_URL}/api/project-members?${queryParams}`;
+    console.log('Fetching project members from:', url);
 
-    return NextResponse.json({ 
-      projectMembers: response.data.data,
-      meta: response.data.meta,
-      success: true 
+    const response = await axios.get(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     });
+
+    console.log('Response status:', response.status);
+    console.log('Response data:', response.data);
+
+    if (response.data && response.data.data) {
+      return NextResponse.json({
+        success: true,
+        projectMembers: response.data.data,
+        pagination: response.data.meta?.pagination
+      });
+    } else {
+      return NextResponse.json({
+        success: false,
+        message: 'No project members found',
+        projectMembers: []
+      });
+    }
+
   } catch (error: any) {
     console.error('Error fetching project members:', error.response?.data || error.message);
     return NextResponse.json(
       { 
         error: error.response?.data?.error?.message || 'Failed to fetch project members',
-        details: error.response?.data 
+        details: error.response?.data,
+        success: false
       }, 
       { status: error.response?.status || 500 }
     );
@@ -64,6 +76,40 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - เพิ่มสมาชิกใหม่
+// helper: ดึง documentId ของ user จาก numeric id (users-permissions)
+async function getUserDocumentIdById(userId: number, token: string) {
+  const res = await axios.get(
+    `${process.env.STRAPI_BASE_URL}/api/users/${userId}?fields=documentId`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  const docId = res.data?.documentId;
+  if (!docId) {
+    throw new Error(`Cannot resolve documentId for user id=${userId}`);
+  }
+  return docId as string;
+}
+
+// helper: ดึง documentId ของ project จาก numeric id
+async function getProjectDocumentIdById(projectId: number, token: string) {
+  const res = await axios.get(
+    `${process.env.STRAPI_BASE_URL}/api/projects/${projectId}?fields=documentId`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  const docId = res.data?.data?.documentId;
+  if (!docId) {
+    throw new Error(`Cannot resolve documentId for project id=${projectId}`);
+  }
+  return docId as string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -73,33 +119,96 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No token found' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const requestBody = await request.json();
+    console.log('Received request body:', JSON.stringify(requestBody, null, 2));
+    
     const { 
-      project_document_id, 
       project_id_number, 
       user_id_in_project, 
-      role_in_project = 'Member' 
-    } = body;
+      role_in_project, 
+      join_date, 
+      project_document_id, 
+      user_document_id
+    } = requestBody;
 
     // Validate required fields
-    if (!project_document_id || !project_id_number || !user_id_in_project) {
+    console.log('Field validation:', {
+      project_id_number: !!project_id_number,
+      user_id_in_project: !!user_id_in_project,
+      role_in_project: !!role_in_project,
+      project_document_id: !!project_document_id
+    });
+
+    if (!project_id_number || !user_id_in_project || !role_in_project || !project_document_id) {
+      console.error('Missing required fields:', {
+        project_id_number,
+        user_id_in_project,
+        role_in_project,
+        project_document_id
+      });
+      return NextResponse.json({ 
+        error: 'Missing required fields: project_id_number, user_id_in_project, role_in_project, project_document_id',
+        received: requestBody
+      }, { status: 400 });
+    }
+
+    console.log('Creating project member with fields:', { 
+      project_id_number, 
+      user_id_in_project, 
+      role_in_project,
+      join_date,
+      project_document_id
+    });
+
+    let userDocId: string | null = null;
+    let projectDocId: string = project_document_id;
+
+    // Resolve user documentId
+    if (project_document_id && typeof user_document_id === 'string') {
+      userDocId = user_document_id;
+    } else if (user_id_in_project) {
+      // resolve documentId จาก numeric id ของ user
+      userDocId = await getUserDocumentIdById(Number(user_id_in_project), token);
+    } else {
       return NextResponse.json(
-        { success: false, message: 'Missing required fields' },
+        { error: 'Missing user identifier: provide user_document_id or user_id_in_project' },
         { status: 400 }
       );
     }
 
-    // เพิ่มสมาชิกใหม่
+    // Resolve project documentId if not provided
+    if (!project_document_id && project_id_number) {
+      projectDocId = await getProjectDocumentIdById(Number(project_id_number), token);
+    }
+
+    // สร้าง project member ตาม schema ที่ถูกต้อง
+    const projectMemberData = {
+      // Required fields ตาม schema
+      role_in_project: role_in_project,
+      join_date: join_date || new Date().toISOString(),
+      project_id_number: project_id_number,
+      user_id_in_project: user_id_in_project,
+      project_document_id: projectDocId,
+      // role enumeration (required ใน schema)
+      role: role_in_project === 'Leader' ? 'owner' : role_in_project === 'Admin' ? 'admin' : 'member',
+      // relations - ใช้ documentId สำหรับ connections
+      project: { connect: [projectDocId] },
+      user: { connect: [userDocId] }
+    };
+
+    console.log('Project member payload:', projectMemberData);
+    console.log('Relations data:', {
+      project_connect: projectDocId,
+      user_connect: userDocId,
+      resolved_from_user_id: user_id_in_project,
+      original_project_document_id: project_document_id
+    });
+
+    // สร้าง project member
     const response = await axios.post(
       `${process.env.STRAPI_BASE_URL}/api/project-members`,
       {
-        data: {
-          project_document_id,
-          project_id_number: parseInt(project_id_number),
-          user_id_in_project: parseInt(user_id_in_project),
-          role_in_project,
-          join_date: new Date().toISOString()
-        }
+        data: projectMemberData
       },
       {
         headers: {
@@ -109,17 +218,24 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    console.log('Project member created successfully:', response.data);
+
     return NextResponse.json({ 
-      projectMember: response.data.data,
+      projectMember: response.data,
       success: true,
-      message: 'Member added successfully'
+      message: 'Project member created successfully with relations'
     });
   } catch (error: any) {
-    console.error('Error adding project member:', error.response?.data || error.message);
+    console.error('Error creating project member:', error.response?.data || error.message);
+    console.error('Full error:', error);
+    console.error('Status:', error.response?.status);
+    
     return NextResponse.json(
       { 
-        error: error.response?.data?.error?.message || 'Failed to add project member',
+        error: error.response?.data?.error?.message || 'Failed to create project member',
         details: error.response?.data,
+        fullError: error.message,
+        status: error.response?.status,
         success: false
       }, 
       { status: error.response?.status || 500 }
@@ -130,45 +246,124 @@ export async function POST(request: NextRequest) {
 // DELETE - ลบสมาชิก
 export async function DELETE(request: NextRequest) {
   try {
+    console.log('=== DELETE PROJECT MEMBER API ===');
+    
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 
     if (!token) {
+      console.log('No token found');
       return NextResponse.json({ error: 'No token found' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');
+    const userDocumentId = searchParams.get('userDocumentId');
+    const projectDocumentId = searchParams.get('projectDocumentId');
+    
+    console.log('Parameters:', { memberId, userDocumentId, projectDocumentId });
 
-    if (!memberId) {
-      return NextResponse.json(
-        { success: false, message: 'Member ID is required' },
-        { status: 400 }
-      );
+    let deleteUrl = '';
+
+    // Method 1: Direct deletion using memberId (documentId)
+    if (memberId) {
+      deleteUrl = `${process.env.STRAPI_BASE_URL}/api/project-members/${memberId}`;
+      console.log('Using direct member ID deletion:', deleteUrl);
     }
-
-    // ลบสมาชิก
-    await axios.delete(
-      `${process.env.STRAPI_BASE_URL}/api/project-members/${memberId}`,
-      {
+    // Method 2: Find member by project and user, then delete
+    else if (projectDocumentId && userDocumentId) {
+      console.log('Finding member by project and user...');
+      
+      // Get all members for this project
+      const findUrl = `${process.env.STRAPI_BASE_URL}/api/project-members?filters[project_document_id][$eq]=${projectDocumentId}`;
+      console.log('Query URL:', findUrl);
+      
+      const findResponse = await axios.get(findUrl, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
+      });
+      
+      console.log('Found members:', findResponse.data.data?.length || 0);
+      console.log('Members data:', findResponse.data.data);
+      
+      if (!findResponse.data.data || findResponse.data.data.length === 0) {
+        return NextResponse.json(
+          { success: false, message: 'No members found for this project' },
+          { status: 404 }
+        );
       }
-    );
+      
+      // Find the member that matches our user
+      let targetMember = null;
+      
+      // Try to match by user_id_in_project (numeric comparison)
+      const numericUserId = parseInt(userDocumentId);
+      if (!isNaN(numericUserId)) {
+        targetMember = findResponse.data.data.find((member: any) => 
+          member.user_id_in_project === numericUserId
+        );
+        console.log('Found by numeric user ID:', !!targetMember);
+      }
+      
+      // If not found by numeric, try string comparison
+      if (!targetMember) {
+        targetMember = findResponse.data.data.find((member: any) => 
+          String(member.user_id_in_project) === String(userDocumentId)
+        );
+        console.log('Found by string user ID:', !!targetMember);
+      }
+      
+      if (!targetMember) {
+        console.log('Available members:', findResponse.data.data.map((m: any) => ({
+          id: m.id,
+          documentId: m.documentId,
+          user_id_in_project: m.user_id_in_project
+        })));
+        return NextResponse.json(
+          { success: false, message: `Member with user ID ${userDocumentId} not found in project` },
+          { status: 404 }
+        );
+      }
+      
+      deleteUrl = `${process.env.STRAPI_BASE_URL}/api/project-members/${targetMember.documentId || targetMember.id}`;
+      console.log('Found target member, delete URL:', deleteUrl);
+    }
+    else {
+      return NextResponse.json(
+        { success: false, message: 'Either memberId or (projectDocumentId + userDocumentId) is required' },
+        { status: 400 }
+      );
+    }
+
+    // Execute deletion
+    console.log('Executing DELETE request to:', deleteUrl);
+    const deleteResponse = await axios.delete(deleteUrl, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    console.log('Delete response status:', deleteResponse.status);
+    console.log('Member deleted successfully');
 
     return NextResponse.json({ 
       success: true,
       message: 'Member removed successfully'
     });
+
   } catch (error: any) {
+    console.error('=== DELETE ERROR ===');
     console.error('Error removing project member:', error.response?.data || error.message);
+    console.error('Error status:', error.response?.status);
+    console.error('Full error:', error);
+    
     return NextResponse.json(
       { 
-        error: error.response?.data?.error?.message || 'Failed to remove project member',
-        details: error.response?.data,
-        success: false
+        success: false,
+        error: error.response?.data?.error?.message || error.message || 'Failed to remove project member'
       }, 
       { status: error.response?.status || 500 }
     );

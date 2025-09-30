@@ -49,7 +49,23 @@ export async function GET() {
 
         // กรองโปรเจ็กต์ที่ user เป็นสมาชิก
         const userProjectIds = userProjectMembers.map((member: any) => member.project_id_number);
-        projects = allProjects.filter((project: any) => userProjectIds.includes(project.id));
+        
+        // รวมโปรเจ็กต์ที่ user เป็นสมาชิกและที่ user เป็นคนสร้าง
+        projects = allProjects.filter((project: any) => {
+          // เป็นสมาชิกใน project หรือเป็นคนสร้าง project
+          const isMember = userProjectIds.includes(project.id);
+          const isCreator = project.created_by_user === currentUserId;
+          
+          console.log(`Project ${project.project_name} (ID: ${project.id}):`, {
+            isMember,
+            isCreator,
+            created_by_user: project.created_by_user,
+            currentUserId,
+            included: isMember || isCreator
+          });
+          
+          return isMember || isCreator;
+        });
 
         // ดึงงานที่ถูกมอบหมายให้ user
         const tasksResponse = await axios.get(
@@ -59,8 +75,11 @@ export async function GET() {
 
         tasks = tasksResponse.data.data || [];
 
-        console.log('Sidebar API - User project IDs:', userProjectIds);
-        console.log('Sidebar API - Filtered projects:', projects.length);
+        console.log('Sidebar API - Current User ID:', currentUserId);
+        console.log('Sidebar API - User project member IDs:', userProjectIds);
+        console.log('Sidebar API - Total projects in system:', allProjects.length);
+        console.log('Sidebar API - Filtered projects for user:', projects.length);
+        console.log('Sidebar API - Projects details:', projects.map((p: any) => ({ id: p.id, name: p.project_name, created_by: p.created_by_user })));
       }
     } catch (projectError) {
       console.error('Failed to fetch projects for sidebar:', projectError);

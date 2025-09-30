@@ -6,6 +6,7 @@ import axios from 'axios';
 import Navbar from '../../../../components/Navbar';
 import Sidebar from '../../../../components/Sidebar';
 import SubmissionModal from '../../../../components/SubmissionModal';
+import TaskStatusIcon from '../../../../components/TaskStatusIcon';
 
 // Interface สำหรับ submission data
 interface Submission {
@@ -87,6 +88,7 @@ export default function TaskDetailPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string>('Member');
   const [updating, setUpdating] = useState(false);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -99,6 +101,27 @@ export default function TaskDetailPage() {
     seconds: number;
     isOverdue: boolean;
   } | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm, setEditForm] = useState({
+    taskName: '',
+    description: '',
+    dueDate: '',
+    dueTime: '',
+    assignedUserId: null as number | null
+  });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Review states
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
+  const [reviewComment, setReviewComment] = useState('');
+  
+  // Task management states
+  const [showTaskMenu, setShowTaskMenu] = useState(false);
 
   // Handle file selection (เก็บไฟล์ไว้ก่อน ไม่อัปโหลดทันที)
   const handleFileSelect = (file: File) => {
@@ -234,8 +257,8 @@ export default function TaskDetailPage() {
         }
       }
 
-      // อัปเดตสถานะ task เป็น "turn in"
-      await handleStatusUpdate('turn in');
+      // อัปเดตสถานะ task เป็น "pending_review" (รอการตรวจสอบ)
+      await handleStatusUpdate('pending_review');
       
       setSelectedFiles([]); // ล้างไฟล์ที่เลือก
       await refreshSubmissions();
@@ -260,6 +283,217 @@ export default function TaskDetailPage() {
   // Handle cancel submission (ยกเลิกการเลือกไฟล์ทั้งหมด)
   const handleCancelSubmission = () => {
     setSelectedFiles([]);
+  };
+
+  // Initialize edit form
+  const initializeEditForm = () => {
+    if (task) {
+      let dateStr = '';
+      let timeStr = '';
+      
+      if (task.due_date) {
+        const dueDateTime = new Date(task.due_date);
+        dateStr = dueDateTime.toISOString().split('T')[0];
+        timeStr = dueDateTime.toTimeString().split(' ')[0].slice(0, 5);
+      }
+      
+      setEditForm({
+        taskName: task.task_name,
+        description: task.description || '',
+        dueDate: dateStr,
+        dueTime: timeStr,
+        assignedUserId: task.assigned_to_user_ids_number || null
+      });
+    }
+  };
+
+  // Handle edit task
+  const handleEditTask = async () => {
+    if (!task?.documentId) return;
+
+    if (!editForm.taskName.trim()) {
+      return;
+    }
+    
+    if (!editForm.dueDate) {
+      return;
+    }
+
+    try {
+      setEditLoading(true);
+      
+      // รวมวันที่และเวลา
+      let combinedDueDate = editForm.dueDate;
+      if (editForm.dueTime) {
+        combinedDueDate = `${editForm.dueDate}T${editForm.dueTime}:00.000Z`;
+      }
+      
+      const response = await axios.put(`/api/tasks/${task.documentId}`, {
+        task_name: editForm.taskName,
+        description: editForm.description,
+        due_date: combinedDueDate,
+        assigned_to_user_ids_number: editForm.assignedUserId,
+      });
+
+      if (response.data.success) {
+        // อัปเดต task ใน state
+        setTask(prev => prev ? {
+          ...prev,
+          task_name: editForm.taskName,
+          description: editForm.description,
+          due_date: combinedDueDate,
+          assigned_to_user_ids_number: editForm.assignedUserId || undefined,
+        } : null);
+
+        // อัปเดตข้อมูล assigned user
+        if (editForm.assignedUserId) {
+          try {
+            const assignedUserResponse = await axios.get(`/api/users?userId=${editForm.assignedUserId}`);
+            if (assignedUserResponse.data.user) {
+              setAssignedUser(assignedUserResponse.data.user);
+            }
+          } catch (assignedUserError) {
+            console.log('Could not fetch assigned user data:', assignedUserError);
+          }
+        } else {
+          setAssignedUser(null);
+        }
+        
+        setIsEditing(false);
+        // alert('แก้ไข Task เรียบร้อยแล้ว!');
+      } else {
+        // alert('เกิดข้อผิดพลาดในการแก้ไข Task: ' + response.data.message);
+      }
+    } catch (error: any) {
+      console.error('Error editing task:', error);
+      // alert('เกิดข้อผิดพลาดในการแก้ไข Task: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // Handle start editing
+  const handleStartEdit = () => {
+    initializeEditForm();
+    setIsEditing(true);
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditForm({
+      taskName: '',
+      description: '',
+      dueDate: '',
+      dueTime: '',
+      assignedUserId: null
+    });
+  };
+
+  // Handle delete task
+  const handleDeleteTask = async () => {
+    if (!task?.documentId) return;
+    
+    // Check if confirmation text matches task name
+    if (deleteConfirmText !== task.task_name) {
+      alert('กรุณาพิมพ์ชื่อ Task ให้ถูกต้อง');
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      
+      const response = await axios.delete(`/api/tasks/${task.documentId}`);
+
+      if (response.data.success) {
+        alert('ลบ Task สำเร็จ');
+        router.push(`/projects/${projectId}`);
+      } else {
+        alert('เกิดข้อผิดพลาดในการลบ Task');
+      }
+    } catch (error: any) {
+      console.error('Error deleting task:', error);
+      alert('เกิดข้อผิดพลาดในการลบ Task: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Handle show delete modal
+  const handleShowDeleteModal = () => {
+    setShowDeleteModal(true);
+    setDeleteConfirmText('');
+  };
+
+  // Handle close delete modal
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeleteConfirmText('');
+  };
+
+  // Handle review task (for Leaders)
+  const handleReviewTask = async () => {
+    if (!task?.documentId || !reviewAction) return;
+
+    try {
+      setReviewLoading(true);
+      
+      const newStatus = reviewAction === 'approve' ? 'completed' : 'rejected';
+      
+      const response = await axios.put(`/api/tasks/${task.documentId}`, {
+        task_status: newStatus
+      });
+
+      if (response.data.success) {
+        // Create submission entry for review comment if provided
+        if (reviewComment.trim()) {
+          try {
+            await axios.post('/api/submissions', {
+              task_document_id: taskDocumentId,
+              task_id_number: task.id,
+              comments: `${reviewAction === 'approve' ? '✅ อนุมัติ' : '❌ ไม่อนุมัติ'}: ${reviewComment}`,
+              file_url: null // No file for review comments
+            });
+          } catch (submissionError) {
+            console.error('Error creating review submission:', submissionError);
+          }
+        }
+
+        // Update task status
+        setTask(prev => prev ? { ...prev, task_status: newStatus } : null);
+        
+        // Refresh submissions to show review comment
+        await refreshSubmissions();
+        
+        // Close modal and reset
+        setShowReviewModal(false);
+        setReviewAction(null);
+        setReviewComment('');
+        
+        alert(reviewAction === 'approve' ? 'อนุมัติงานเรียบร้อยแล้ว' : 'ไม่อนุมัติงาน กรุณาแจ้งให้ผู้ส่งงานแก้ไข');
+      } else {
+        alert('เกิดข้อผิดพลาดในการตรวจสอบงาน');
+      }
+    } catch (error: any) {
+      console.error('Error reviewing task:', error);
+      alert('เกิดข้อผิดพลาดในการตรวจสอบงาน: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  // Handle show review modal
+  const handleShowReviewModal = (action: 'approve' | 'reject') => {
+    setReviewAction(action);
+    setShowReviewModal(true);
+    setReviewComment('');
+  };
+
+  // Handle close review modal
+  const handleCloseReviewModal = () => {
+    setShowReviewModal(false);
+    setReviewAction(null);
+    setReviewComment('');
   };
 
   useEffect(() => {
@@ -345,6 +579,31 @@ export default function TaskDetailPage() {
               })
             );
             setProjectMembers(membersWithUserInfo);
+            
+            // ตรวจสอบบทบาทของผู้ใช้
+            if (currentUser && projectResponse.data.project) {
+              const currentUserId = currentUser.id;
+              const project = projectResponse.data.project;
+              
+              // ตรวจสอบว่าผู้ใช้เป็นผู้สร้างโปรเจ็กต์หรือไม่
+              const isProjectCreator = project.created_by_user_id === currentUserId || 
+                                     project.created_by_user === currentUserId;
+              
+              if (isProjectCreator) {
+                setUserRole('Leader');
+              } else {
+                // หาบทบาทจาก project members
+                const userMembership = membersWithUserInfo.find(member => 
+                  (member.userInfo?.id || member.user_id_in_project) === currentUserId
+                );
+                
+                if (userMembership) {
+                  setUserRole(userMembership.role_in_project);
+                } else {
+                  setUserRole('Member'); // default role
+                }
+              }
+            }
           }
         } catch (membersError) {
           console.error('Could not fetch project members:', membersError);
@@ -413,6 +672,19 @@ export default function TaskDetailPage() {
 
     return () => clearInterval(timer);
   }, [task?.due_date]);
+
+  // Close task menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showTaskMenu && !target.closest('.task-menu-container')) {
+        setShowTaskMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTaskMenu]);
 
   // Handle submission refresh
   const refreshSubmissions = async () => {
@@ -581,72 +853,24 @@ export default function TaskDetailPage() {
     };
   };
 
-  // Get status config
+  // Import color utility
+  const { getTaskStatusConfig } = require('../../../../utils/taskStatusColors');
+  
+  // Get status config - ใช้ utility function สำหรับสีการ์ด
   const getStatusConfig = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'turn in':
-      case 'completed':
-        return {
-          bgColor: 'bg-green-50',
-          textColor: 'text-green-800',
-          borderColor: 'border-green-300',
-          statusText: 'ส่งงานแล้ว',
-          description: 'งานถูกส่งเรียบร้อยแล้ว',
-          descriptionColor: 'text-green-600',
-          iconBg: 'bg-green-200',
-          icon: (
-            <svg className="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          )
-        };
-      case 'not turn in':
-      case 'pending':
-        return {
-          bgColor: 'bg-yellow-50',
-          textColor: 'text-yellow-800',
-          borderColor: 'border-yellow-300',
-          statusText: 'รอส่งงาน',
-          description: 'ยังไม่ได้ส่งงาน กรุณาส่งก่อนครบกำหนด',
-          descriptionColor: 'text-yellow-600',
-          iconBg: 'bg-yellow-200',
-          icon: (
-            <svg className="w-6 h-6 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )
-        };
-      case 'overdue':
-        return {
-          bgColor: 'bg-red-50',
-          textColor: 'text-red-800',
-          borderColor: 'border-red-300',
-          statusText: 'เลยกำหนด',
-          description: 'เลยเวลาส่งงานแล้ว',
-          descriptionColor: 'text-red-600',
-          iconBg: 'bg-red-200',
-          icon: (
-            <svg className="w-6 h-6 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )
-        };
-      default:
-        return {
-          bgColor: 'bg-gray-50',
-          textColor: 'text-gray-800',
-          borderColor: 'border-gray-300',
-          statusText: 'ไม่ระบุสถานะ',
-          description: 'สถานะไม่ชัดเจน',
-          descriptionColor: 'text-gray-600',
-          iconBg: 'bg-gray-200',
-          icon: (
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )
-        };
-    }
+    const config = getTaskStatusConfig(status);
+    return {
+      bgColor: config.lightBgColor, // ใช้สีพื้นหลังแบบการ์ด
+      textColor: config.textColor,
+      borderColor: config.borderColor,
+      badgeColor: config.badgeColor, // สำหรับ badge
+      indicatorColor: config.indicatorColor, // สำหรับจุดสถานะ
+      statusText: config.text, // ใช้ข้อความสถานะแบบการ์ด
+      description: config.description,
+      descriptionColor: config.descriptionColor,
+      iconBg: config.iconBg,
+      icon: <TaskStatusIcon status={status} className="w-6 h-6" />
+    };
   };
 
   // Loading state
@@ -706,6 +930,8 @@ export default function TaskDetailPage() {
 
   const statusConfig = getStatusConfig(task.task_status);
 
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
@@ -740,67 +966,191 @@ export default function TaskDetailPage() {
             <div className="lg:col-span-2">
               {/* Task Header */}
               <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
+                {!isEditing ? (
+                  // Display Mode
+                  <div className="mb-4">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">
                       {task.task_name}
                     </h1>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-gray-500 text-sm">
-                        สร้างเมื่อ {formatDate(task.createdAt)}
-                      </span>
+                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <span>สร้างเมื่อ {formatDate(task.createdAt)}</span>
+                      {task.updatedAt !== task.createdAt && (
+                        <span>• แก้ไขล่าสุด {formatDate(task.updatedAt)}</span>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg">
-                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg">
-                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                ) : (
+                  // Edit Mode
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-gray-900">แก้ไข Task</h2>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="p-2 hover:bg-gray-100 rounded-lg"
+                        title="ยกเลิกการแก้ไข"
+                      >
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    {/* Edit Form */}
+                    <div className="space-y-4">
+                      {/* Task Name */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          ชื่อ Task <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={editForm.taskName}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, taskName: e.target.value }))}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                          placeholder="ใส่ชื่อ Task"
+                          disabled={editLoading}
+                        />
+                      </div>
+
+                      {/* Description */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          รายละเอียด
+                        </label>
+                        <textarea
+                          value={editForm.description}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                          rows={3}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none"
+                          placeholder="ใส่รายละเอียดของ Task (ไม่บังคับ)"
+                          disabled={editLoading}
+                        />
+                      </div>
+
+                      {/* Due Date and Time */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            วันที่กำหนดส่ง <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="date"
+                            value={editForm.dueDate}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, dueDate: e.target.value }))}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                            disabled={editLoading}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            เวลากำหนดส่ง
+                          </label>
+                          <input
+                            type="time"
+                            value={editForm.dueTime}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, dueTime: e.target.value }))}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                            disabled={editLoading}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Assigned User */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          มอบหมายให้
+                        </label>
+                        <select
+                          value={editForm.assignedUserId || ''}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, assignedUserId: e.target.value ? parseInt(e.target.value) : null }))}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                          disabled={editLoading}
+                        >
+                          <option value="">เลือกผู้รับผิดชอบ</option>
+                          {projectMembers.map((member) => (
+                            <option 
+                              key={member.id} 
+                              value={member.userInfo?.id || member.user_id_in_project}
+                            >
+                              {member.userInfo?.username || `User ${member.user_id_in_project}`} ({member.role_in_project})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all"
+                          disabled={editLoading}
+                        >
+                          ยกเลิก
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleEditTask}
+                          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                          disabled={editLoading}
+                        >
+                          {editLoading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                              <span>กำลังบันทึก...</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>บันทึกการแก้ไข</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Task Description */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">รายละเอียด</h2>
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 leading-relaxed">
-                    {task.description || 'ไม่มีรายละเอียดเพิ่มเติม'}
-                  </p>
+              {task.description && (
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-3">รายละเอียด</h2>
+                  <div className="prose max-w-none">
+                    <p className="text-gray-700 leading-relaxed">
+                      {task.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
 
 
-              {/* Task Files Section - แสดงไฟล์ที่อัปโหลดสำหรับ Task นี้ */}
+              {/* Task Files Section */}
               <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">ไฟล์งาน</h2>
                 
                 {/* Upload Area - แสดงเฉพาะคนที่ได้รับมอบหมาย */}
                 {user && task.assigned_to_user_ids_number === user.id && (
                   <div 
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4 hover:border-gray-400 transition-colors"
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4 hover:border-blue-400 hover:bg-blue-50 transition-all"
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                   >
                     <div className="text-center">
                       {uploading ? (
-                        <div className="flex flex-col items-center">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                          <p className="text-gray-600">กำลังอัปโหลด...</p>
+                        <div className="py-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                          <p className="text-gray-600 text-sm">กำลังอัปโหลด...</p>
                         </div>
                       ) : (
                         <>
-                          <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                           </svg>
-                          <p className="text-gray-600 mb-2">ลากไฟล์มาวางที่นี่ หรือ</p>
+                          <p className="text-gray-600 mb-2 text-sm">ลากไฟล์มาวางที่นี่ หรือ</p>
                           <label className="inline-block">
                             <input
                               type="file"
@@ -809,52 +1159,51 @@ export default function TaskDetailPage() {
                               onChange={handleFileSelectFromInput}
                               multiple
                             />
-                            <span className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors cursor-pointer">
+                            <span className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">
                               เลือกไฟล์
                             </span>
                           </label>
-                          <p className="text-sm text-gray-500 mt-2">รองรับไฟล์ .pdf, .doc, .docx, .jpg, .png (ขนาดไม่เกิน 10MB)</p>
+                          <p className="text-xs text-gray-500 mt-2">รองรับ .pdf, .doc, .docx, .jpg, .png (ไม่เกิน 10MB)</p>
                         </>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* Selected Files Preview - แสดงไฟล์ที่เลือกก่อนส่ง */}
+                {/* Selected Files Preview */}
                 {selectedFiles.length > 0 && (
-                  <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 mb-4">
-                    <div className="flex items-center justify-between mb-3">
+                  <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 mb-4">
+                    <div className="flex items-center justify-between mb-2">
                       <h3 className="text-sm font-medium text-blue-900">
-                        ไฟล์ที่เลือก ({selectedFiles.length} ไฟล์):
+                        ไฟล์ที่เลือก ({selectedFiles.length})
                       </h3>
                       <button
                         onClick={handleCancelSubmission}
-                        className="px-3 py-1.5 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                        className="text-xs text-red-600 hover:text-red-800 font-medium"
                       >
                         ลบทั้งหมด
                       </button>
                     </div>
 
-                    {/* Files List */}
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
                       {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-white border border-blue-200 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-blue-200 rounded-lg flex items-center justify-center">
-                              <svg className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className="font-medium text-blue-900 text-sm">{file.name}</p>
-                              <p className="text-xs text-blue-700">ขนาด: {(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        <div key={index} className="flex items-center justify-between p-2 bg-white border border-blue-200 rounded text-xs">
+                          <div className="flex items-center space-x-2 min-w-0 flex-1">
+                            <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-blue-900 truncate">{file.name}</p>
+                              <p className="text-blue-700">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
                             </div>
                           </div>
                           <button
                             onClick={() => handleRemoveSelectedFile(index)}
-                            className="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded font-medium transition-colors"
+                            className="ml-2 p-1 text-red-500 hover:text-red-700 flex-shrink-0"
                           >
-                            ลบ
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                           </button>
                         </div>
                       ))}
@@ -920,58 +1269,54 @@ export default function TaskDetailPage() {
                   <h2 className="text-lg font-semibold text-gray-900">ประวัติ ({submissions.length})</h2>
                   <button
                     onClick={refreshSubmissions}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                     title="รีเฟรชข้อมูล"
                   >
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                   </button>
                 </div>
                 
                 {submissions.length === 0 ? (
-                  <div className="text-center py-8">
-                    <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="text-center py-6">
+                    <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
-                    <p className="text-gray-600">ยังไม่มีประวัติการส่งงาน</p>
+                    <p className="text-gray-600 text-sm">ยังไม่มีประวัติการส่งงาน</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
                     {submissions.map((submission) => (
-                      <div key={submission.id} className="border-l-4 border-blue-500 pl-4 py-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span className="text-blue-600 text-sm font-medium">
-                                  {submission.submittedByUser?.username.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900">{submission.submittedByUser?.username}</p>
-                                <p className="text-sm text-gray-500">{formatDateTime(submission.submission_date)}</p>
-                              </div>
-                            </div>
-                            
-                            {submission.comments && (
-                              <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                                <p className="text-gray-700 text-sm">{submission.comments}</p>
-                              </div>
-                            )}
-                            
-                            {submission.file_url && (
-                              <div className="flex items-center space-x-2 text-sm bg-blue-50 rounded-lg p-2">
-                                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                </svg>
-                                <span className="text-blue-700 font-medium">
-                                  แนบไฟล์: {submission.file_url.split('/').pop()}
-                                </span>
-                              </div>
-                            )}
+                      <div key={submission.id} className="border-l-4 border-blue-500 bg-gray-50 rounded-r-lg pl-3 py-2">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 text-xs font-medium">
+                              {submission.submittedByUser?.username.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 text-sm truncate">{submission.submittedByUser?.username}</p>
+                            <p className="text-xs text-gray-500">{formatDateTime(submission.submission_date)}</p>
                           </div>
                         </div>
+                        
+                        {submission.comments && (
+                          <div className="bg-white rounded p-2 mb-2 text-sm text-gray-700">
+                            {submission.comments}
+                          </div>
+                        )}
+                        
+                        {submission.file_url && (
+                          <div className="flex items-center space-x-1 text-xs bg-blue-100 rounded p-1.5">
+                            <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                            <span className="text-blue-800 font-medium truncate">
+                              {submission.file_url.split('/').pop()}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -979,19 +1324,106 @@ export default function TaskDetailPage() {
               </div>
             </div>
 
-            {/* Right Column - Task Info */}
+            {/* Right Column - Task Info & Actions */}
             <div className="space-y-6">
-              {/* Task Information */}
+              {/* Project Leader Section - Only for Leaders */}
+              {userRole === 'Leader' && (
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">สำหรับ Project Leader</h3>
+                  
+                  {/* Project Management Button */}
+                  <div className="mb-4">
+                    <button
+                      onClick={() => window.location.href = `/projects/${projectId}`}
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      <span>จัดการโปรเจค</span>
+                    </button>
+                  </div>
+
+                  {/* Task Management Button */}
+                  <div className="relative task-menu-container">
+                    <button
+                      onClick={() => setShowTaskMenu(!showTaskMenu)}
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors shadow-sm"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      </svg>
+                      <span>จัดการ Task</span>
+                      <svg className={`w-4 h-4 transition-transform ${showTaskMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {showTaskMenu && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+                        <button
+                          onClick={() => {
+                            handleStartEdit();
+                            setShowTaskMenu(false);
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center space-x-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          <span>แก้ไข Task</span>
+                        </button>
+                        
+                        <div className="border-t border-gray-100 my-1"></div>
+                        
+                        <button
+                          onClick={() => {
+                            handleShowDeleteModal();
+                            setShowTaskMenu(false);
+                          }}
+                          className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          <span>ลบ Task</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Task Information Card */}
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">ข้อมูล Task</h3>
                 <div className="space-y-4">
+                  {/* Status */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
-                      ผู้รับผิดชอบ
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-gray-600 text-sm font-medium">
+                    <label className="block text-sm font-medium text-gray-500 mb-2">สถานะ</label>
+                    <div className={`inline-flex items-center space-x-3 px-4 py-3 ${statusConfig.bgColor} border ${statusConfig.borderColor} rounded-lg`}>
+                      {/* Status Indicator */}
+                      <div className={`w-3 h-3 rounded-full ${statusConfig.indicatorColor} flex-shrink-0`}></div>
+                      
+                      {/* Status Badge */}
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig.badgeColor} text-white`}>
+                        {statusConfig.statusText}
+                      </div>
+                      
+                      {/* Status Icon */}
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${statusConfig.iconBg}`}>
+                        {statusConfig.icon}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Assigned User */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-2">ผู้รับผิดชอบ</label>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 text-sm font-medium">
                           {assignedUser ? assignedUser.username.charAt(0).toUpperCase() : '?'}
                         </span>
                       </div>
@@ -1001,65 +1433,66 @@ export default function TaskDetailPage() {
                     </div>
                   </div>
 
+                  {/* Due Date */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
-                      กำหนดส่ง
-                    </label>
-                    <div className="flex items-center space-x-2">
+                    <label className="block text-sm font-medium text-gray-500 mb-2">กำหนดส่ง</label>
+                    <div className="flex items-center space-x-2 text-gray-900">
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <span className="text-gray-900">{formatDate(task.due_date)}</span>
+                      <span>{formatDate(task.due_date)}</span>
                     </div>
                   </div>
 
+                  {/* Last Updated */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
-                      อัปเดตล่าสุด
-                    </label>
-                    <span className="text-gray-900">{formatDate(task.updatedAt)}</span>
+                    <label className="block text-sm font-medium text-gray-500 mb-2">อัปเดตล่าสุด</label>
+                    <div className="flex items-center space-x-2 text-gray-900">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{formatDate(task.updatedAt)}</span>
+                    </div>
                   </div>
                 </div>
+
+
               </div>
 
-              {/* Task Actions and Countdown */}
+              {/* Task Actions for Assignee */}
               {user && task.assigned_to_user_ids_number === user.id && (
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">การจัดการงาน</h3>
                   
                   {/* Countdown Timer */}
                   {timeLeft && (
-                    <div className="mb-6">
-                      <label className="block text-sm font-medium text-gray-500 mb-2">
-                        เวลาที่เหลือ
-                      </label>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-500 mb-2">เวลาที่เหลือ</label>
                       {timeLeft.isOverdue ? (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className={`${statusConfig.bgColor} border ${statusConfig.borderColor} rounded-lg p-3`}>
                           <div className="flex items-center space-x-2">
-                            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span className="text-red-700 font-medium">เลยกำหนดส่งแล้ว</span>
+                            <div className={`w-3 h-3 rounded-full ${statusConfig.indicatorColor}`}></div>
+                            <span className={`${statusConfig.textColor} font-medium`}>เลยกำหนดส่งแล้ว</span>
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className={`${statusConfig.bgColor} border ${statusConfig.borderColor} rounded-lg p-3`}>
                           <div className="grid grid-cols-4 gap-2 text-center">
-                            <div className="bg-white rounded-lg p-2">
-                              <div className="text-xl font-bold text-blue-600">{timeLeft.days}</div>
+                            <div className="bg-white rounded-lg p-2 border border-gray-100">
+                              <div className={`text-lg font-bold ${statusConfig.textColor.replace('text-', 'text-').replace('-800', '-600')}`}>{timeLeft.days}</div>
                               <div className="text-xs text-gray-500">วัน</div>
                             </div>
-                            <div className="bg-white rounded-lg p-2">
-                              <div className="text-xl font-bold text-blue-600">{timeLeft.hours}</div>
-                              <div className="text-xs text-gray-500">ชั่วโมง</div>
+                            <div className="bg-white rounded-lg p-2 border border-gray-100">
+                              <div className={`text-lg font-bold ${statusConfig.textColor.replace('text-', 'text-').replace('-800', '-600')}`}>{timeLeft.hours}</div>
+                              <div className="text-xs text-gray-500">ชม.</div>
                             </div>
-                            <div className="bg-white rounded-lg p-2">
-                              <div className="text-xl font-bold text-blue-600">{timeLeft.minutes}</div>
+                            <div className="bg-white rounded-lg p-2 border border-gray-100">
+                              <div className={`text-lg font-bold ${statusConfig.textColor.replace('text-', 'text-').replace('-800', '-600')}`}>{timeLeft.minutes}</div>
                               <div className="text-xs text-gray-500">นาที</div>
                             </div>
-                            <div className="bg-white rounded-lg p-2">
-                              <div className="text-xl font-bold text-blue-600">{timeLeft.seconds}</div>
-                              <div className="text-xs text-gray-500">วินาที</div>
+                            <div className="bg-white rounded-lg p-2 border border-gray-100">
+                              <div className={`text-lg font-bold ${statusConfig.textColor.replace('text-', 'text-').replace('-800', '-600')}`}>{timeLeft.seconds}</div>
+                              <div className="text-xs text-gray-500">วิ.</div>
                             </div>
                           </div>
                         </div>
@@ -1067,30 +1500,9 @@ export default function TaskDetailPage() {
                     </div>
                   )}
 
-                  {/* Submission Actions */}
-                  <div className="space-y-4">
-                    {/* Current Status Display */}
-                    <div className={`p-4 rounded-lg border-2 ${statusConfig.bgColor} ${statusConfig.borderColor}`}>
-                      <label className="block text-sm font-medium text-gray-600 mb-3">
-                        สถานะงาน
-                      </label>
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${statusConfig.iconBg}`}>
-                          {statusConfig.icon}
-                        </div>
-                        <div>
-                          <div className={`text-lg font-bold ${statusConfig.textColor}`}>
-                            {statusConfig.statusText}
-                          </div>
-                          <div className={`text-sm ${statusConfig.descriptionColor}`}>
-                            {statusConfig.description}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {task.task_status === 'turn in' ? (
-                      // Cancel Submission Button
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    {task.task_status === 'turn in' || task.task_status === 'pending_review' ? (
                       <button
                         onClick={handleCancelWorkSubmission}
                         disabled={updating}
@@ -1111,7 +1523,6 @@ export default function TaskDetailPage() {
                         )}
                       </button>
                     ) : selectedFiles.length > 0 ? (
-                      // Submit Work Button
                       <button
                         onClick={handleSubmitWork}
                         disabled={submitting}
@@ -1132,23 +1543,65 @@ export default function TaskDetailPage() {
                         )}
                       </button>
                     ) : (
-                      // No Files Selected
-                      <div className="text-center py-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                        <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="text-center py-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <svg className="w-6 h-6 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
-                        <p className="text-gray-600 text-sm">เลือกไฟล์ในส่วน "ไฟล์งาน" เพื่อส่งงาน</p>
+                        <p className="text-gray-600 text-sm">เลือกไฟล์เพื่อส่งงาน</p>
                       </div>
                     )}
                   </div>
                 </div>
               )}
+
+              {/* Review Section - Show when task needs review - Only for Leaders */}
+              {userRole === 'Leader' && (task.task_status === 'pending_review' || task.task_status === 'turn in') && (
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">ตรวจสอบงาน</h3>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-blue-800 font-medium">งานรอการตรวจสอบ</span>
+                    </div>
+                    <p className="text-sm text-blue-700 mb-3">
+                      งานนี้ได้รับการส่งแล้ว กรุณาตรวจสอบและให้ผลการตรวจสอบ
+                    </p>
+                    
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleShowReviewModal('approve')}
+                        disabled={reviewLoading}
+                        className="flex-1 flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>อนุมัติ</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => handleShowReviewModal('reject')}
+                        disabled={reviewLoading}
+                        className="flex-1 flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>ไม่อนุมัติ</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Submission Modal */}
+      </div>      {/* Submission Modal */}
       {task && (
         <SubmissionModal 
           isOpen={showSubmissionModal}
@@ -1159,6 +1612,215 @@ export default function TaskDetailPage() {
           taskName={task.task_name}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && task && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-red-600 flex items-center space-x-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span>ยืนยันการลบ Task</span>
+              </h3>
+              <button
+                onClick={handleCloseDeleteModal}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+                disabled={isDeleting}
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-red-800 text-sm">
+                  <strong>คำเตือน:</strong> การดำเนินการนี้ไม่สามารถย้อนกลับได้ Task และข้อมูลทั้งหมดจะถูกลบอย่างถาวร
+                </p>
+              </div>
+
+              <p className="text-gray-700 mb-4">
+                คุณกำลังจะลบ Task: <strong className="text-gray-900">"{task.task_name}"</strong>
+              </p>
+
+              <p className="text-gray-700 mb-4">
+                เพื่อยืนยันการลบ กรุณาพิมพ์ชื่อ Task ในช่องด้านล่าง:
+              </p>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  พิมพ์ชื่อ Task: <span className="font-semibold text-red-600">"{task.task_name}"</span>
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none"
+                  placeholder="พิมพ์ชื่อ Task เพื่อยืนยัน"
+                  disabled={isDeleting}
+                />
+              </div>
+
+              {deleteConfirmText && deleteConfirmText !== task.task_name && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                  <p className="text-yellow-800 text-sm">
+                    ชื่อ Task ไม่ตรงกัน กรุณาพิมพ์ให้ถูกต้อง
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCloseDeleteModal}
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-lg transition-all"
+                disabled={isDeleting}
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleDeleteTask}
+                disabled={isDeleting || deleteConfirmText !== task.task_name}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>กำลังลบ...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>ลบ Task</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && task && reviewAction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className={`text-lg font-semibold flex items-center space-x-2 ${
+                reviewAction === 'approve' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {reviewAction === 'approve' ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+                <span>{reviewAction === 'approve' ? 'อนุมัติงาน' : 'ไม่อนุมัติงาน'}</span>
+              </h3>
+              <button
+                onClick={handleCloseReviewModal}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+                disabled={reviewLoading}
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div className={`border rounded-lg p-4 mb-4 ${
+                reviewAction === 'approve' 
+                  ? 'bg-green-50 border-green-200' 
+                  : 'bg-red-50 border-red-200'
+              }`}>
+                <p className={`text-sm ${
+                  reviewAction === 'approve' ? 'text-green-800' : 'text-red-800'
+                }`}>
+                  <strong>Task:</strong> {task.task_name}
+                </p>
+                <p className={`text-sm mt-1 ${
+                  reviewAction === 'approve' ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  คุณกำลังจะ{reviewAction === 'approve' ? 'อนุมัติ' : 'ไม่อนุมัติ'}งานนี้
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ความคิดเห็น {reviewAction === 'reject' && <span className="text-red-500">*</span>}
+                </label>
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none"
+                  placeholder={reviewAction === 'approve' 
+                    ? 'ความคิดเห็นเพิ่มเติม (ไม่บังคับ)' 
+                    : 'กรุณาระบุเหตุผลที่ไม่อนุมัติ (บังคับ)'
+                  }
+                  disabled={reviewLoading}
+                />
+              </div>
+
+              {reviewAction === 'reject' && !reviewComment.trim() && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                  <p className="text-yellow-800 text-sm">
+                    กรุณาระบุเหตุผลในการไม่อนุมัติ
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCloseReviewModal}
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-lg transition-all"
+                disabled={reviewLoading}
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleReviewTask}
+                disabled={reviewLoading || (reviewAction === 'reject' && !reviewComment.trim())}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
+                  reviewAction === 'approve'
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-red-600 hover:bg-red-700 text-white'
+                }`}
+              >
+                {reviewLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>กำลังดำเนินการ...</span>
+                  </>
+                ) : (
+                  <>
+                    {reviewAction === 'approve' ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                    <span>{reviewAction === 'approve' ? 'อนุมัติ' : 'ไม่อนุมัติ'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
