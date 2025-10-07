@@ -189,36 +189,231 @@ export default function OverviewPage() {
           </div>
 
           {/* Projects Section */}
-          <div>
-            <h2 className="text-xl font-semibold text-blue-700 mb-4">
-              My Projects
-            </h2>
-            <div className="space-y-4">
-              {safeUserProjects.length > 0 ? (
-                safeUserProjects.map((project: Project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))
-              ) : (
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 text-center">
-                  <div className="mb-4">
-                    <svg className="w-16 h-16 text-blue-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          <div className="space-y-8">
+            {/* Projects as Leader Section */}
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                     </svg>
                   </div>
-                  <p className="text-blue-700 text-lg font-medium mb-2">คุณยังไม่ได้เป็นสมาชิกในโปรเจ็กต์ใดๆ</p>
-                  <p className="text-blue-600 text-sm mb-4">สร้างโปรเจ็กต์ใหม่หรือติดต่อเจ้าของโปรเจ็กต์เพื่อขอเข้าร่วม</p>
-                  <a 
-                    href="/create-project"
-                    className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>สร้างโปรเจ็กต์ใหม่</span>
-                  </a>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">โปรเจกต์ที่เป็น Leader</h2>
+                    <p className="text-gray-600">โปรเจกต์ที่คุณเป็นผู้สร้างและดูแล</p>
+                  </div>
                 </div>
-              )}
+                <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                  {safeUserProjects.filter(project => 
+                    project.created_by_user_id === user?.id || project.created_by_user === user?.id
+                  ).length} โปรเจกต์
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {safeUserProjects
+                  .filter(project => 
+                    project.created_by_user_id === user?.id || project.created_by_user === user?.id
+                  )
+                  .map((project: Project) => (
+                    <a 
+                      key={project.id} 
+                      href={`/projects/${project.documentId || project.id}`}
+                      className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 p-6 cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-purple-100 text-purple-700 border border-purple-200 px-2 py-1 rounded text-xs font-medium flex items-center space-x-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            </svg>
+                            <span>Leader</span>
+                          </div>
+                        </div>
+                        
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          project.project_status === 'active' 
+                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            : project.project_status === 'completed'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                        }`}>
+                          {project.project_status === 'active' ? 'กำลังดำเนินการ' :
+                           project.project_status === 'completed' ? 'เสร็จสิ้น' : 'รอดำเนินการ'}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {project.project_name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {project.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-3">
+                        <div className="flex items-center space-x-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span>{new Date(project.start_date).toLocaleDateString('th-TH')}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>{new Date(project.end_date).toLocaleDateString('th-TH')}</span>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                
+                {/* Empty state for Leader projects */}
+                {safeUserProjects.filter(project => 
+                  project.created_by_user_id === user?.id || project.created_by_user === user?.id
+                ).length === 0 && (
+                  <div className="col-span-full">
+                    <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-700 text-lg font-semibold mb-2">ยังไม่มีโปรเจกต์ที่เป็น Leader</p>
+                      <p className="text-gray-500 text-sm mb-4">สร้างโปรเจกต์ใหม่เพื่อเริ่มเป็นผู้นำทีม</p>
+                      <a 
+                        href="/create-project"
+                        className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>สร้างโปรเจกต์ใหม่</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Projects as Member Section */}
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">โปรเจกต์ที่เป็นสมาชิก</h2>
+                    <p className="text-gray-600">โปรเจกต์ที่คุณเข้าร่วมในฐานะสมาชิก</p>
+                  </div>
+                </div>
+                <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                  {safeUserProjects.filter(project => 
+                    project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
+                  ).length} โปรเจกต์
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {safeUserProjects
+                  .filter(project => 
+                    project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
+                  )
+                  .map((project: Project) => (
+                    <a 
+                      key={project.id} 
+                      href={`/projects/${project.documentId || project.id}`}
+                      className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 p-6 cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-blue-100 text-blue-700 border border-blue-200 px-2 py-1 rounded text-xs font-medium flex items-center space-x-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <span>Member</span>
+                          </div>
+                        </div>
+                        
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          project.project_status === 'active' 
+                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            : project.project_status === 'completed'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                        }`}>
+                          {project.project_status === 'active' ? 'กำลังดำเนินการ' :
+                           project.project_status === 'completed' ? 'เสร็จสิ้น' : 'รอดำเนินการ'}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {project.project_name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {project.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-3">
+                        <div className="flex items-center space-x-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span>{new Date(project.start_date).toLocaleDateString('th-TH')}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>{new Date(project.end_date).toLocaleDateString('th-TH')}</span>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                
+                {/* Empty state for Member projects */}
+                {safeUserProjects.filter(project => 
+                  project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
+                ).length === 0 && (
+                  <div className="col-span-full">
+                    <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-700 text-lg font-semibold mb-2">ยังไม่เป็นสมาชิกในโปรเจกต์ใด</p>
+                      <p className="text-gray-500 text-sm mb-4">รอการเชิญจาก Leader หรือติดต่อเพื่อขอเข้าร่วมโปรเจกต์</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Empty state for all projects */}
+            {safeUserProjects.length === 0 && (
+              <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-12 text-center">
+                <div className="w-20 h-20 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <p className="text-gray-700 text-2xl font-bold mb-3">ยังไม่มีโปรเจกต์</p>
+                <p className="text-gray-500 text-lg mb-6">เริ่มต้นการทำงานร่วมกันด้วยการสร้างโปรเจกต์แรกของคุณ</p>
+                <a 
+                  href="/create-project"
+                  className="inline-flex items-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-sm hover:shadow-md"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>สร้างโปรเจกต์ใหม่</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>
