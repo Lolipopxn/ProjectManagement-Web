@@ -383,14 +383,6 @@ export default function VoiceRoomPopup({
   const deregisterSessionKeepalive = useCallback(
     (agoraUid: string) => {
       try {
-        const sid = sessionIdRef.current;
-        if (sid != null) {
-          fetch(
-            `/api/voice/session?id=${encodeURIComponent(String(sid))}&hard=1`,
-            { method: "DELETE", keepalive: true }
-          ).catch(() => {});
-          return;
-        }
         const url = `/api/voice/session?slug=${encodeURIComponent(
           slug
         )}&agoraUid=${encodeURIComponent(agoraUid)}&hard=1`;
