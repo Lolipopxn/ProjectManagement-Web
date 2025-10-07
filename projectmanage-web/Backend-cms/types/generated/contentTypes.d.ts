@@ -654,7 +654,7 @@ export interface ApiVoiceSessionVoiceSession
     singularName: 'voice-session';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     active: Schema.Attribute.Boolean;

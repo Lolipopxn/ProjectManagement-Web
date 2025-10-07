@@ -102,6 +102,8 @@ export default function VoiceRoomPopup({
   const clientRef = useRef<any>(null);
   const micRef = useRef<any>(null); // LocalMicrophoneTrack
   const remoteTracksRef = useRef<Map<string, any>>(new Map()); // uid -> RemoteAudioTrack
+  // Track the exact session id we created/activated
+  const sessionIdRef = useRef<number | string | null>(null);
 
   // Push-to-talk
   const pttHeldRef = useRef(false);
@@ -345,11 +347,15 @@ export default function VoiceRoomPopup({
   const registerSession = useCallback(
     async (agoraUid: string, initMuted: boolean) => {
       try {
-        await fetch("/api/voice/session", {
+        const res = await fetch("/api/voice/session", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ slug, agoraUid, muted: initMuted }),
         });
+        // Capture id of the created/updated session
+        const js = await res.json().catch(() => null);
+        const id = js?.data?.id ?? js?.id;
+        if (id != null) sessionIdRef.current = id;
       } catch (e) {
         /* no-op */
       }
@@ -357,21 +363,7 @@ export default function VoiceRoomPopup({
     [slug]
   );
 
-  const deregisterSession = useCallback(
-    async (agoraUid: string, hard: boolean) => {
-      try {
-        await fetch("/api/voice/session", {
-          method: "DELETE",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ slug, agoraUid, hard }),
-        });
-      } catch (e) {
-        /* no-op */
-      }
-    },
-    [slug]
-  );
-
+  // Re-add: PATCH muted instead of deleting session
   const patchMutedSession = useCallback(
     async (agoraUid: string, mutedVal: boolean) => {
       try {
@@ -381,6 +373,29 @@ export default function VoiceRoomPopup({
           body: JSON.stringify({ slug, agoraUid, muted: mutedVal }),
         });
       } catch (e) {
+        /* no-op */
+      }
+    },
+    [slug]
+  );
+
+  // Prefer deleting by id on unload; fallback to slug/agoraUid only if id missing
+  const deregisterSessionKeepalive = useCallback(
+    (agoraUid: string) => {
+      try {
+        const sid = sessionIdRef.current;
+        if (sid != null) {
+          fetch(
+            `/api/voice/session?id=${encodeURIComponent(String(sid))}&hard=1`,
+            { method: "DELETE", keepalive: true }
+          ).catch(() => {});
+          return;
+        }
+        const url = `/api/voice/session?slug=${encodeURIComponent(
+          slug
+        )}&agoraUid=${encodeURIComponent(agoraUid)}&hard=1`;
+        fetch(url, { method: "DELETE", keepalive: true }).catch(() => {});
+      } catch {
         /* no-op */
       }
     },
@@ -522,16 +537,16 @@ export default function VoiceRoomPopup({
     selectedMicId,
     stopMicTest,
     markPeerSpeaking,
+    registerSession,
   ]);
 
   /** ===== Leave (explicit only) ===== */
-  const handleLeave = useCallback(async () => {
+  const handleLeave = useCallback(async (myUid: string) => {
     try {
-      if (myUid) {
-        try {
-          await deregisterSession(myUid, true);
-        } catch {}
-      }
+
+      await deregisterSessionKeepalive(myUid);
+
+
       if (micRef.current) {
         await micRef.current.setEnabled(false);
         micRef.current.close?.();
@@ -554,12 +569,14 @@ export default function VoiceRoomPopup({
       // muted/deaf persist by design
       setMe(null);
       setMyUid(null);
+      // clear persisted session id so we don't try to reuse it
+      sessionIdRef.current = null;
       if (speakingTimerRef.current) {
         clearInterval(speakingTimerRef.current as any);
         speakingTimerRef.current = null;
       }
     }
-  }, []);
+  }, [deregisterSessionKeepalive]);
 
   /** ===== Close UI only (keep session) ===== */
   const handleClose = useCallback(() => {
@@ -576,13 +593,13 @@ export default function VoiceRoomPopup({
     const next = !muted;
     await micRef.current.setEnabled(!next);
     setMuted(next);
-
+    // persist muted state instead of deleting the session
     if (myUid) {
       try {
         await patchMutedSession(myUid, next);
       } catch {}
     }
-  }, [muted]);
+  }, [muted, myUid, patchMutedSession]);
 
   const toggleDeaf = useCallback(async () => {
     const next = !deaf;
@@ -650,7 +667,7 @@ export default function VoiceRoomPopup({
     // Clean up ONLY when component unmounts (closing drawer via isOpen will not unmount)
     return () => {
       // If you want to auto-leave on hard unmount (route change), keep this:
-      void handleLeave();
+      //void handleLeave(myUid);
       stopMicTest();
       if (speakingTimerRef.current) {
         clearInterval(speakingTimerRef.current as any);
@@ -992,7 +1009,7 @@ export default function VoiceRoomPopup({
                     </button>
 
                     <button
-                      onClick={handleLeave}
+                      onClick={() => { if (myUid) void handleLeave(myUid); }}
                       disabled={!joined && !joining}
                       className="rounded-lg bg-[#3F72AF] px-3 py-2 text-sm text-white hover:brightness-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#3F72AF] focus:ring-offset-2"
                       type="button"
