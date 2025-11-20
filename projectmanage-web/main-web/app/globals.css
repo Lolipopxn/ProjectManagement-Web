@@ -52,3 +52,7 @@
 .task-card-shimmer:hover::before {
   left: 100%;
 }
+
+html {
+  scroll-behavior: smooth;
+}
