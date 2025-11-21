@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import { login } from "./action";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import { IoPersonSharp } from "react-icons/io5";
+import { FcGoogle } from "react-icons/fc";
 import Image from "next/image";
 
 const initialState = {
@@ -13,52 +15,44 @@ export default function LoginPage() {
   const [state, formAction] = useActionState(login, initialState);
 
   return (
-    <div className="flex h-full">
-      <div className="w-1/2 relative h-screen hidden md:block bg-blue-500">
-        <Image
-          src="/bg-login.jpg"
-          alt="Login Image"
-          fill
-          className="object-cover opacity-30 z-0"
-        />
-
-        <div className="absolute inset-0 bg-black-500/[100%] flex items-center justify-start p-15">
+    <div className="h-screen w-screen  grid grid-cols-1 md:grid-cols-2">
+      <div className="col-span-1 relative hidden md:block bg-[#ffffff]">
+        <div className="relative flex items-center justify-center w-full h-full">
+          <div className="absolute opacity-100 z-0 pr-1 w-full h-full bg-[url('/bg-login.jpg')] bg-cover bg-top-left border-t-4 border-white bg-clip-border p-1 rounded-tr-[700px]"></div>
+          <div className="relative opacity-100 z-0 pr-1 w-full h-full bg-white bg-cover bg-top-left border-b-4 border-white rounded-bl-[1000px]"></div>
+        </div>
+        
+        <div className=" absolute inset-0 bg-black-500/[100%] flex justify-center items-start mt-20 ml-40">
           <div className="text-white text-start">
-            <h1 className="text-4xl font-bold mb-4">
-              Project Management Platform
-            </h1>
-            <p className="text-lg">
-              Collaborate, organize tasks, and manage your team’s productivity
-              in one place.
-            </p>
+            <div className="opacity-100 bg-[url('/postponed-concept.png')] bg-cover bg-center w-150 h-110 scale-80"></div>
           </div>
         </div>
       </div>
 
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-50">
-        <div className="bg-white shadow-lg rounded-lg p-8 w-[80%] h-[90%]">
+      <div className="w-full col-span-1 flex items-center justify-center bg-[#3C467B]">
+        <div className="bg-white pt-15 px-20 w-[100%] h-[100%]">
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
             Login
           </h2>
 
-          <form className="space-y-5 px-15" action={formAction}>
+          <form className="space-y-3 px-15" action={formAction}>
             {/* Email */}
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-normal text-gray-700 mb-3"
               >
-                Email Address
+                ชื่อผู้ใช้ หรือ อีเมล
               </label>
-              <div className="flex items-center border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
-                <FaEnvelope className="text-gray-400 mr-2" />
+              <div className="flex items-center bg-blue-300/20 text-black rounded-[25px] px-3 py-4 focus-within:ring-2 focus-within:ring-[#3C467B] hover:bg-blue-300/50">
+                <IoPersonSharp className="mx-5 w-5 h-5 self-center" />
                 <input
                   id="email"
                   type="email"
                   name="email"
                   required
                   placeholder="you@example.com"
-                  className="w-full border-none outline-none"
+                  className="w-full border-none outline-none placeholder-black"
                 />
               </div>
             </div>
@@ -66,30 +60,46 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="email"
+                className="block text-sm font-normal text-gray-700 mb-3"
               >
-                Password
+              รหัสผ่าน
               </label>
-              <div className="flex items-center border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
-                <FaLock className="text-gray-400 mr-2" />
+              <div className="flex items-center bg-blue-300/20 text-black rounded-[25px] px-3 py-4 focus-within:ring-2 focus-within:ring-[#3C467B] hover:bg-blue-300/50">
+                <FaLock className="mx-5 w-4 h-4 self-center" />
                 <input
                   id="password"
                   type="password"
                   name="password"
                   required
                   placeholder="Enter your password"
-                  className="w-full border-none outline-none"
+                  className="w-full border-none outline-none placeholder-black"
                 />
               </div>
             </div>
 
+            {/* Register */}
+          <div className="mt-4 text-center text-sm text-gray-600 flex flex-row justify-between items-center">
+            <p>
+              Don't have an account?{" "}
+              <a href="/register" className="text-blue-600 hover:underline">
+                Sign up
+              </a>
+            </p>
+            <p>
+              <a href="/forgot_password" className="text-blue-600 hover:underline">
+                Forgot password?
+              </a>
+            </p>
+          </div>
+
+
             {/* Login Button */}
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-all"
+              className="w-1/2 flex justify-self-center justify-center self-end bg-linear-to-r from-[#6E8CFB] to-[#636CCB] text-white hover:opacity-70 font-bold py-3 mt-8 rounded-[25px] transition-all"
             >
-              Login
+              <div>Login</div>
             </button>
             {state?.message && (
             <div className="mt-4 text-center text-red-500">
@@ -98,20 +108,21 @@ export default function LoginPage() {
           )}
           </form>
 
-          {/* Footer */}
-          <div className="mt-4 text-center text-sm text-gray-600">
-            <p>
-              <a href="/forgot_password" className="text-blue-600 hover:underline">
-                Forgot password?
-              </a>
-            </p>
-            <p className="mt-2">
-              Don't have an account?{" "}
-              <a href="/register" className="text-blue-600 hover:underline">
-                Sign up
-              </a>
-            </p>
+          {/* Others Login */}
+          <hr className="my-6 border-t"/>
+          <div className="justify-items-center items-center space-y-5">
+            <div className="font-normal">หรือ</div>
+            <button className="w-8/10 bg-white border border-gray-400 gap-3 rounded-[16px] p-3 flex justify-center justify-self-center items-center hover:bg-gray-200">
+              <FcGoogle className="w-6 h-6"/>
+              <div className="font-normal text-md">Login with <span className="font-bold">Google</span></div>
+            </button>
           </div>
+
+          {/* Footer */}
+          <div className="mt-20 flex justify-center">
+            © 2025 Project Management. All rights reserved.
+          </div>
+
         </div>
       </div>
     </div>
