@@ -30,12 +30,12 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full col-span-1 flex items-center justify-center bg-[#3C467B]">
-        <div className="bg-white pt-15 px-20 w-[100%] h-[100%]">
+        <div className="bg-white pt-15 px-12 md:px-20 w-[100%] h-[100%]">
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
             Login
           </h2>
 
-          <form className="space-y-3 px-15" action={formAction}>
+          <form className="space-y-3 md:px-15" action={formAction}>
             {/* Email */}
             <div>
               <label
@@ -79,7 +79,7 @@ export default function LoginPage() {
             </div>
 
             {/* Register */}
-          <div className="mt-4 text-center text-sm text-gray-600 flex flex-row justify-between items-center">
+          <div className="mt-4 text-start text-sm text-gray-600 flex flex-row justify-between gap-10 items-center">
             <p>
               Don't have an account?{" "}
               <a href="/register" className="text-blue-600 hover:underline">
@@ -97,13 +97,13 @@ export default function LoginPage() {
             {/* Login Button */}
             <button
               type="submit"
-              className="w-1/2 flex justify-self-center justify-center self-end bg-linear-to-r from-[#6E8CFB] to-[#636CCB] text-white hover:opacity-70 font-bold py-3 mt-8 rounded-[25px] transition-all"
+              className="w-full md:w-1/2 flex justify-self-center justify-center self-end bg-linear-to-r from-[#6E8CFB] to-[#636CCB] text-white hover:opacity-70 font-bold py-3 mt-8 rounded-[25px] transition-all"
             >
               <div>Login</div>
             </button>
             {state?.message && (
             <div className="mt-4 text-center text-red-500">
-              Message: {state.message}
+              {state.message}
             </div>
           )}
           </form>
@@ -111,8 +111,8 @@ export default function LoginPage() {
           {/* Others Login */}
           <hr className="my-6 border-t"/>
           <div className="justify-items-center items-center space-y-5">
-            <div className="font-normal">หรือ</div>
-            <button className="w-8/10 bg-white border border-gray-400 gap-3 rounded-[16px] p-3 flex justify-center justify-self-center items-center hover:bg-gray-200">
+            <div className="font-normal text-center">หรือ</div>
+            <button className="w-full md:w-8/10 bg-white border border-gray-400 gap-3 rounded-[16px] p-3 flex justify-center justify-self-center items-center hover:bg-gray-200">
               <FcGoogle className="w-6 h-6"/>
               <div className="font-normal text-md">Login with <span className="font-bold">Google</span></div>
             </button>
