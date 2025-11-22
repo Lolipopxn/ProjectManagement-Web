@@ -5,9 +5,9 @@ import { FaFacebook, FaFacebookMessenger, FaGithub } from "react-icons/fa";
 export default function Page() {
     return (
         <section id='footer' className='bg-[#161815] h-auto'>
-            <div className="container mx-auto relative px-25 py-10 max-w-[1320px] text-white flex flex-col space-y-10">     
+            <div className="container mx-auto relative px-25 py-10 max-w-[1320px] text-white flex flex-col space-y-10 text-sm md:text-md">     
                 <div className="justify-items-center py-5">
-                    <h1 className="text-5xl font-bold">-- What's next --</h1>
+                    <h1 className="text-2xl md:text-5xl font-bold">-- What's next --</h1>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-15 px-5">
                     <div>

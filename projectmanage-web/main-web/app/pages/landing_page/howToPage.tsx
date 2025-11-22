@@ -6,7 +6,7 @@ export default function HowToPage() {
             {/*Page step 1-2*/}
             <div className="bg-[#6E8CFB]">
                 <div className="container mx-auto relative pt-15 px-10 max-w-[1320px] flex flex-col justify-center items-between">
-                    <div className="justify-items-center border-2 rounded-[15px] bg-[#636CCB] mt-10 w-1/3 text-center self-center shadow-lg">
+                    <div className="justify-items-center border-2 rounded-[15px] bg-[#636CCB] mt-10 w-full md:w-1/3 text-center self-center shadow-lg">
                         <h1 className="text-white text-2xl font-semibold py-5">How to Use Web Application ?</h1>
                     </div>
                     

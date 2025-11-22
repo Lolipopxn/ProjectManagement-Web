@@ -12,13 +12,13 @@ export default function Nav() {
 
     return (
         <nav className="bg-[#161815] fixed top-0 left-0 w-full z-50">
-            <div className="container mx-auto relative md:py-4 px-4 text-white text-sm max-w-[1320px] h-auto flex flex-col md:flex-row md:justify-between md:items-center">
+            <div className="container mx-auto relative py-2 md:py-4 px-4 text-white text-sm max-w-[1320px] h-auto flex flex-col md:flex-row md:justify-between md:items-center">
                 <div className="flex flex-col md:flex-row md:items-center gap-5">
                     <div className="flex flex-row items-center">
                         <a href="#">
                             <img src="/Logo-main.png" alt="Logo" className="h-10 w-10 md:h-14 md:w-14"/>
                         </a>
-                        <a href="#" className="hidden sm:flex">
+                        <a href="#" className="">
                            MyDaily
                         </a>
                         
