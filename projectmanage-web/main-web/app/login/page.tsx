@@ -2,10 +2,9 @@
 
 import { useActionState } from "react";
 import { login } from "./action";
-import { FaEnvelope, FaLock } from "react-icons/fa";
+import { FaLock } from "react-icons/fa";
 import { IoPersonSharp } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
-import Image from "next/image";
 
 const initialState = {
   message: null,
@@ -13,6 +12,13 @@ const initialState = {
 
 export default function LoginPage() {
   const [state, formAction] = useActionState(login, initialState);
+
+  const handleGoogleLogin = () => {
+    const strapi = "http://localhost:1337";
+
+    window.location.href =
+      `${strapi}/api/connect/google`;
+  };
 
   return (
     <div className="h-screen w-screen  grid grid-cols-1 md:grid-cols-2">
@@ -112,7 +118,7 @@ export default function LoginPage() {
           <hr className="my-6 border-t"/>
           <div className="justify-items-center items-center space-y-5">
             <div className="font-normal text-center">หรือ</div>
-            <button className="w-full md:w-8/10 bg-white border border-gray-400 gap-3 rounded-[16px] p-3 flex justify-center justify-self-center items-center hover:bg-gray-200">
+            <button onClick={handleGoogleLogin} className="w-full md:w-8/10 bg-white border border-gray-400 gap-3 rounded-[16px] p-3 flex justify-center justify-self-center items-center hover:bg-gray-200">
               <FcGoogle className="w-6 h-6"/>
               <div className="font-normal text-md">Login with <span className="font-bold">Google</span></div>
             </button>
