@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/Nabbar_main/Navbar';
 import Sidebar from '../components/Sidebar';
 import ProjectCard from '../components/ProjectCard';
 
@@ -123,16 +123,18 @@ export default function OverviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className=" bg-gray-50 w-full">
       {/* Navbar */}
       <Navbar user={user} />
-      
-      <div className="flex">
-        {/* Sidebar */}
+
+      {/* Sidebar */}
+      <div className='hidden md:flex mt-17'>
         <Sidebar />
-        
+      </div>
+      
+      <div className="flex flex-row justify-center items-start mt-17 ">
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 md:ml-70 max-w-[1900px]">
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -152,9 +154,6 @@ export default function OverviewPage() {
                 <span>สร้างโปรเจ็กต์ใหม่</span>
               </a>
             </div>
-
-            
-            
 
             {/* Project Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -211,7 +210,7 @@ export default function OverviewPage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                 {safeUserProjects
                   .filter(project => 
                     project.created_by_user_id === user?.id || project.created_by_user === user?.id
@@ -317,7 +316,7 @@ export default function OverviewPage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                 {safeUserProjects
                   .filter(project => 
                     project.created_by_user_id !== user?.id && project.created_by_user !== user?.id

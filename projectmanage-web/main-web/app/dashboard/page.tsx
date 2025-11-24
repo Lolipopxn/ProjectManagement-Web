@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/Nabbar_main/Navbar';
 import Sidebar from '../components/Sidebar';
 import TaskStatusIcon from '../components/TaskStatusIcon';
 

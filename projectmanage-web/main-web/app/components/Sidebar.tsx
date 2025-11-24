@@ -121,7 +121,7 @@ export default function Sidebar() {
   const totalProjects = projects.length;
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto">
+    <aside className="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto fixed">
       <div className="p-4">
         {/* Breadcrumb */}
         <div className="flex items-center space-x-2 text-sm text-gray-500 mb-6">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/Nabbar_main/Navbar';
 import Sidebar from '../components/Sidebar';
 import { v4 as uuidv4 } from 'uuid';
 import { UUID } from 'crypto';
@@ -412,7 +412,7 @@ export default function CreateProjectPage() {
       {/* Navbar */}
       <Navbar user={null} />
       
-      <div className="flex">
+      <div className="flex mt-17">
         {/* Sidebar */}
         <Sidebar />
         

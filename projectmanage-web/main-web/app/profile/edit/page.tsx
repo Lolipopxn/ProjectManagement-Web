@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Nabbar_main/Navbar';
 import { motion } from 'framer-motion';
 
 interface User {
