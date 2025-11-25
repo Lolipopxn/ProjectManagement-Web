@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
-import { MdSpaceDashboard, MdPerson } from "react-icons/md";
-import { FaFolder } from "react-icons/fa";
+import { MdSpaceDashboard, MdPerson, MdNotifications } from "react-icons/md";
+import { FaFolder, FaPlus} from "react-icons/fa";
 import { IoIosSettings } from "react-icons/io";
 
 interface User {
@@ -121,7 +121,7 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
   };
 
   const Avatar = ({ name }: { name?: string }) => (
-    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-semibold ring-2 ring-indigo-100">
+    <div className="h-6 w-6 md:h-9 md:w-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-semibold ring-2 ring-indigo-100">
       {name?.charAt(0)?.toUpperCase() || (
         <svg
           className="w-5 h-5 text-white/90"
@@ -169,7 +169,7 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
       <div
         role="menu"
         aria-label="User menu"
-        className={`absolute right-0 mt-1 w-auto px-5 py-3 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-150 origin-top-right${
+        className={`absolute right-0 mt-1 w-auto px-6 py-3 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-150 origin-top-right${
           open
             ? "opacity-100 scale-100 translate-y-0 visible"
             : "opacity-0 scale-95 -translate-y-1 invisible pointer-events-none"
@@ -177,7 +177,7 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
       >
         {user ? (
           <div className="py-2">
-            <div className="px-4 pb-3 pt-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+            <div className="px-5 pb-3 pt-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
               <div className="flex items-center gap-3">
                 <Avatar name={user.username} />
                 <div className="min-w-0">
@@ -215,7 +215,27 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
               className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
             >
               <FaFolder className="w-4 h-4 text-gray-700" />
-              <div>โปรเจค</div>
+              <div>โปรเจคทั้งหมด</div>
+            </a>
+
+            <a
+              href="/create-project"
+              onClick={() => setOpen(false)}
+              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <FaPlus className="w-4 h-4 text-gray-700" />
+              <div>สร้างโปรเจคใหม่</div>
+            </a>
+
+            <a
+              href="/notifications"
+              onClick={() => setOpen(false)}
+              className="flex flex-row items-center justify-between gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <div className="flex flex-row justify-center items-center gap-3">
+                <MdNotifications className="w-4 h-4 text-gray-700" />
+                <div>การเเจ้งเตือน</div>
+              </div>
             </a>
 
             <a

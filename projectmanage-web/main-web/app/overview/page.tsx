@@ -6,6 +6,8 @@ import Navbar from '../components/Nabbar_main/Navbar';
 import Sidebar from '../components/Sidebar';
 import ProjectCard from '../components/ProjectCard';
 
+import { useSidebarStore } from "@/hooks/sidebar";
+
 // Interface สำหรับ project data
 interface Project {
   id: number;
@@ -46,6 +48,7 @@ export default function OverviewPage() {
   const [overviewData, setOverviewData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isNavOpen = useSidebarStore((s) => s.isNavOpen);
 
   // ดึงข้อมูลจาก API route
   useEffect(() => {
@@ -123,7 +126,7 @@ export default function OverviewPage() {
   };
 
   return (
-    <div className=" bg-gray-50 w-full">
+    <div className=" bg-gray-50 min-h-screen w-full">
       {/* Navbar */}
       <Navbar user={user} />
 
@@ -132,9 +135,9 @@ export default function OverviewPage() {
         <Sidebar />
       </div>
       
-      <div className="flex flex-row justify-center items-start mt-17 ">
+      <div className="flex flex-row justify-center items-start mt-17 md:mt-0">
         {/* Main Content */}
-        <div className="flex-1 p-6 md:ml-70 max-w-[1900px]">
+        <div className={`${isNavOpen ? "md:ml-70" : "md:ml-20"} flex-1 p-6  max-w-[1900px]`}>
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">

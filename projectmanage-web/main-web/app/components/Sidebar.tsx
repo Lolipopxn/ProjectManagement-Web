@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { VscChevronLeft, VscChevronRight } from "react-icons/vsc";
+import { MdSpaceDashboard } from "react-icons/md";
+import { FaFolder, FaPlus } from "react-icons/fa";
+import { useSidebarStore } from "@/hooks/sidebar";
 
 interface Project {
   id: number;
@@ -56,21 +61,24 @@ export default function Sidebar() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const { isNavOpen, toggleNav } = useSidebarStore();
 
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await axios.get<SidebarApiResponse>('/api/sidebar', { withCredentials: true });
+        const { data } = await axios.get<SidebarApiResponse>("/api/sidebar", {
+          withCredentials: true,
+        });
         setProjects(data.projects ?? []);
         setTasks(data.tasks ?? []);
         if (!data.hasAuth) {
           // ไม่มีสิทธิ์ -> ส่งไปหน้า login
-          router.push('/login');
+          router.push("/login");
         }
       } catch (e: any) {
-        console.error('Failed to fetch sidebar data:', e);
-        setErr(e?.response?.data?.message || 'ไม่สามารถโหลดข้อมูลได้');
-        if (e?.response?.status === 401) router.push('/login');
+        console.error("Failed to fetch sidebar data:", e);
+        setErr(e?.response?.data?.message || "ไม่สามารถโหลดข้อมูลได้");
+        if (e?.response?.status === 401) router.push("/login");
       } finally {
         setLoading(false);
       }
@@ -78,40 +86,53 @@ export default function Sidebar() {
   }, [router]);
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '—';
+    if (!dateString) return "—";
     const dt = new Date(dateString);
-    if (Number.isNaN(dt.getTime())) return '—';
-    return new Intl.DateTimeFormat('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(dt);
+    if (Number.isNaN(dt.getTime())) return "—";
+    return new Intl.DateTimeFormat("th-TH", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(dt);
   };
 
   // เรียง task ตาม due_date ก่อน แล้วค่อยจัดกลุ่ม เพื่อลิสต์สวย ๆ
   const groupedTasks = useMemo(() => {
-    const byProject: Record<string, { tasks: Task[], projectInfo: Project | null }> = {};
+    const byProject: Record<
+      string,
+      { tasks: Task[]; projectInfo: Project | null }
+    > = {};
     const sorted = [...tasks].sort((a, b) => {
       const ta = new Date(a.due_date).getTime();
       const tb = new Date(b.due_date).getTime();
-      return (Number.isNaN(ta) ? Infinity : ta) - (Number.isNaN(tb) ? Infinity : tb);
+      return (
+        (Number.isNaN(ta) ? Infinity : ta) - (Number.isNaN(tb) ? Infinity : tb)
+      );
     });
-    
+
     for (const t of sorted) {
       // หา project ที่ตรงกับ task โดยเช็คจาก project_document_id หรือ project_id_number
-      const matchedProject = projects.find(p => 
-        (t.project_document_id && (p.documentId === t.project_document_id || p.id.toString() === t.project_document_id)) ||
-        (t.project_id_number && p.id === t.project_id_number)
+      const matchedProject = projects.find(
+        (p) =>
+          (t.project_document_id &&
+            (p.documentId === t.project_document_id ||
+              p.id.toString() === t.project_document_id)) ||
+          (t.project_id_number && p.id === t.project_id_number)
       );
-      
+
       if (matchedProject) {
-        const projectKey = matchedProject.documentId ?? matchedProject.id.toString();
+        const projectKey =
+          matchedProject.documentId ?? matchedProject.id.toString();
         if (!byProject[projectKey]) {
           byProject[projectKey] = { tasks: [], projectInfo: matchedProject };
         }
         byProject[projectKey].tasks.push(t);
       } else {
         // ถ้าหา project ไม่เจอให้ใส่ในกลุ่ม no-project
-        if (!byProject['no-project']) {
-          byProject['no-project'] = { tasks: [], projectInfo: null };
+        if (!byProject["no-project"]) {
+          byProject["no-project"] = { tasks: [], projectInfo: null };
         }
-        byProject['no-project'].tasks.push(t);
+        byProject["no-project"].tasks.push(t);
       }
     }
     return byProject;
@@ -121,36 +142,97 @@ export default function Sidebar() {
   const totalProjects = projects.length;
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto fixed">
+    <aside className={`${isNavOpen ? 'transition-all duration-500  w-64' : 'transition-all duration-500 w-18 '}  bg-white border-r border-gray-200 h-screen overflow-y-auto fixed`}>
       <div className="p-4">
         {/* Breadcrumb */}
-        <div className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5v6m8-6v6m-8-2h8" />
+        <div className="flex flex-row mt-5 justify-between items-center space-x-2 text-sm text-gray-500 mb-6">
+          <div className={`${isNavOpen ? 'flex' : 'hidden'} flex flex-row justify-center items-center gap-1`}>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 5v6m8-6v6m-8-2h8"
+              />
+            </svg>
+            <span>Home</span>
+          </div>
+          <button onClick={toggleNav} className="bg-white rounded-[16px]">
+            <svg
+            className={`hidden md:flex w-4 h-4 transition-transform ${
+              isNavOpen ? "rotate-180" : "rotate-0 ml-3"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
-          <span>Home</span>
+          </button> 
         </div>
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 gap-2 mb-6">
           <Link
             href="/dashboard"
-            className="bg-purple-100 text-purple-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-purple-200 transition-colors text-center flex items-center justify-center"
+            className="bg-purple-100 text-purple-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-purple-200 transition-colors text-center flex items-center justify-start"
           >
-            📊 Dashboard
+            {isNavOpen ? (
+            <div className="flex flex-row justify-center items-center gap-2 ml-3">
+              <MdSpaceDashboard className="w-4 h-4" />
+              <div>Dashboard</div>
+            </div>
+            ) : (
+              <div className="flex flex-row justify-center items-center">
+              <MdSpaceDashboard className="w-4 h-4" />
+            </div>
+            )}
           </Link>
           <Link
             href="/overview"
-            className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors text-center"
+            className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors text-center flex items-center justify-start"
           >
-            Overview
+            {isNavOpen ? (
+            <div className="flex flex-row justify-center items-center gap-2 ml-3">
+              <FaFolder className="w-4 h-4" />
+              <div>overview</div>
+            </div>
+            ) : (
+              <div className="flex flex-row justify-center items-center">
+              <FaFolder className="w-4 h-4" />
+            </div>
+            )}
           </Link>
           <Link
             href="/create-project"
-            className="bg-green-100 text-green-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-green-200 transition-colors text-center"
+            className="bg-green-100 text-green-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-green-200 transition-colors text-center flex items-center justify-start"
           >
-            + Create Project
+            {isNavOpen ? (
+            <div className="flex flex-row justify-center items-center gap-2 ml-3">
+              <FaPlus className="w-4 h-4" />
+              <div>Create</div>
+            </div>
+            ) : (
+              <div className="flex flex-row justify-center items-center">
+              <FaPlus className="w-4 h-4" />
+            </div>
+            )}
           </Link>
         </div>
 
@@ -162,21 +244,30 @@ export default function Sidebar() {
         )}
 
         {/* My Projects */}
-        <div className="mb-6">
+        <div className={`${isNavOpen ? ' flex flex-col mb-6' : 'hidden'} `}>
           <button
             onClick={() => setMyProjectOpen((v) => !v)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
           >
             <span>My Projects</span>
             <span className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100">{totalProjects}</span>
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100">
+                {totalProjects}
+              </span>
               <svg
-                className={`w-4 h-4 transition-transform ${myProjectOpen ? 'rotate-90' : ''}`}
+                className={`w-4 h-4 transition-transform ${
+                  myProjectOpen ? "rotate-90" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </button>
@@ -186,7 +277,10 @@ export default function Sidebar() {
               {loading ? (
                 <div className="space-y-2">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="h-6 bg-gray-100 rounded animate-pulse" />
+                    <div
+                      key={i}
+                      className="h-6 bg-gray-100 rounded animate-pulse"
+                    />
                   ))}
                 </div>
               ) : projects.length > 0 ? (
@@ -203,28 +297,39 @@ export default function Sidebar() {
                   );
                 })
               ) : (
-                <div className="text-sm text-gray-500">ไม่มีโปรเจ็กต์ที่เป็นสมาชิก</div>
+                <div className="text-sm text-gray-500">
+                  ไม่มีโปรเจ็กต์ที่เป็นสมาชิก
+                </div>
               )}
             </div>
           )}
         </div>
 
         {/* My Tasks */}
-        <div>
+        <div className={`${isNavOpen ? ' flex flex-col' : 'hidden'} `}>
           <button
             onClick={() => setMyTaskOpen((v) => !v)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
           >
             <span>My Tasks</span>
             <span className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100">{totalTasks}</span>
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100">
+                {totalTasks}
+              </span>
               <svg
-                className={`w-4 h-4 transition-transform ${myTaskOpen ? 'rotate-90' : ''}`}
+                className={`w-4 h-4 transition-transform ${
+                  myTaskOpen ? "rotate-90" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </span>
           </button>
@@ -238,77 +343,118 @@ export default function Sidebar() {
                       <div className="h-4 w-32 bg-gray-100 rounded mb-2 animate-pulse" />
                       <div className="space-y-2">
                         {[...Array(2)].map((__, j) => (
-                          <div key={j} className="h-6 bg-gray-100 rounded animate-pulse" />
+                          <div
+                            key={j}
+                            className="h-6 bg-gray-100 rounded animate-pulse"
+                          />
                         ))}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : Object.keys(groupedTasks).length > 0 ? (
-                Object.entries(groupedTasks).map(([projectKey, projectData]) => {
-                  // ลิงก์โปรเจ็กต์: ใช้ documentId จาก projectInfo ถ้ามี
-                  const projHref = projectData.projectInfo ? `/projects/${projectData.projectInfo.documentId ?? projectData.projectInfo.id}` : undefined;
-                  const projectName = projectData.projectInfo?.project_name ?? 'งานอื่นๆ';
+                Object.entries(groupedTasks).map(
+                  ([projectKey, projectData]) => {
+                    // ลิงก์โปรเจ็กต์: ใช้ documentId จาก projectInfo ถ้ามี
+                    const projHref = projectData.projectInfo
+                      ? `/projects/${
+                          projectData.projectInfo.documentId ??
+                          projectData.projectInfo.id
+                        }`
+                      : undefined;
+                    const projectName =
+                      projectData.projectInfo?.project_name ?? "งานอื่นๆ";
 
-                  return (
-                    <div key={projectKey} className="bg-gray-50 p-2 rounded-lg">
-                      {projectKey !== 'no-project' && (
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center space-x-2 text-blue-600 font-medium text-sm px-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                            </svg>
-                            {projHref ? (
-                              <Link href={projHref} className="hover:underline">
-                                {projectName}
-                              </Link>
-                            ) : (
-                              <span>{projectName}</span>
-                            )}
-                          </div>
-                          <span className="text-[11px] text-gray-500 mr-2">ทั้งหมด {projectData.tasks.length} งาน</span>
-                        </div>
-                      )}
-
-                      <div className="space-y-0.5">
-                        {projectData.tasks.map((task) => {
-                          const projectKey = projectData.projectInfo?.documentId ?? projectData.projectInfo?.id ?? task.project_document_id;
-                          const taskKey = task.documentId ?? task.id;
-                          const href = `/projects/${projectKey}/tasks/${taskKey}`;
-                          const isOverdue =
-                            task.due_date && new Date(task.due_date).getTime() < Date.now() && task.task_status !== 'done';
-
-                          return (
-                            <Link
-                              key={task.id}
-                              href={href}
-                              className="block p-2 hover:bg-gray-100 rounded-md text-xs text-gray-700 transition-colors"
-                            >
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-semibold text-lg text-gray-800 truncate">{task.task_name}</span>
-                                {task.task_status && (
-                                  <span className="px-1.5 py-0.5 rounded bg-gray-200 text-[10px] uppercase tracking-wide">
-                                    {task.task_status}
-                                  </span>
-                                )}
-                              </div>
-                              <div
-                                className={`flex items-center gap-1 text-[11px] ${
-                                  isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'
-                                }`}
+                    return (
+                      <div
+                        key={projectKey}
+                        className="bg-gray-50 p-2 rounded-lg"
+                      >
+                        {projectKey !== "no-project" && (
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center space-x-2 text-blue-600 font-medium text-sm px-2">
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                               >
-                                
-                                <span>กำหนดส่ง: {formatDate(task.due_date)}</span>
-                              </div>
-                            </Link>
-                          );
-                        })}
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+                                />
+                              </svg>
+                              {projHref ? (
+                                <Link
+                                  href={projHref}
+                                  className="hover:underline"
+                                >
+                                  {projectName}
+                                </Link>
+                              ) : (
+                                <span>{projectName}</span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-gray-500 mr-2">
+                              ทั้งหมด {projectData.tasks.length} งาน
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="space-y-0.5">
+                          {projectData.tasks.map((task) => {
+                            const projectKey =
+                              projectData.projectInfo?.documentId ??
+                              projectData.projectInfo?.id ??
+                              task.project_document_id;
+                            const taskKey = task.documentId ?? task.id;
+                            const href = `/projects/${projectKey}/tasks/${taskKey}`;
+                            const isOverdue =
+                              task.due_date &&
+                              new Date(task.due_date).getTime() < Date.now() &&
+                              task.task_status !== "done";
+
+                            return (
+                              <Link
+                                key={task.id}
+                                href={href}
+                                className="block p-2 hover:bg-gray-100 rounded-md text-xs text-gray-700 transition-colors"
+                              >
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-semibold text-lg text-gray-800 truncate">
+                                    {task.task_name}
+                                  </span>
+                                  {task.task_status && (
+                                    <span className="px-1.5 py-0.5 rounded bg-gray-200 text-[10px] uppercase tracking-wide">
+                                      {task.task_status}
+                                    </span>
+                                  )}
+                                </div>
+                                <div
+                                  className={`flex items-center gap-1 text-[11px] ${
+                                    isOverdue
+                                      ? "text-red-600 font-semibold"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  <span>
+                                    กำหนดส่ง: {formatDate(task.due_date)}
+                                  </span>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  }
+                )
               ) : (
-                <div className="text-sm text-gray-500">ไม่มีงานที่ได้รับมอบหมาย</div>
+                <div className="text-sm text-gray-500">
+                  ไม่มีงานที่ได้รับมอบหมาย
+                </div>
               )}
             </div>
           )}

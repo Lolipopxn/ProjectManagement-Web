@@ -20,7 +20,7 @@ export default function SearchBar() {
         placeholder="ค้นหาโปรเจ็กต์, งาน, หรือสมาชิก..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full pl-10 pr-4 py-1 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300 border border-gray-200"
+        className="w-full pl-10 pr-4 py-1 rounded-[16px] bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300 border border-gray-200"
       />
     </form>
   );
