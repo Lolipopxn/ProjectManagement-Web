@@ -142,10 +142,10 @@ export default function Sidebar() {
   const totalProjects = projects.length;
 
   return (
-    <aside className={`${isNavOpen ? 'transition-all duration-500  w-64' : 'transition-all duration-500 w-18 '}  bg-white border-r border-gray-200 h-screen overflow-y-auto fixed`}>
+    <aside className={`${isNavOpen ? 'transition-all duration-500 md:w-64' : 'transition-all duration-500 md:w-18 '}  bg-white border-r border-gray-200 top-10 md:top-17 md:h-screen overflow-y-auto fixed`}>
       <div className="p-4">
         {/* Breadcrumb */}
-        <div className="flex flex-row mt-5 justify-between items-center space-x-2 text-sm text-gray-500 mb-6">
+        <div className="flex flex-row md:mt-5 justify-between items-center space-x-2 text-sm text-gray-500 mb-6">
           <div className={`${isNavOpen ? 'flex' : 'hidden'} flex flex-row justify-center items-center gap-1`}>
             <svg
               className="w-4 h-4"
@@ -170,7 +170,7 @@ export default function Sidebar() {
           </div>
           <button onClick={toggleNav} className="bg-white rounded-[16px]">
             <svg
-            className={`hidden md:flex w-4 h-4 transition-transform ${
+            className={`flex md:flex w-4 h-4 transition-transform ${
               isNavOpen ? "rotate-180" : "rotate-0 ml-3"
             }`}
             fill="none"

@@ -177,8 +177,8 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
       >
         {user ? (
           <div className="py-2">
-            <div className="px-5 pb-3 pt-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
-              <div className="flex items-center gap-3">
+            <div className="px-15 md:px-1 pb-3 pt-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+              <div className="flex flex-row items-center gap-3">
                 <Avatar name={user.username} />
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-gray-800 truncate">

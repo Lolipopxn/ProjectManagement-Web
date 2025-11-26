@@ -49,6 +49,7 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isNavOpen = useSidebarStore((s) => s.isNavOpen);
+  const [isToggle, setToggle] = useState(true);
 
   // ดึงข้อมูลจาก API route
   useEffect(() => {
@@ -126,16 +127,16 @@ export default function OverviewPage() {
   };
 
   return (
-    <div className=" bg-gray-50 min-h-screen w-full">
+    <div className=" bg-white min-h-screen w-full">
       {/* Navbar */}
       <Navbar user={user} />
 
       {/* Sidebar */}
-      <div className='hidden md:flex mt-17'>
+      <div className='hidden md:flex'>
         <Sidebar />
       </div>
       
-      <div className="flex flex-row justify-center items-start mt-17 md:mt-0">
+      <div className="flex flex-row justify-center items-start mt-13 md:mt-17">
         {/* Main Content */}
         <div className={`${isNavOpen ? "md:ml-70" : "md:ml-20"} flex-1 p-6  max-w-[1900px]`}>
           {/* Header */}
@@ -143,74 +144,80 @@ export default function OverviewPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2 text-gray-600">
                 <span>Project Overview</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <button onClick={() => {setToggle(x => !x)} }>
+                  <svg className={`w-4 h-4 ${isToggle ? 'rotate-0' : 'rotate-90'} transition-all duration-300`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               </div>
               <a 
                 href="/create-project"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                className="bg-blue-500 hover:bg-blue-600 shadow-md shadow-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span>สร้างโปรเจ็กต์ใหม่</span>
+                <span>New Project</span>
               </a>
             </div>
 
             {/* Project Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white border border-gray-200 rounded-lg p-3">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{safeStats.totalProjects}</div>
-                  <div className="text-xs text-gray-600">โปรเจ็กต์ทั้งหมด</div>
+            {isToggle && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">{safeStats.totalProjects}</div>
+                    <div className="text-xs text-gray-600">โปรเจ็กต์ทั้งหมด</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{safeStats.activeProjects}</div>
+                    <div className="text-xs text-gray-600">กำลังดำเนินการ</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">{safeStats.completedProjects}</div>
+                    <div className="text-xs text-gray-600">เสร็จสิ้น</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-yellow-600">{safeStats.pendingProjects}</div>
+                    <div className="text-xs text-gray-600">รอดำเนินการ</div>
+                  </div>
                 </div>
               </div>
-              
-              <div className="bg-white border border-gray-200 rounded-lg p-3">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{safeStats.activeProjects}</div>
-                  <div className="text-xs text-gray-600">กำลังดำเนินการ</div>
-                </div>
-              </div>
-              
-              <div className="bg-white border border-gray-200 rounded-lg p-3">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{safeStats.completedProjects}</div>
-                  <div className="text-xs text-gray-600">เสร็จสิ้น</div>
-                </div>
-              </div>
-              
-              <div className="bg-white border border-gray-200 rounded-lg p-3">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600">{safeStats.pendingProjects}</div>
-                  <div className="text-xs text-gray-600">รอดำเนินการ</div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Projects Section */}
           <div className="space-y-8">
             {/* Projects as Leader Section */}
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
+              <div className="flex flex-col justify-start items-start mb-6 gap-2">
+                <div className="flex flex-row justify-between items-center w-full">           
+                  <div className='flex flex-row items-center justify-start w-full gap-3'>
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-lg md:text-2xl font-bold text-gray-900">โปรเจกต์ที่เป็นเจ้าของ</h2>
+                      <p className="text-gray-600 text-sm md:text-[16px]">โปรเจกต์ที่คุณเป็นผู้สร้างและดูแล</p>    
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">โปรเจกต์ที่เป็น Leader</h2>
-                    <p className="text-gray-600">โปรเจกต์ที่คุณเป็นผู้สร้างและดูแล</p>
+                  <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium md:w-25 text-center">
+                    {safeUserProjects.filter(project => 
+                      project.created_by_user_id === user?.id || project.created_by_user === user?.id
+                    ).length} <div className='hidden md:inline'>โปรเจกต์</div>
                   </div>
-                </div>
-                <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                  {safeUserProjects.filter(project => 
-                    project.created_by_user_id === user?.id || project.created_by_user === user?.id
-                  ).length} โปรเจกต์
-                </div>
+                </div>       
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
@@ -285,7 +292,7 @@ export default function OverviewPage() {
                       <p className="text-gray-500 text-sm mb-4">สร้างโปรเจกต์ใหม่เพื่อเริ่มเป็นผู้นำทีม</p>
                       <a 
                         href="/create-project"
-                        className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                        className="inline-flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 shadow-md shadow-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -300,23 +307,25 @@ export default function OverviewPage() {
 
             {/* Projects as Member Section */}
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
+              <div className="flex flex-col justify-start items-start mb-6 gap-2">
+                <div className="flex flex-row justify-between items-center w-full">           
+                  <div className='flex flex-row items-center justify-start w-full gap-3'>
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-lg md:text-2xl font-bold text-gray-900">โปรเจกต์ที่เป็นสมาชิก</h2>
+                      <p className="text-gray-600 text-sm md:text-[16px]">โปรเจกต์ที่คุณเข้าร่วมในฐานะสมาชิก</p>    
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">โปรเจกต์ที่เป็นสมาชิก</h2>
-                    <p className="text-gray-600">โปรเจกต์ที่คุณเข้าร่วมในฐานะสมาชิก</p>
+                  <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                    {safeUserProjects.filter(project => 
+                      project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
+                    ).length} <div className='hidden md:inline'>โปรเจกต์</div>
                   </div>
-                </div>
-                <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                  {safeUserProjects.filter(project => 
-                    project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
-                  ).length} โปรเจกต์
-                </div>
+                </div>       
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
@@ -397,24 +406,7 @@ export default function OverviewPage() {
 
             {/* Empty state for all projects */}
             {safeUserProjects.length === 0 && (
-              <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-12 text-center">
-                <div className="w-20 h-20 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <p className="text-gray-700 text-2xl font-bold mb-3">ยังไม่มีโปรเจกต์</p>
-                <p className="text-gray-500 text-lg mb-6">เริ่มต้นการทำงานร่วมกันด้วยการสร้างโปรเจกต์แรกของคุณ</p>
-                <a 
-                  href="/create-project"
-                  className="inline-flex items-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-sm hover:shadow-md"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>สร้างโปรเจกต์ใหม่</span>
-                </a>
-              </div>
+              null
             )}
           </div>
         </div>
