@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
     const { 
       task_document_id,
       task_id_number,
+      submitted_by_user_id_number,
       comments,
       file_url
     } = body;
@@ -130,13 +131,13 @@ export async function POST(request: NextRequest) {
     }
 
     // หา user documentId สำหรับการทำ relation
-    const userDocumentId = await getUserDocumentIdById(currentUser.id, token);
+    const userDocumentId = await getUserDocumentIdById(submitted_by_user_id_number || currentUser.id, token);
 
     // สร้าง submission ใน Strapi
     const submissionData = {
       task_document_id,
       task_id_number: parseInt(task_id_number),
-      submitted_by_user_id_number: currentUser.id,
+      submitted_by_user_id_number: submitted_by_user_id_number || currentUser.id,
       submission_date: new Date().toISOString(),
       comments: comments || '',
       file_url: file_url || null,

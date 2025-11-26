@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     if (!token) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
+        { success: false, message: 'ไม่ได้รับอนุญาต' },
         { status: 401 }
       );
     }
@@ -18,26 +18,43 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const taskDocumentId = formData.get('taskDocumentId') as string;
+    const projectDocumentId = formData.get('projectDocumentId') as string;
+    const userId = formData.get('userId') as string;
+    const customFileName = formData.get('customFileName') as string | null;
 
     if (!file) {
       return NextResponse.json(
-        { success: false, message: 'No file uploaded' },
+        { success: false, message: 'ไม่มีไฟล์ที่อัปโหลด' },
         { status: 400 }
       );
     }
 
     if (!taskDocumentId) {
       return NextResponse.json(
-        { success: false, message: 'Missing taskDocumentId' },
+        { success: false, message: 'ไม่ระบุ taskDocumentId' },
         { status: 400 }
       );
     }
 
-    // ตรวจสอบขนาดไฟล์ (จำกัดที่ 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (!projectDocumentId) {
+      return NextResponse.json(
+        { success: false, message: 'ไม่ระบุ projectDocumentId' },
+        { status: 400 }
+      );
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, message: 'ไม่ระบุ userId' },
+        { status: 400 }
+      );
+    }
+
+    // ตรวจสอบขนาดไฟล์ (จำกัดที่ 100MB)
+    const maxSize = 100 * 1024 * 1024; // 100MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { success: false, message: 'File size too large. Maximum 10MB allowed.' },
+        { success: false, message: 'ไฟล์มีขนาดใหญ่เกินไป จำกัดสูงสุด 100MB' },
         { status: 400 }
       );
     }
@@ -56,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { success: false, message: 'File type not allowed' },
+        { success: false, message: 'ประเภทไฟล์ไม่ถูกต้อง' },
         { status: 400 }
       );
     }
@@ -64,10 +81,11 @@ export async function POST(request: NextRequest) {
     // สร้างชื่อไฟล์ที่ไม่ซ้ำ
     const timestamp = Date.now();
     const fileExtension = path.extname(file.name);
-    const fileName = `${taskDocumentId}_${timestamp}${fileExtension}`;
+    // ใช้ชื่อไฟล์ที่กำหนดเองถ้ามี หรือใช้ชื่อไฟล์เดิม
+    const fileName = customFileName ? `${customFileName}${fileExtension}` : file.name;
     
-    // สร้างโฟลเดอร์ uploads ถ้ายังไม่มี
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'submissions');
+    // สร้างโฟลเดอร์ตามโครงสร้าง: uploads/submissions/[projectDocumentId]/[taskDocumentId]/[userId]/[timestamp]/
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'submissions', projectDocumentId, taskDocumentId, userId, timestamp.toString());
     try {
       await mkdir(uploadsDir, { recursive: true });
     } catch (error) {
@@ -82,21 +100,21 @@ export async function POST(request: NextRequest) {
     await writeFile(filePath, buffer);
 
     // สร้าง URL สำหรับเข้าถึงไฟล์
-    const fileUrl = `/uploads/submissions/${fileName}`;
+    const fileUrl = `/uploads/submissions/${projectDocumentId}/${taskDocumentId}/${userId}/${timestamp}/${fileName}`;
 
     return NextResponse.json({
       success: true,
       fileUrl: fileUrl,
-      fileName: file.name,
+      fileName: customFileName ? `${customFileName}${fileExtension}` : file.name,
       fileSize: file.size,
       fileType: file.type,
-      message: 'File uploaded successfully'
+      message: 'อัปโหลดไฟล์สำเร็จ'
     });
 
   } catch (error: any) {
     console.error('Error uploading file:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to upload file' },
+      { success: false, message: 'ล้มเหลวในการอัปโหลดไฟล์' },
       { status: 500 }
     );
   }
