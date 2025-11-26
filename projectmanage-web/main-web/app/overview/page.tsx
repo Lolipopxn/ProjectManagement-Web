@@ -320,7 +320,7 @@ export default function OverviewPage() {
                       <p className="text-gray-600 text-sm md:text-[16px]">โปรเจกต์ที่คุณเข้าร่วมในฐานะสมาชิก</p>    
                     </div>
                   </div>
-                  <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                  <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium md:w-25">
                     {safeUserProjects.filter(project => 
                       project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
                     ).length} <div className='hidden md:inline'>โปรเจกต์</div>
