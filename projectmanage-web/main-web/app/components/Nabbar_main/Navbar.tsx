@@ -6,23 +6,13 @@ import UserMenu from "./UserMenu";
 import { MdSpaceDashboard, MdNotifications } from "react-icons/md";
 import { FaFolder, FaPlus } from "react-icons/fa";
 
-interface User {
-  id: number;
-  username: string;
-  email: string;
-}
-
-interface NavbarProps {
-  user?: User | null;
-}
-
-export default function Navbar({ user }: NavbarProps) {
+export default function Navbar() {
   return (
     <nav className="bg-[#50589C] text-white px-6 md:px-4 py-3 fixed top-0 left-0 w-full z-50">
       <div className="container reactive mx-auto h-auto max-w-full flex items-center justify-between">
         {/* Left side - App name and navigation */}
         <div className="flex items-center space-x-5 md:space-x-20 text-lg md:text-md">
-          <a href="/overview" className="font-semibold">
+          <a href="/main_pages/overview" className="font-semibold">
             MyDaily
           </a>
 
@@ -30,7 +20,7 @@ export default function Navbar({ user }: NavbarProps) {
           <ul className="hidden gap-8 md:flex md:flex-row">
             <li className="flex items-center">
               <a
-                href="/dashboard"
+                href="/main_pages/dashboard"
                 className="flex flex-row gap-1 items-center hover:text-[#F2AEBB]"
               >
                 <MdSpaceDashboard size={20} />
@@ -39,7 +29,7 @@ export default function Navbar({ user }: NavbarProps) {
             </li>
             <li className="flex items-center">
               <a
-                href="/overview"
+                href="/main_pages/overview"
                 className="flex flex-row gap-1 items-center hover:text-[#F2AEBB]"
               >
                 <FaFolder size={20} />
@@ -57,7 +47,7 @@ export default function Navbar({ user }: NavbarProps) {
         {/* Right side - Actions */}
         <div className="flex flex-row justify-end items-center md:space-x-6">
           {/* Create project button */}
-          <a href="/create-project" className="hidden md:flex flex-row justify-center items-center gap-2 p-1 px-2 hover:bg-[#F2AEBB] rounded-lg transition-colors relative">
+          <a href="/main_pages/create-project" className="hidden md:flex flex-row justify-center items-center gap-2 p-1 px-2 hover:bg-[#F2AEBB] rounded-lg transition-colors relative">
             <FaPlus size={20} />
             <div className="hidden md:flex">New</div>
           </a>
@@ -71,7 +61,7 @@ export default function Navbar({ user }: NavbarProps) {
           </button>
 
           {/* User Profile - pass initial user data */}
-          <UserMenu initialUser={user} />
+          <UserMenu />
         </div>
       </div>
     </nav>

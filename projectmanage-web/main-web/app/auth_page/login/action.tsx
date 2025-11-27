@@ -39,5 +39,5 @@ export async function login(prevState: FormState, formData: FormData) {
     return { message: error?.response?.data?.error?.message || error.message || "Login failed." };
   }
   
-  redirect("/overview");
+  redirect("/main_pages/overview");
 }

@@ -139,8 +139,7 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: PALETTE.paper }}>
-        <Navbar user={user} />
+      <div className="min-h-screen w-full" style={{ backgroundColor: PALETTE.paper }}>
         <div className="mx-auto max-w-2xl px-4 py-8">
           <div
             className="animate-pulse rounded-2xl border bg-white/70 p-6 shadow-sm"
@@ -158,8 +157,7 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: PALETTE.paper }}>
-      <Navbar user={user} />
+    <div className="min-h-screen w-full" style={{ backgroundColor: PALETTE.paper }}>
 
       {/* Container กว้างขึ้น และมี spacing ที่โปร่งขึ้น */}
       <div className="mx-auto max-w-5xl px-4 py-10">

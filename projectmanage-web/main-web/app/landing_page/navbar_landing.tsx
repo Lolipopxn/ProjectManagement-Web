@@ -31,8 +31,8 @@ export default function Nav() {
                     </ul>
                 </div>
                 <ul className={`${!isOpen ? 'hidden transition-all transition-discrete opacity-0' : 'flex' } flex flex-col my-5 md:my-0 md:flex md:opacity-100 md:flex-row gap-5`}>
-                    <li className="my-2"><a className="inline-flex justify-center items-center border-1 border-[#6E8CFB] hover:bg-[#6E8CFB] px-4 py-2 rounded-md" href="/login">Sign in</a></li>
-                    <li className="my-2"><a className="inline-flex justify-center items-center bg-[#6E8CFB] hover:bg-[#50589C] px-4 py-2 rounded-md" href="/overview">Get Started</a></li>
+                    <li className="my-2"><a className="inline-flex justify-center items-center border-1 border-[#6E8CFB] hover:bg-[#6E8CFB] px-4 py-2 rounded-md" href="/auth_page/login">Sign in</a></li>
+                    <li className="my-2"><a className="inline-flex justify-center items-center bg-[#6E8CFB] hover:bg-[#50589C] px-4 py-2 rounded-md" href="/main_pages/overview">Get Started</a></li>
                 </ul>
 
                 {/*section toggle hidden*/}

@@ -73,7 +73,7 @@ export default function Sidebar() {
         setTasks(data.tasks ?? []);
         if (!data.hasAuth) {
           // ไม่มีสิทธิ์ -> ส่งไปหน้า login
-          router.push("/login");
+          router.push("/auth_page/login");
         }
       } catch (e: any) {
         console.error("Failed to fetch sidebar data:", e);
@@ -190,7 +190,7 @@ export default function Sidebar() {
         {/* Action Buttons */}
         <div className="grid grid-cols-1 gap-2 mb-6">
           <Link
-            href="/dashboard"
+            href="/main_pages/dashboard"
             className="bg-purple-100 text-purple-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-purple-200 transition-colors text-center flex items-center justify-start"
           >
             {isNavOpen ? (
@@ -205,7 +205,7 @@ export default function Sidebar() {
             )}
           </Link>
           <Link
-            href="/overview"
+            href="/main_pages/overview"
             className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors text-center flex items-center justify-start"
           >
             {isNavOpen ? (
@@ -220,7 +220,7 @@ export default function Sidebar() {
             )}
           </Link>
           <Link
-            href="/create-project"
+            href="/main_pages/create-project"
             className="bg-green-100 text-green-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-green-200 transition-colors text-center flex items-center justify-start"
           >
             {isNavOpen ? (
@@ -285,7 +285,7 @@ export default function Sidebar() {
                 </div>
               ) : projects.length > 0 ? (
                 projects.map((p) => {
-                  const href = `/projects/${p.documentId ?? p.id}`;
+                  const href = `/main_pages/projects/${p.documentId ?? p.id}`;
                   return (
                     <Link
                       key={p.documentId ?? p.id}
@@ -357,7 +357,7 @@ export default function Sidebar() {
                   ([projectKey, projectData]) => {
                     // ลิงก์โปรเจ็กต์: ใช้ documentId จาก projectInfo ถ้ามี
                     const projHref = projectData.projectInfo
-                      ? `/projects/${
+                      ? `/main_pages/projects/${
                           projectData.projectInfo.documentId ??
                           projectData.projectInfo.id
                         }`
@@ -410,7 +410,7 @@ export default function Sidebar() {
                               projectData.projectInfo?.id ??
                               task.project_document_id;
                             const taskKey = task.documentId ?? task.id;
-                            const href = `/projects/${projectKey}/tasks/${taskKey}`;
+                            const href = `/main_pages/projects/${projectKey}/tasks/${taskKey}`;
                             const isOverdue =
                               task.due_date &&
                               new Date(task.due_date).getTime() < Date.now() &&

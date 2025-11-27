@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import Navbar from '../components/Nabbar_main/Navbar';
-import Sidebar from '../components/Sidebar';
 import { v4 as uuidv4 } from 'uuid';
 import { UUID } from 'crypto';
 
@@ -162,7 +160,7 @@ export default function CreateProjectPage() {
   // แสดง loading ถ้ายังตรวจสอบ auth อยู่
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">กำลังตรวจสอบการเข้าสู่ระบบ...</p>
@@ -238,18 +236,18 @@ export default function CreateProjectPage() {
         }
       });
 
-      console.log('Response status:', response.status); // Debug log
-      console.log('Response data:', response.data); // Debug log
-      console.log('Project creation summary:', {
-        projectName: formData.project_name,
-        totalMembers: projectMembers.length + 1,
-        memberRoles: [
-          { userId: currentUserId, role: 'Leader', isCreator: true },
-          ...projectMembers.map(m => ({ userId: m.userId, role: m.roleInProject, isCreator: false }))
-        ],
-        dateRange: `${formData.start_date} to ${formData.end_date}`,
-        status: formData.project_status
-      });
+      // console.log('Response status:', response.status); // Debug log
+      // console.log('Response data:', response.data); // Debug log
+      // console.log('Project creation summary:', {
+      //   projectName: formData.project_name,
+      //   totalMembers: projectMembers.length + 1,
+      //   memberRoles: [
+      //     { userId: currentUserId, role: 'Leader', isCreator: true },
+      //     ...projectMembers.map(m => ({ userId: m.userId, role: m.roleInProject, isCreator: false }))
+      //   ],
+      //   dateRange: `${formData.start_date} to ${formData.end_date}`,
+      //   status: formData.project_status
+      // });
 
       if (response.status === 200) {
         // ใน Strapi v5 ใช้ documentId แทน id
@@ -372,7 +370,7 @@ export default function CreateProjectPage() {
         
         // รอ 3 วินาทีแล้วไปหน้าโปรเจ็กต์ที่สร้าง (ใช้ documentId)
         setTimeout(() => {
-          router.push(`/projects/${createdProjectDocumentId}`);
+          router.push(`/main_pages/projects/${createdProjectDocumentId}`);
         }, 3000);
       } else {
         setError('ไม่สามารถสร้างโปรเจ็กต์ได้ กรุณาลองใหม่อีกครั้ง');
@@ -408,14 +406,8 @@ export default function CreateProjectPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <Navbar user={null} />
-      
-      <div className="flex mt-17">
-        {/* Sidebar */}
-        <Sidebar />
-        
+    <div className="min-h-screen w-full bg-gray-50">
+      <div className="flex mt-3">    
         {/* Main Content */}
         <div className="flex-1 p-6">
           {/* Header */}

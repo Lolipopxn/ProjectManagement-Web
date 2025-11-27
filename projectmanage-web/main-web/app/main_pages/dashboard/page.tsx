@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Nabbar_main/Navbar';
-import Sidebar from '../components/Sidebar';
-import TaskStatusIcon from '../components/TaskStatusIcon';
+
+import TaskStatusIcon from '../../components/TaskStatusIcon';
 
 // Types
 interface User {
@@ -211,7 +210,7 @@ export default function DashboardPage() {
   };
 
   // Import color utility
-  const { getTaskStatusConfig } = require('../utils/taskStatusColors');
+  const { getTaskStatusConfig } = require('../../utils/taskStatusColors');
   
   // ฟังก์ชันกำหนดสีของสถานะ - ใช้ utility function
   const getStatusConfig = (status: string) => {
@@ -234,7 +233,7 @@ export default function DashboardPage() {
     const isRejected = task.task_status.toLowerCase() === 'rejected';
 
     // Import column type colors utility
-    const { getColumnTypeColors } = require('../utils/taskStatusColors');
+    const { getColumnTypeColors } = require('../../utils/taskStatusColors');
     
     // กำหนดสีตามประเภทคอลัมน์ - ใช้ utility function
     const columnColors = getColumnTypeColors(columnType);
@@ -304,7 +303,7 @@ export default function DashboardPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">กำลังโหลด Dashboard...</p>
@@ -316,7 +315,7 @@ export default function DashboardPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">{error}</h2>
           <div className="space-x-4">
@@ -327,7 +326,7 @@ export default function DashboardPage() {
               ลองใหม่
             </button>
             <a 
-              href="/login" 
+              href="/auth_page/login" 
               className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block"
             >
               เข้าสู่ระบบ
@@ -376,14 +375,8 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <Navbar user={user} />
-      
-      <div className="flex">
-        {/* Sidebar */}
-        <Sidebar />
-        
+    <div className="min-h-screen w-full bg-gray-50">   
+      <div className="flex"> 
         {/* Main Content */}
         <div className="flex-1 p-6">
           {/* Page Header */}

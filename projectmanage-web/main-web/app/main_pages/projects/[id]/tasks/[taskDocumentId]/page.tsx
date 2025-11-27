@@ -3,10 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
-import Navbar from '../../../../components/Nabbar_main/Navbar';
-import Sidebar from '../../../../components/Sidebar';
-import SubmissionModal from '../../../../components/SubmissionModal';
-import TaskStatusIcon from '../../../../components/TaskStatusIcon';
+import SubmissionModal from '../../../../../components/SubmissionModal';
+import TaskStatusIcon from '../../../../../components/TaskStatusIcon';
 
 // Interface สำหรับ submission data
 interface Submission {
@@ -512,7 +510,7 @@ export default function TaskDetailPage() {
 
       if (response.data.success) {
         alert('ลบ Task สำเร็จ');
-        router.push(`/projects/${projectId}`);
+        router.push(`/main_pages/projects/${projectId}`);
       } else {
         alert('เกิดข้อผิดพลาดในการลบ Task');
       }
@@ -967,7 +965,7 @@ export default function TaskDetailPage() {
   };
 
   // Import color utility
-  const { getTaskStatusConfig } = require('../../../../utils/taskStatusColors');
+  const { getTaskStatusConfig } = require('../../../../../utils/taskStatusColors');
   
   // Get status config - ใช้ utility function สำหรับสีการ์ด
   const getStatusConfig = (status: string) => {
@@ -989,7 +987,7 @@ export default function TaskDetailPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">กำลังโหลดข้อมูล Task...</p>
@@ -1001,7 +999,7 @@ export default function TaskDetailPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">{error}</h2>
           <div className="space-x-4">
@@ -1012,7 +1010,7 @@ export default function TaskDetailPage() {
               ลองใหม่
             </button>
             <button 
-              onClick={() => router.push(`/projects/${projectId}`)}
+              onClick={() => router.push(`/main_pages/projects/${projectId}`)}
               className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               กลับสู่โปรเจ็กต์
@@ -1026,12 +1024,12 @@ export default function TaskDetailPage() {
   // Task not found
   if (!task) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">ไม่พบ Task</h2>
           <p className="text-gray-600 mb-6">Task ที่คุณกำลังมองหาอาจถูกลบหรือย้ายไปแล้ว</p>
           <button 
-            onClick={() => router.push(`/projects/${projectId}`)}
+            onClick={() => router.push(`/main_pages/projects/${projectId}`)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
             กลับสู่โปรเจ็กต์
@@ -1046,16 +1044,10 @@ export default function TaskDetailPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <Navbar user={user} />
-      
-      <div className="flex">
-        {/* Sidebar */}
-        {/* <Sidebar /> */}
-        
+    <div className="min-h-screen w-full bg-gray-50">
+      <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 max-w-[1900px]">
           {/* Breadcrumb */}
           <div className="flex items-center space-x-2 text-gray-600 mb-6">
             <a href="/overview" className="hover:text-blue-600">Home</a>
@@ -1063,7 +1055,7 @@ export default function TaskDetailPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
             <a 
-              href={`/projects/${projectId}`} 
+              href={`/main_pages/projects/${projectId}`} 
               className="hover:text-blue-600"
             >
               {project?.project_name || 'Project'}
@@ -1454,7 +1446,7 @@ export default function TaskDetailPage() {
                   {/* Project Management Button */}
                   <div className="mb-4">
                     <button
-                      onClick={() => window.location.href = `/projects/${projectId}`}
+                      onClick={() => window.location.href = `/main_pages/projects/${projectId}`}
                       className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

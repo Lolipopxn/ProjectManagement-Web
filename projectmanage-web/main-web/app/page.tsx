@@ -1,5 +1,5 @@
 
-import LandingPage from './pages/landing_page/page';
+import LandingPage from './landing_page/page';
 
 export default async function Home() {
 

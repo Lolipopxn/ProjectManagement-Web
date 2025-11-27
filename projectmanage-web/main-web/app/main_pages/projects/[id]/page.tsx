@@ -3,12 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
-import Navbar from '../../components/Nabbar_main/Navbar';
-import Sidebar from '../../components/Sidebar';
-import TaskStatusIcon from '../../components/TaskStatusIcon';
-import CreateTaskModal from '../../components/CreateTaskModal';
-import ProjectChatPopup from "../../components/ProjectChat";
-import VoiceRoomButton from "../../components/VoiceRoomButton";
+import TaskStatusIcon from '../../../components/TaskStatusIcon';
+import CreateTaskModal from '../../../components/CreateTaskModal';
+import ProjectChatPopup from "../../../components/ProjectChat";
+import VoiceRoomButton from "../../../components/VoiceRoomButton";
 
 // Interface สำหรับ project data
 interface Project {
@@ -621,7 +619,7 @@ export default function ProjectDetailPage() {
         setShowProjectManageModal(false);
         alert('ลบโปรเจคเรียบร้อยแล้ว!');
         // Navigate back to overview
-        router.push('/overview');
+        router.push('/main_pages/overview');
       } else {
         alert('เกิดข้อผิดพลาดในการลบโปรเจค: ' + response.data.message);
       }
@@ -704,7 +702,7 @@ export default function ProjectDetailPage() {
   };
 
   // Import color utility
-  const { getTaskStatusConfig: getUtilityTaskStatusConfig } = require('../../utils/taskStatusColors');
+  const { getTaskStatusConfig: getUtilityTaskStatusConfig } = require('../../../utils/taskStatusColors');
   
   // Get status config for tasks - ใช้ utility function
   const getTaskStatusConfig = (status: string) => {
@@ -766,7 +764,7 @@ export default function ProjectDetailPage() {
               className="font-semibold text-gray-900 text-xl cursor-pointer hover:text-blue-600 transition-colors leading-tight"
               onClick={() => {
                 if (task.documentId) {
-                  router.push(`/projects/${projectId}/tasks/${task.documentId}`);
+                  router.push(`/main_pages/projects/${projectId}/tasks/${task.documentId}`);
                 } else {
                   console.warn('Task documentId not found:', task);
                   // alert('ไม่พบ documentId ของ Task นี้');
@@ -826,7 +824,7 @@ export default function ProjectDetailPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">กำลังโหลดข้อมูลโปรเจ็กต์...</p>
@@ -838,7 +836,7 @@ export default function ProjectDetailPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">{error}</h2>
           <p className="text-gray-600 mb-6">กรุณาลองใหม่อีกครั้งหรือติดต่อผู้ดูแลระบบ</p>
@@ -850,7 +848,7 @@ export default function ProjectDetailPage() {
               ลองใหม่
             </button>
             <a 
-              href="/overview" 
+              href="/main_pages/overview" 
               className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block"
             >
               กลับสู่หน้าหลัก
@@ -864,12 +862,12 @@ export default function ProjectDetailPage() {
   // Project not found
   if (!project) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">ไม่พบโปรเจ็กต์</h2>
           <p className="text-gray-600 mb-6">โปรเจ็กต์ที่คุณกำลังมองหาอาจถูกลบหรือย้ายไปแล้ว</p>
           <a 
-            href="/overview" 
+            href="/main_pages/overview" 
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
             กลับสู่หน้าหลัก
@@ -1672,19 +1670,13 @@ export default function ProjectDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <Navbar user={user} />
-      
-      <div className="flex">
-        {/* Sidebar */}
-        <Sidebar />
-        
+    <div className="min-h-screen w-full bg-gray-50">
+      <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 max-w-[1900px]">
           {/* Breadcrumb */}
           <div className="flex items-center space-x-2 text-gray-600 mb-6">
-            <a href="/overview" className="hover:text-blue-600">Home</a>
+            <a href="/main_pages/overview" className="hover:text-blue-600">Home</a>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

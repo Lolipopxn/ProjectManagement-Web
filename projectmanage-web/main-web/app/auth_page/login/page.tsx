@@ -88,12 +88,12 @@ export default function LoginPage() {
           <div className="mt-4 text-start text-sm text-gray-600 flex flex-row justify-between gap-10 items-center">
             <p>
               Don't have an account?{" "}
-              <a href="/register" className="text-blue-600 hover:underline">
+              <a href="/auth_page/register" className="text-blue-600 hover:underline">
                 Sign up
               </a>
             </p>
             <p>
-              <a href="/forgot_password" className="text-blue-600 hover:underline">
+              <a href="/auth_page/forgot_password" className="text-blue-600 hover:underline">
                 Forgot password?
               </a>
             </p>

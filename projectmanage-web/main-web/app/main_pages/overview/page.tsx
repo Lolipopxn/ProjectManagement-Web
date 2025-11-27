@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Nabbar_main/Navbar';
-import Sidebar from '../components/Sidebar';
-import ProjectCard from '../components/ProjectCard';
+import ProjectCard from '../../components/ProjectCard';
 
 import { useSidebarStore } from "@/hooks/sidebar";
 
@@ -61,14 +59,14 @@ export default function OverviewPage() {
         console.log('Fetching overview data from API...');
         const response = await axios.get('/api/overview');
         
-        console.log('Overview API response:', response.data);
-        console.log('User own projects count:', response.data?.userOwnProjects?.length);
-        console.log('User own projects data:', response.data?.userOwnProjects);
+        // console.log('Overview API response:', response.data);
+        // console.log('User own projects count:', response.data?.userOwnProjects?.length);
+        // console.log('User own projects data:', response.data?.userOwnProjects);
         
         setOverviewData(response.data);
       } catch (error: any) {
-        console.error('Failed to fetch overview data:', error);
-        console.error('Error response:', error.response?.data);
+        // console.error('Failed to fetch overview data:', error);
+        // console.error('Error response:', error.response?.data);
         
         if (error.response?.status === 401) {
           setError('กรุณาเข้าสู่ระบบ');
@@ -86,7 +84,7 @@ export default function OverviewPage() {
   // แสดง loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
@@ -98,14 +96,14 @@ export default function OverviewPage() {
   // แสดง error state
   if (error || !overviewData?.user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="h-auto w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             {error || 'กรุณาเข้าสู่ระบบ'}
           </h2>
           <p className="text-gray-600 mb-6">คุณต้องเข้าสู่ระบบเพื่อดูข้อมูลโปรเจ็กต์</p>
           <a 
-            href="/login" 
+            href="/auth_page/login" 
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
             เข้าสู่ระบบ
@@ -129,16 +127,10 @@ export default function OverviewPage() {
   return (
     <div className=" bg-white min-h-screen w-full">
       {/* Navbar */}
-      <Navbar user={user} />
-
-      {/* Sidebar */}
-      <div className='hidden md:flex'>
-        <Sidebar />
-      </div>
       
-      <div className="flex flex-row justify-center items-start mt-13 md:mt-17">
+      <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
-        <div className={`${isNavOpen ? "md:ml-70" : "md:ml-20"} flex-1 p-6  max-w-[1900px]`}>
+        <div className={`flex-1 p-6 max-w-[1900px]`}>
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -151,7 +143,7 @@ export default function OverviewPage() {
                 </button>
               </div>
               <a 
-                href="/create-project"
+                href="/main_pages/create-project"
                 className="bg-blue-500 hover:bg-blue-600 shadow-md shadow-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +220,7 @@ export default function OverviewPage() {
                   .map((project: Project) => (
                     <a 
                       key={project.id} 
-                      href={`/projects/${project.documentId || project.id}`}
+                      href={`/main_pages/projects/${project.documentId || project.id}`}
                       className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 p-6 cursor-pointer"
                     >
                       <div className="flex items-start justify-between mb-4">
@@ -291,7 +283,7 @@ export default function OverviewPage() {
                       <p className="text-gray-700 text-lg font-semibold mb-2">ยังไม่มีโปรเจกต์ที่เป็น Leader</p>
                       <p className="text-gray-500 text-sm mb-4">สร้างโปรเจกต์ใหม่เพื่อเริ่มเป็นผู้นำทีม</p>
                       <a 
-                        href="/create-project"
+                        href="/main_pages/create-project"
                         className="inline-flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 shadow-md shadow-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -336,7 +328,7 @@ export default function OverviewPage() {
                   .map((project: Project) => (
                     <a 
                       key={project.id} 
-                      href={`/projects/${project.documentId || project.id}`}
+                      href={`/main_pages/projects/${project.documentId || project.id}`}
                       className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 p-6 cursor-pointer"
                     >
                       <div className="flex items-start justify-between mb-4">

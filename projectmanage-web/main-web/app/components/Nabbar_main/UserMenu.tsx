@@ -13,44 +13,24 @@ interface User {
   email: string;
 }
 
-interface UserMenuProps {
-  initialUser?: User | null;
-}
-
-export default function UserMenu({ initialUser }: UserMenuProps) {
-  const [user, setUser] = useState<User | null>(initialUser || null);
+export default function UserMenu() {
+  const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // ถ้าไม่มี initialUser ให้ดึงข้อมูลจาก client side
-    if (!initialUser) {
       const fetchUserData = async () => {
         try {
-          const token = document.cookie
-            .split("; ")
-            .find((row) => row.startsWith("token="))
-            ?.split("=")[1];
-
-          if (token) {
-            const response = await axios.get(
-              `${process.env.NEXT_PUBLIC_STRAPI_BASE_URL}/api/users/me`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
-            setUser(response.data);
-          }
+            const response = await axios.get('/api/auth/me');
+            if(response.data.user) setUser(response.data.user);
+       
         } catch (error) {
           console.error("Failed to fetch user data:", error);
         }
       };
 
       fetchUserData();
-    }
-  }, [initialUser]);
+  }, []);
 
   // Close on outside click and Esc
   useEffect(() => {
@@ -100,7 +80,7 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
       console.log("Client-side cleanup completed");
 
       // Redirect ไปหน้า login
-      window.location.href = "/login";
+      window.location.href = "/auth_page/login";
     } catch (error) {
       console.error("Error during logout:", error);
 
@@ -116,7 +96,7 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
       setUser(null);
 
       // แม้เกิดข้อผิดพลาดก็ให้ redirect ไปหน้า login
-      window.location.href = "/login";
+      window.location.href = "/auth_page/login";
     }
   };
 
@@ -192,7 +172,7 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
             </div>
 
             <a
-              href="/profile"
+              href="/main_pages/profile"
               onClick={() => setOpen(false)}
               className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -201,7 +181,7 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
             </a>
 
             <a
-              href="/dashboard"
+              href="/main_pages/dashboard"
               onClick={() => setOpen(false)}
               className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -210,7 +190,7 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
             </a>
 
             <a
-              href="/overview"
+              href="/main_pages/overview"
               onClick={() => setOpen(false)}
               className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -219,7 +199,7 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
             </a>
 
             <a
-              href="/create-project"
+              href="/main_pages/create-project"
               onClick={() => setOpen(false)}
               className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -273,26 +253,13 @@ export default function UserMenu({ initialUser }: UserMenuProps) {
             </button>
           </div>
         ) : (
-          <div className="py-2">
+          <div className="px-5">
             <a
-              href="/login"
+              href="/auth_page/login"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="flex items-center gap-3text-sm text-gray-700 hover:bg-gray-50 w-17"
             >
-              <svg
-                className="w-5 h-5 text-gray-500"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H3"
-                />
-              </svg>
-              เข้าสู่ระบบ
+                เข้าสู่ระบบ
             </a>
           </div>
         )}
