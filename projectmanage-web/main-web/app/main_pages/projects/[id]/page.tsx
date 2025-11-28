@@ -1670,7 +1670,7 @@ export default function ProjectDetailPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-50">
+    <div className="min-h-screen w-auto md:w-full bg-white">
       <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
         <div className="flex-1 p-6 max-w-[1900px]">
@@ -1685,7 +1685,7 @@ export default function ProjectDetailPage() {
 
           {/* Project Header - Compact Design */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 md:gap-0">
               {/* Project Info */}
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm">
@@ -1694,7 +1694,7 @@ export default function ProjectDetailPage() {
                   </svg>
                 </div>
                 <div>
-                  <div className="flex items-center space-x-3 mb-1">
+                  <div className="flex items-center space-x-2 md:space-x-2 mb-1">
                     <h1 className="text-xl font-bold text-gray-900">{project.project_name}</h1>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
                       {project.project_status}
@@ -1709,16 +1709,16 @@ export default function ProjectDetailPage() {
                   </div>
                   <div className="flex items-center space-x-4 text-sm text-gray-600">
                     <div className="flex items-center space-x-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="hidden md:inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <span>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center  space-x-1">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      <span>{projectMembers.length} สมาชิก</span>
+                      <span>{projectMembers.length} <div className="hidden md:inline">สมาชิก</div></span>
                     </div>
                   </div>
                 </div>

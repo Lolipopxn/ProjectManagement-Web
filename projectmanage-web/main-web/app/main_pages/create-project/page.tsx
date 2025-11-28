@@ -425,7 +425,7 @@ export default function CreateProjectPage() {
           </div>
 
           {/* Form */}
-          <div className="flex gap-6">
+          <div className="flex gap-6 flex-col md:flex-row">
             {/* Project Information Card - Left Side */}
             <div className="flex-1">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
