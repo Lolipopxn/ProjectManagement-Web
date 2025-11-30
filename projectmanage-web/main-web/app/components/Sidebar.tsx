@@ -142,10 +142,10 @@ export default function Sidebar() {
   const totalProjects = projects.length;
 
   return (
-    <aside className={`${isNavOpen ? 'transition-all duration-500 md:w-64' : 'transition-all duration-500 md:w-18 '}  bg-white border-r border-gray-200 top-10 md:top-17 md:h-screen overflow-y-auto fixed`}>
-      <div className="p-4">
+    <aside className={`${isNavOpen ? 'transition-all duration-500 w-full md:w-64' : 'transition-all duration-500 md:w-18 '}  bg-white border border-gray-200 bottom-0 md:top-17 md:h-screen overflow-y-auto fixed`}>
+      <div className="p-3 md:p-4">
         {/* Breadcrumb */}
-        <div className="flex flex-row md:mt-5 justify-between items-center space-x-2 text-sm text-gray-500 mb-6">
+        <div className="hidden md:flex flex-row md:mt-5 justify-between items-center space-x-2 text-sm text-gray-500 mb-6">
           <div className={`${isNavOpen ? 'flex' : 'hidden'} flex flex-row justify-center items-center gap-1`}>
             <svg
               className="w-4 h-4"
@@ -188,13 +188,13 @@ export default function Sidebar() {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-1 gap-2 mb-6">
+        <div className="flex flex-row justify-between md:grid md:grid-cols-1 md:gap-2 md:mb-6 px-5 md:p-0">
           <Link
             href="/main_pages/dashboard"
-            className="bg-purple-100 text-purple-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-purple-200 transition-colors text-center flex items-center justify-start"
+            className="md:bg-purple-100 md:text-purple-800 px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium hover:bg-purple-200 transition-colors text-center flex items-center justify-start"
           >
             {isNavOpen ? (
-            <div className="flex flex-row justify-center items-center gap-2 ml-3">
+            <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:ml-3">
               <MdSpaceDashboard className="w-4 h-4" />
               <div>Dashboard</div>
             </div>
@@ -206,11 +206,11 @@ export default function Sidebar() {
           </Link>
           <Link
             href="/main_pages/overview"
-            className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors text-center flex items-center justify-start"
+            className="md:bg-blue-100 md:text-blue-800 px-3 py-2 rounded-md text-xs md:text-sm font-medium hover:bg-blue-200 transition-colors text-center flex items-center justify-start"
           >
             {isNavOpen ? (
-            <div className="flex flex-row justify-center items-center gap-2 ml-3">
-              <FaFolder className="w-4 h-4" />
+            <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:ml-3">
+              <FaFolder className="w-5 h-4" />
               <div>overview</div>
             </div>
             ) : (
@@ -221,10 +221,10 @@ export default function Sidebar() {
           </Link>
           <Link
             href="/main_pages/create-project"
-            className="bg-green-100 text-green-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-green-200 transition-colors text-center flex items-center justify-start"
+            className="md:bg-green-100 md:text-green-800 px-3 py-2 rounded-md text-xs md:text-sm font-medium hover:bg-green-200 transition-colors text-center flex items-center justify-start"
           >
             {isNavOpen ? (
-            <div className="flex flex-row justify-center items-center gap-2 ml-3">
+            <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:ml-3">
               <FaPlus className="w-4 h-4" />
               <div>Create</div>
             </div>
@@ -244,7 +244,7 @@ export default function Sidebar() {
         )}
 
         {/* My Projects */}
-        <div className={`${isNavOpen ? ' flex flex-col mb-6' : 'hidden'} `}>
+        <div className={`${isNavOpen ? 'hidden md:flex flex-col mb-6' : 'hidden'}`}>
           <button
             onClick={() => setMyProjectOpen((v) => !v)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
@@ -306,7 +306,7 @@ export default function Sidebar() {
         </div>
 
         {/* My Tasks */}
-        <div className={`${isNavOpen ? ' flex flex-col' : 'hidden'} `}>
+        <div className={`${isNavOpen ? 'hidden md:flex flex-col' : 'hidden'} `}>
           <button
             onClick={() => setMyTaskOpen((v) => !v)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"

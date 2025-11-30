@@ -9,19 +9,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <section>
-      <div className="flex flex-col">
+      <div className="flex flex-col overflow-hidden">
         {/*Navbar-Top*/}
         <Navbar />
 
-        {/*Navbar-left*/}
-          <div className={`hidden md:flex`}>
-            <Sidebar />
-          </div>
-
-        <div className={`flex flex-row gap-2 mt-17 ${isNavOpen ? 'transition-all duration-500 md:ml-65' : 'transition-all duration-500 md:ml-20'}`}>
+        <div className={`flex flex-row gap-2 mt-17 overflow-y-auto ${isNavOpen ? 'transition-all duration-500 md:ml-65' : 'transition-all duration-500 md:ml-20'}`}>
           {/*Content*/}
           {children}
         </div>
+
+        {/*Navbar-left*/}
+          <div className={`shrink-0 md:flex`}>
+            <Sidebar />
+          </div>
+
       </div>
     </section>
   );

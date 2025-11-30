@@ -96,7 +96,7 @@ export default function OverviewPage() {
   // แสดง error state
   if (error || !overviewData?.user) {
     return (
-      <div className="h-auto w-full bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             {error || 'กรุณาเข้าสู่ระบบ'}
