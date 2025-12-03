@@ -7,6 +7,7 @@ import TaskStatusIcon from '../../../components/TaskStatusIcon';
 import CreateTaskModal from '../../../components/CreateTaskModal';
 import ProjectChatPopup from "../../../components/ProjectChat";
 import VoiceRoomButton from "../../../components/VoiceRoomButton";
+import GanttChart from '@/app/components/GanttChart';
 
 // Interface สำหรับ project data
 interface Project {
@@ -31,6 +32,7 @@ interface Task {
   description: string;
   task_status: string;
   due_date: string;
+  createdAt: string;
   project_document_id: string;
   assigned_to_user_ids_number: number;
   assigned_to_user_ids?: any;
@@ -93,6 +95,7 @@ export default function ProjectDetailPage() {
   const [taskManageLoading, setTaskManageLoading] = useState(false);
   const [showProjectManageModal, setShowProjectManageModal] = useState(false);
   const [projectManageLoading, setProjectManageLoading] = useState(false);
+  const [ToggleGantt, setToggleGantt] = useState(false);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -1673,7 +1676,7 @@ export default function ProjectDetailPage() {
     <div className="min-h-screen w-auto md:w-full bg-white">
       <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
-        <div className="flex-1 p-6 max-w-[1900px]">
+        <div className={`flex-1 p-6 ${!ToggleGantt ? 'max-w-[1900px]' : 'max-w-[1900px]'}`}>
           {/* Breadcrumb */}
           <div className="flex items-center space-x-2 text-gray-600 mb-6">
             <a href="/main_pages/overview" className="hover:text-blue-600">Home</a>
@@ -1723,9 +1726,15 @@ export default function ProjectDetailPage() {
                   </div>
                 </div>
               </div>
+
               
               {/* Action Buttons */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">         
+                <div className='flex justify-center items-center'>
+                  <button onClick={() => setToggleGantt(!ToggleGantt)} className="bg-white py-1 px-5 ring-1 rounded-lg shadow-sm hover:bg-gray-100 ring-gray-500">
+                    Gantt Chart
+                  </button>
+                </div>
                 {/* Project Management Button - Only for Leaders */}
                 {userRole === 'Leader' && (
                   <button
@@ -1756,6 +1765,8 @@ export default function ProjectDetailPage() {
               </div>
             </div>
           </div>
+
+          {ToggleGantt ? (
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Tasks */}
@@ -2070,7 +2081,13 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </div>)
+          : (          
+          <div className="grid grid-cols-1">
+            {/*GanttChart*/}
+            <GanttChart tasks={myTasks} />
+          </div> 
+          )}
         </div>
       </div>
 
