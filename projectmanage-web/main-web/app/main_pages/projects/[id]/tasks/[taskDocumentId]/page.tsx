@@ -16,6 +16,7 @@ interface Submission {
   submission_date: string;
   comments?: string;
   file_url?: string;
+  is_active: boolean; // true = ส่งงาน, false = ยกเลิกการส่ง
   submittedByUser?: {
     id: number;
     username: string;
@@ -93,12 +94,11 @@ export default function TaskDetailPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
-  const [submitComment, setSubmitComment] = useState('');
   const [fileNames, setFileNames] = useState<{ [key: number]: string }>({}); // เก็บชื่อไฟล์ที่กำหนดเอง
+  const [taskComment, setTaskComment] = useState(''); // comment รวมของ Task
   const [editingFileIndex, setEditingFileIndex] = useState<number | null>(null); // ติดตามไฟล์ที่กำลังแก้ไข
-  const [showAddFileModal, setShowAddFileModal] = useState(false); // แสดง Add File Modal
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]); // ไฟล์ที่รอการยืนยันใน modal
-  const [pendingFileNames, setPendingFileNames] = useState<{ [key: number]: string }>({}); // ชื่อไฟล์ใน modal
+  const [fileNameErrors, setFileNameErrors] = useState<{ [key: number]: string }>({}); // เก็บ error message สำหรับแต่ละไฟล์
+  const [showFileManagementModal, setShowFileManagementModal] = useState(false); // ควบคุมการแสดง modal จัดการไฟล์
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
     hours: number;
@@ -164,46 +164,8 @@ export default function TaskDetailPage() {
       return;
     }
 
-    // เปิด modal แทนการเพิ่มไฟล์โดยตรง
-    setPendingFiles([file]);
-    setPendingFileNames({});
-    setShowAddFileModal(true);
-  };
-
-  // Handle add file from modal
-  const handleConfirmAddFile = () => {
-    if (pendingFiles.length === 0) return;
-    
-    // เพิ่มไฟล์เข้าไปใน selected files
-    setSelectedFiles(prev => [...prev, ...pendingFiles]);
-    
-    // เพิ่มชื่อไฟล์ที่กำหนดเองถ้ามี
-    const newFileNames = { ...fileNames };
-    pendingFiles.forEach((file, index) => {
-      const currentIndex = selectedFiles.length + index;
-      if (pendingFileNames[index]) {
-        newFileNames[currentIndex] = pendingFileNames[index];
-      }
-    });
-    setFileNames(newFileNames);
-    
-    // ปิด modal และรีเซ็ต
-    setShowAddFileModal(false);
-    setPendingFiles([]);
-    setPendingFileNames({});
-  };
-
-  // Handle rename pending file
-  const handleRenamePendingFile = (index: number, newName: string) => {
-    setPendingFileNames(prev => ({
-      ...prev,
-      [index]: newName
-    }));
-  };
-
-  // Get pending file display name
-  const getPendingFileName = (index: number, originalName: string) => {
-    return pendingFileNames[index] || originalName;
+    // เพิ่มไฟล์โดยตรง
+    setSelectedFiles(prev => [...prev, file]);
   };
 
   // Handle file selection from input
@@ -214,6 +176,10 @@ export default function TaskDetailPage() {
       Array.from(files).forEach(file => {
         handleFileSelect(file);
       });
+      // เปิด modal จัดการไฟล์ทันทีเมื่อเลือกไฟล์
+      if (files.length > 0) {
+        setShowFileManagementModal(true);
+      }
     }
     // ล้างค่า input เพื่อให้สามารถเลือกไฟล์เดิมใหม่ได้
     event.target.value = '';
@@ -235,39 +201,56 @@ export default function TaskDetailPage() {
     event.preventDefault();
   };
 
-  // Handle file deletion
-  const handleDeleteFile = async (submissionId: number) => {
-    if (!confirm('คุณต้องการลบไฟล์นี้หรือไม่?')) return;
+  // Handle file deletion (soft delete - set is_active to false)
+  const handleDeleteFile = async (submissionId: number, submissionDocumentId?: string) => {
+    // หา submission ที่ต้องการลบ
+    const submission = submissions.find(s => s.id === submissionId);
+    if (!submission) {
+      alert('ไม่พบไฟล์ที่ต้องการลบ');
+      return;
+    }
+
+    const fileName = submission.file_url?.split('/').pop() || 'ไฟล์';
+    const documentId = submissionDocumentId || submission.documentId;
+    
+    if (!documentId) {
+      alert('ไม่สามารถลบไฟล์ได้ เนื่องจากไม่พบ Document ID');
+      console.error('Missing documentId for submission:', submission);
+      return;
+    }
+    
+    if (!confirm(`คุณต้องการลบไฟล์ "${fileName}" หรือไม่?\n\nไฟล์จะถูกทำเครื่องหมายว่าถูกลบแล้ว`)) {
+      return;
+    }
 
     try {
-      const response = await axios.delete(`/api/submissions/${submissionId}`);
+      // Soft delete: อัพเดท is_active เป็น false โดยใช้ documentId
+      console.log('Deleting submission with documentId:', documentId); // debug
+      const response = await axios.delete(`/api/submissions/${documentId}`);
+      
       if (response.data.success) {
         alert('ลบไฟล์เรียบร้อยแล้ว');
         await refreshSubmissions();
       } else {
         alert('เกิดข้อผิดพลาดในการลบไฟล์');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting file:', error);
-      alert('เกิดข้อผิดพลาดในการลบไฟล์');
+      const errorMsg = error.response?.data?.message || 'เกิดข้อผิดพลาดในการลบไฟล์';
+      alert(errorMsg);
     }
   };
 
-  // Handle submit work (เปิด modal เพื่อให้ user เขียน comment)
+  // Handle submit work (เปิด modal ยืนยันการส่งงาน)
   const handleSubmitWork = async () => {
-    // เปิด modal แทนที่จะส่งงานทันที
-    if (!selectedFiles.length) {
-      alert('กรุณาเลือกไฟล์ก่อนส่งงาน');
-      return;
-    }
-    setSubmitComment('');
+    // ไม่บังคับให้มีไฟล์ - สามารถส่งงานโดยไม่มีไฟล์ได้
     setShowSubmitModal(true);
   };
 
   // Handle confirm submit (ยืนยันการส่งงานหลังจากเขียน comment)
   const handleConfirmSubmit = async () => {
-    if (!selectedFiles.length || !task || !user) {
-      alert('กรุณาเลือกไฟล์ก่อนส่งงาน');
+    if (!task || !user) {
+      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
       return;
     }
 
@@ -275,10 +258,12 @@ export default function TaskDetailPage() {
       setSubmitting(true);
       const uploadedFiles: any[] = [];
 
-      console.log('Starting file upload...'); // debug
+      // ถ้ามีไฟล์ให้อัปโหลด
+      if (selectedFiles.length > 0) {
+        console.log('Starting file upload...'); // debug
 
-      // อัปโหลดไฟล์ทีละไฟล์
-      for (let fileIndex = 0; fileIndex < selectedFiles.length; fileIndex++) {
+        // อัปโหลดไฟล์ทีละไฟล์
+        for (let fileIndex = 0; fileIndex < selectedFiles.length; fileIndex++) {
         const file = selectedFiles[fileIndex];
         const customName = fileNames[fileIndex] || '';
         const formData = new FormData();
@@ -308,22 +293,38 @@ export default function TaskDetailPage() {
         }
       }
 
-      console.log('Creating submissions...'); // debug
+        console.log('Creating submissions...'); // debug
 
-      // สร้าง submission สำหรับแต่ละไฟล์
-      for (const uploadedFile of uploadedFiles) {
-        const submissionResponse = await axios.post('/api/submissions', {
+        // สร้าง submission สำหรับแต่ละไฟล์
+        for (let i = 0; i < uploadedFiles.length; i++) {
+          const uploadedFile = uploadedFiles[i];
+          
+          const submissionResponse = await axios.post('/api/submissions', {
+            task_document_id: taskDocumentId,
+            task_id_number: task.id,
+            submitted_by_user_id_number: user.id,
+            comments: taskComment.trim() || `ส่งงาน: ${uploadedFile.fileName}`,
+            file_url: uploadedFile.fileUrl,
+            is_active: true // ส่งงาน = active
+          });
+
+          if (!submissionResponse.data.success) {
+            throw new Error(`Failed to create submission for ${uploadedFile.fileName}`);
+          }
+          console.log('Submission created:', uploadedFile.fileName); // debug
+        }
+      } else {
+        // ถ้าไม่มีไฟล์ - สร้าง submission แบบไม่มีไฟล์
+        console.log('Creating submission without files...'); // debug
+        
+        await axios.post('/api/submissions', {
           task_document_id: taskDocumentId,
           task_id_number: task.id,
           submitted_by_user_id_number: user.id,
-          comments: submitComment || `ส่งงาน: ${uploadedFile.fileName}`,
-          file_url: uploadedFile.fileUrl
+          comments: taskComment.trim() || 'ส่งงานโดยไม่แนบไฟล์',
+          file_url: null,
+          is_active: true
         });
-
-        if (!submissionResponse.data.success) {
-          throw new Error(`Failed to create submission for ${uploadedFile.fileName}`);
-        }
-        console.log('Submission created:', uploadedFile.fileName); // debug
       }
 
       console.log('Updating task status...'); // debug
@@ -337,8 +338,8 @@ export default function TaskDetailPage() {
       console.log('Refreshing submissions...'); // debug
       
       setSelectedFiles([]); // ล้างไฟล์ที่เลือก
-      setSubmitComment(''); // ล้าง comment
       setFileNames({}); // ล้างชื่อไฟล์ที่กำหนดเอง
+      setTaskComment(''); // ล้าง comment ของ Task
       setEditingFileIndex(null); // ยกเลิกการแก้ไขชื่อไฟล์
       setShowSubmitModal(false); // ปิด modal
       await refreshSubmissions();
@@ -369,8 +370,52 @@ export default function TaskDetailPage() {
     setFileNames(newFileNames);
   };
 
+  // Validate file name format
+  const validateFileName = (fileName: string): { isValid: boolean; message?: string } => {
+    // ตรวจสอบว่าไม่เว้นว่าง
+    if (!fileName.trim()) {
+      return { isValid: false, message: 'กรุณาใส่ชื่อไฟล์' };
+    }
+
+    // ตรวจสอบความยาว
+    if (fileName.length > 100) {
+      return { isValid: false, message: 'ชื่อไฟล์ยาวเกินไป (สูงสุด 100 ตัวอักษร)' };
+    }
+
+    // ตรวจสอบอักขระที่ไม่อนุญาต (Windows + Linux)
+    const invalidChars = /[<>:"/\\|?*\x00-\x1f]/;
+    if (invalidChars.test(fileName)) {
+      return { isValid: false, message: 'ชื่อไฟล์มีอักขระที่ไม่อนุญาต (< > : " / \\ | ? *)' };
+    }
+
+    // ตรวจสอบว่าไม่ขึ้นต้นหรือลงท้ายด้วยช่องว่างหรือจุด
+    if (fileName.startsWith(' ') || fileName.endsWith(' ') || fileName.endsWith('.')) {
+      return { isValid: false, message: 'ชื่อไฟล์ไม่สามารถขึ้นต้นหรือลงท้ายด้วยช่องว่างหรือจุด' };
+    }
+
+    // ตรวจสอบชื่อสงวนของ Windows
+    const reservedNames = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i;
+    const nameWithoutExt = fileName.split('.')[0];
+    if (reservedNames.test(nameWithoutExt)) {
+      return { isValid: false, message: 'ชื่อไฟล์นี้เป็นชื่อสงวนของระบบ' };
+    }
+
+    return { isValid: true };
+  };
+
   // Handle rename file
   const handleRenameFile = (index: number, newName: string) => {
+    // ถ้าเป็นการล้างชื่อ (กด Escape) ให้ล้างได้เลย
+    if (newName === '') {
+      setFileNames(prev => {
+        const updated = { ...prev };
+        delete updated[index];
+        return updated;
+      });
+      return;
+    }
+
+    // ถ้ามีการใส่ชื่อใหม่ ให้เก็บไว้ก่อน (จะ validate ตอน onBlur)
     setFileNames(prev => ({
       ...prev,
       [index]: newName
@@ -386,6 +431,10 @@ export default function TaskDetailPage() {
   const handleCancelSubmission = () => {
     setSelectedFiles([]);
     setFileNames({}); // ล้างชื่อไฟล์ที่กำหนดเอง
+    setTaskComment(''); // ล้าง comment ของ Task
+    setShowFileManagementModal(false); // ปิด modal
+    setEditingFileIndex(null); // ยกเลิกการแก้ไขชื่อไฟล์
+    setFileNameErrors({}); // ล้าง errors
   };
 
   // Initialize edit form
@@ -860,21 +909,43 @@ export default function TaskDetailPage() {
     }
   };
 
-  // Handle cancel work submission (ยกเลิกการส่งงาน - ลบ submission ทั้งหมดและเปลี่ยนสถานะ)
+  // Handle cancel work submission (ยกเลิกการส่งงาน - เปลี่ยน is_active เป็น false และเปลี่ยนสถานะ)
   const handleCancelWorkSubmission = async () => {
     if (!task?.documentId || !user) return;
 
-    if (!confirm('คุณต้องการยกเลิกการส่งงานหรือไม่? ไฟล์ทั้งหมดจะถูกลบ')) return;
+    if (!confirm('คุณต้องการยกเลิกการส่งงานหรือไม่?\n\nไฟล์ที่ส่งทั้งหมดจะถูกทำเครื่องหมายว่าถูกยกเลิกแล้ว')) return;
 
     try {
       setUpdating(true);
 
-      // ลบ submission ทั้งหมดของ user ใน task นี้ผ่าน API ใหม่
       console.log(`Canceling submissions for task: ${taskDocumentId}`);
       
-      const deleteResponse = await axios.delete(`/api/submissions/cancel-by-task?taskDocumentId=${taskDocumentId}`);
-      
-      console.log('Delete response:', deleteResponse.data);
+      // หา submission ที่ active อยู่ของผู้ใช้คนนี้
+      const activeSubmissions = submissions.filter(
+        s => s.is_active && s.submitted_by_user_id_number === user.id
+      );
+
+      if (activeSubmissions.length === 0) {
+        alert('ไม่พบการส่งงานที่ active');
+        return;
+      }
+
+      // อัปเดตทุก submission ที่ active ให้เป็น is_active = false
+      for (const submission of activeSubmissions) {
+        if (!submission.documentId) {
+          console.error('Missing documentId for submission:', submission);
+          continue;
+        }
+
+        console.log('Setting is_active = false for submission:', submission.documentId);
+        
+        await axios.put(`/api/submissions/${submission.documentId}`, {
+          is_active: false,
+          comments: submission.comments ? `${submission.comments}\n\n❌ ยกเลิกการส่งงานเมื่อ ${new Date().toLocaleString('th-TH')}` : `❌ ยกเลิกการส่งงานเมื่อ ${new Date().toLocaleString('th-TH')}`
+        });
+      }
+
+      console.log('All active submissions set to inactive');
 
       // เปลี่ยนสถานะ task เป็น "not turn in"
       const response = await axios.put(`/api/tasks/${task.documentId}`, {
@@ -884,10 +955,10 @@ export default function TaskDetailPage() {
       if (response.data.success) {
         setTask(prev => prev ? { ...prev, task_status: 'not turn in' } : null);
         
-        const deleteData = deleteResponse.data;
-        
         // รีเฟรช submissions
         await refreshSubmissions();
+        
+        alert('ยกเลิกการส่งงานเรียบร้อยแล้ว');
       } else {
         alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
       }
@@ -1259,73 +1330,309 @@ export default function TaskDetailPage() {
                 
                 </div>
 
-                {/* Selected Files Preview */}
-                {selectedFiles.length > 0 && (
-                  <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-medium text-blue-900">
-                        ไฟล์ที่เลือก ({selectedFiles.length})
-                      </h3>
+                {/* Selected Files Preview - Compact View */}
+                {selectedFiles.length > 0 && !showFileManagementModal && (
+                  <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <h3 className="text-sm font-semibold text-blue-900">
+                          ไฟล์ที่เลือก: {selectedFiles.length} ไฟล์
+                        </h3>
+                        <span className="text-xs text-blue-700">
+                          ({(selectedFiles.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
                       <button
                         onClick={handleCancelSubmission}
-                        className="text-xs text-red-600 hover:text-red-800 font-medium"
+                        className="text-xs text-red-600 hover:text-red-800 font-medium px-3 py-1 hover:bg-red-50 rounded transition-colors"
                       >
                         ลบทั้งหมด
                       </button>
                     </div>
 
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {/* File List Preview - แสดงสูงสุด 5 ไฟล์ แล้วค่อยให้เลื่อน */}
+                    <div className={`space-y-2 mb-3 ${selectedFiles.length > 5 ? 'max-h-[320px] overflow-y-auto' : ''}`}>
                       {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-white border border-blue-200 rounded text-xs">
+                        <div key={index} className="flex items-center justify-between p-2 bg-white border border-blue-100 rounded text-xs">
                           <div className="flex items-center space-x-2 min-w-0 flex-1">
                             <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <div className="min-w-0 flex-1">
-                              {editingFileIndex === index ? (
-                                <input
-                                  type="text"
-                                  value={fileNames[index] || ''}
-                                  onChange={(e) => handleRenameFile(index, e.target.value)}
-                                  onBlur={() => setEditingFileIndex(null)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') setEditingFileIndex(null);
-                                    if (e.key === 'Escape') {
-                                      handleRenameFile(index, '');
-                                      setEditingFileIndex(null);
-                                    }
-                                  }}
-                                  className="w-full px-2 py-1 border border-blue-400 rounded text-xs font-medium bg-white text-blue-900"
-                                  placeholder={file.name}
-                                  autoFocus
-                                />
-                              ) : (
-                                <>
-                                  <p className="font-medium text-blue-900 truncate cursor-pointer hover:text-blue-700" onClick={() => setEditingFileIndex(index)} title="คลิกเพื่อเปลี่ยนชื่อ">
-                                    {fileNames[index] || file.name}
-                                  </p>
-                                  <p className="text-blue-700">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
-                                </>
-                              )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-blue-900 truncate">
+                                {fileNames[index] ? (
+                                  <>
+                                    <span className="text-green-700">✓</span> {fileNames[index]}
+                                  </>
+                                ) : (
+                                  file.name
+                                )}
+                              </p>
+                              <p className="text-blue-600">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                             </div>
                           </div>
                           <button
                             onClick={() => handleRemoveSelectedFile(index)}
-                            className="ml-2 p-1 text-red-500 hover:text-red-700 flex-shrink-0"
+                            className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded flex-shrink-0"
+                            title="ลบไฟล์นี้"
                           >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
                         </div>
                       ))}
                     </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between pt-3 border-t border-blue-200">
+                      <p className="text-xs text-blue-700 flex items-center space-x-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>คลิกปุ่มด้านล่างเพื่อจัดการชื่อไฟล์</span>
+                      </p>
+                      <button
+                        onClick={() => setShowFileManagementModal(true)}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center space-x-2 shadow-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        <span>จัดการชื่อไฟล์</span>
+                      </button>
+                    </div>
                   </div>
                 )}
 
-                {/* Files List */}
+                {/* File Management Modal */}
+                {showFileManagementModal && selectedFiles.length > 0 && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+                      {/* Modal Header */}
+                      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900">ไฟล์ที่เลือก</h3>
+                            <p className="text-sm text-gray-500">{selectedFiles.length} ไฟล์ • รวม {(selectedFiles.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowFileManagementModal(false);
+                            setEditingFileIndex(null);
+                          }}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="ปิด"
+                        >
+                          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      {/* Modal Body - File List */}
+                      <div className="flex-1 overflow-y-auto px-6 py-4">
+                        <div className="space-y-3">
+                          {selectedFiles.map((file, index) => (
+                            <div key={index} className="bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 transition-all">
+                              {/* File Header */}
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center space-x-2 mb-1">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                        #{index + 1}
+                                      </span>
+                                      <span className="text-xs text-gray-500">
+                                        {file.type || 'Unknown type'}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-700 truncate">
+                                      ชื่อไฟล์ต้นฉบับ: {file.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                      ขนาด: {(file.size / 1024 / 1024).toFixed(2)} MB
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveSelectedFile(index)}
+                                  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                                  title="ลบไฟล์นี้"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+
+                              {/* File Rename Section */}
+                              <div className="space-y-2">
+                                <label className="block text-sm font-semibold text-gray-700">
+                                  ตั้งชื่อไฟล์ใหม่ (ไม่บังคับ)
+                                </label>
+                                {editingFileIndex === index ? (
+                                  <div className="space-y-2">
+                                    <div className="relative">
+                                      <input
+                                        type="text"
+                                        value={fileNames[index] || ''}
+                                        onChange={(e) => {
+                                          handleRenameFile(index, e.target.value);
+                                          // Clear error when typing
+                                          setFileNameErrors(prev => {
+                                            const updated = { ...prev };
+                                            delete updated[index];
+                                            return updated;
+                                          });
+                                        }}
+                                        onBlur={() => {
+                                          // Validate on blur
+                                          const currentName = fileNames[index];
+                                          if (currentName && currentName.trim()) {
+                                            const validation = validateFileName(currentName);
+                                            if (!validation.isValid) {
+                                              setFileNameErrors(prev => ({
+                                                ...prev,
+                                                [index]: validation.message || 'ชื่อไฟล์ไม่ถูกต้อง'
+                                              }));
+                                            }
+                                          }
+                                          setEditingFileIndex(null);
+                                        }}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            const currentName = fileNames[index];
+                                            if (currentName && currentName.trim()) {
+                                              const validation = validateFileName(currentName);
+                                              if (!validation.isValid) {
+                                                setFileNameErrors(prev => ({
+                                                  ...prev,
+                                                  [index]: validation.message || 'ชื่อไฟล์ไม่ถูกต้อง'
+                                                }));
+                                              } else {
+                                                setEditingFileIndex(null);
+                                              }
+                                            } else {
+                                              setEditingFileIndex(null);
+                                            }
+                                          }
+                                          if (e.key === 'Escape') {
+                                            handleRenameFile(index, '');
+                                            setFileNameErrors(prev => {
+                                              const updated = { ...prev };
+                                              delete updated[index];
+                                              return updated;
+                                            });
+                                            setEditingFileIndex(null);
+                                          }
+                                        }}
+                                        className="w-full px-4 py-2.5 border-2 border-blue-500 rounded-lg text-sm font-medium bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                        placeholder="ใส่ชื่อไฟล์ใหม่..."
+                                        autoFocus
+                                      />
+                                      <div className="absolute right-3 top-2.5 flex items-center space-x-1">
+                                        <span className="text-xs text-gray-400">Enter เพื่อบันทึก</span>
+                                      </div>
+                                    </div>
+                                    {fileNameErrors[index] && (
+                                      <div className="flex items-center space-x-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                        </svg>
+                                        <span className="text-xs font-medium">{fileNameErrors[index]}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => setEditingFileIndex(index)}
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-left hover:bg-gray-50 hover:border-blue-300 transition-all flex items-center justify-between group"
+                                  >
+                                    <span className="text-gray-700 font-medium truncate">
+                                      {fileNames[index] ? (
+                                        <span className="text-blue-700">{fileNames[index]}</span>
+                                      ) : (
+                                        <span className="text-gray-400">คลิกเพื่อตั้งชื่อไฟล์...</span>
+                                      )}
+                                    </span>
+                                    <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Modal Footer */}
+                      <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2 text-sm text-gray-600">
+                            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>คลิกปุ่มด้านบนเพื่อตั้งชื่อไฟล์ใหม่</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              // Validate all file names before closing
+                              let hasError = false;
+                              const errors: { [key: number]: string } = {};
+                              
+                              Object.keys(fileNames).forEach(indexStr => {
+                                const index = parseInt(indexStr);
+                                const fileName = fileNames[index];
+                                if (fileName && fileName.trim()) {
+                                  const validation = validateFileName(fileName);
+                                  if (!validation.isValid) {
+                                    errors[index] = validation.message || 'ชื่อไฟล์ไม่ถูกต้อง';
+                                    hasError = true;
+                                  }
+                                }
+                              });
+
+                              if (hasError) {
+                                setFileNameErrors(errors);
+                                alert('กรุณาแก้ไขชื่อไฟล์ที่ไม่ถูกต้องก่อนดำเนินการต่อ');
+                              } else {
+                                // Close modal and keep files
+                                setShowFileManagementModal(false);
+                                setEditingFileIndex(null);
+                              }
+                            }}
+                            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors shadow-sm flex items-center space-x-2"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>เสร็จสิ้น</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Files List - แสดงเฉพาะเมื่อมีไฟล์ที่อัปโหลดแล้ว */}
                 <div className="space-y-3">
-                  {submissions.filter(s => s.file_url).length === 0 ? (
+                  {submissions.filter(s => s.file_url && s.is_active).length === 0 && selectedFiles.length === 0 ? (
                     <div className="text-center py-8">
                       <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1333,7 +1640,7 @@ export default function TaskDetailPage() {
                       <p className="text-gray-600">ยังไม่มีไฟล์ที่อัปโหลด</p>
                     </div>
                   ) : (
-                    submissions.filter(s => s.file_url).map((submission) => (
+                    submissions.filter(s => s.file_url && s.is_active).map((submission) => (
                       <div key={submission.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -1361,10 +1668,14 @@ export default function TaskDetailPage() {
                           </a>
                           {user && submission.submitted_by_user_id_number === user.id && (task.task_status === 'not turn in' || task.task_status === 'rejected') && (
                             <button 
-                              onClick={() => handleDeleteFile(submission.id)}
-                              className="px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                              onClick={() => handleDeleteFile(submission.id, submission.documentId)}
+                              className="px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1"
+                              title="ลบไฟล์นี้"
                             >
-                              ลบ
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              <span>ลบ</span>
                             </button>
                           )}
                         </div>
@@ -1375,10 +1686,40 @@ export default function TaskDetailPage() {
 
               </div>
 
+              {/* Task Comment Section - แสดงเสมอเมื่ออยู่ในโหมดส่งงาน */}
+              {user && task.assigned_to_user_ids_number === user.id && (task.task_status === 'not turn in' || task.task_status === 'rejected') && (
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                  <div className="flex items-center mb-4">
+                    <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    </svg>
+                    <h2 className="text-lg font-semibold text-gray-900">ความเห็น / หมายเหตุ</h2>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    
+                    <textarea
+                      value={taskComment}
+                      onChange={(e) => setTaskComment(e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none"
+                      placeholder="เขียนความเห็นหรือคำอธิบายสำหรับการส่งงานนี้ เช่น รายละเอียดงาน คำอธิบายเนื้อหา สิ่งที่ต้องการแจ้ง ฯลฯ"
+                    />
+                    
+                  </div>
+                </div>
+              )}
+
               {/* History Section */}
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">ประวัติ ({submissions.length})</h2>
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h2 className="text-lg font-semibold text-gray-900">ประวัติการส่งงาน</h2>
+                    <span className="text-sm text-gray-500">({submissions.length} รายการ)</span>
+                  </div>
                   <button
                     onClick={refreshSubmissions}
                     className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1391,42 +1732,124 @@ export default function TaskDetailPage() {
                 </div>
                 
                 {submissions.length === 0 ? (
-                  <div className="text-center py-6">
-                    <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <p className="text-gray-600 text-sm">ยังไม่มีประวัติการส่งงาน</p>
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 font-medium">ยังไม่มีประวัติการส่งงาน</p>
+                    <p className="text-gray-400 text-sm mt-1">ประวัติจะแสดงที่นี่เมื่อมีการส่งงาน</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {submissions.map((submission) => (
-                      <div key={submission.id} className="border-l-4 border-blue-500 bg-gray-50 rounded-r-lg pl-3 py-2">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-blue-600 text-xs font-medium">
-                              {submission.submittedByUser?.username.charAt(0).toUpperCase()}
-                            </span>
+                  <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                    {submissions.map((submission, index) => (
+                      <div 
+                        key={submission.id} 
+                        className={`border rounded-lg p-3 transition-all hover:shadow-sm ${
+                          submission.is_active 
+                            ? 'bg-white border-green-200 hover:border-green-300' 
+                            : 'bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        {/* Header Row */}
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center space-x-2 flex-1 min-w-0">
+                            {/* User Avatar */}
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              submission.is_active 
+                                ? 'bg-green-100' 
+                                : 'bg-gray-200'
+                            }`}>
+                              <span className={`text-xs font-semibold ${
+                                submission.is_active 
+                                  ? 'text-green-700' 
+                                  : 'text-gray-600'
+                              }`}>
+                                {submission.submittedByUser?.username.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            
+                            {/* User Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-semibold text-gray-900 text-sm truncate">
+                                  {submission.submittedByUser?.username}
+                                </span>
+                                {submission.is_active ? (
+                                  <span className="inline-flex items-center space-x-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>ส่งแล้ว</span>
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center space-x-1 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>ยกเลิก</span>
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center space-x-2 mt-0.5">
+                                <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="text-xs text-gray-500">{formatDateTime(submission.submission_date)}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 text-sm truncate">{submission.submittedByUser?.username}</p>
-                            <p className="text-xs text-gray-500">{formatDateTime(submission.submission_date)}</p>
+                          
+                          {/* Submission Number */}
+                          <div className="flex-shrink-0 ml-2">
+                            <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-gray-500 bg-gray-100 rounded-full">
+                              #{submissions.length - index}
+                            </span>
                           </div>
                         </div>
                         
-                        {submission.comments && (
-                          <div className="bg-white rounded p-2 mb-2 text-sm text-gray-700">
-                            {submission.comments}
+                        {/* File Info */}
+                        {submission.file_url && (
+                          <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg mb-2 ${
+                            submission.is_active 
+                              ? 'bg-green-50 border border-green-100' 
+                              : 'bg-gray-100 border border-gray-200'
+                          }`}>
+                            <svg className={`w-4 h-4 flex-shrink-0 ${
+                              submission.is_active ? 'text-green-600' : 'text-gray-500'
+                            }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                            <span className={`text-xs font-medium truncate flex-1 ${
+                              submission.is_active ? 'text-green-700' : 'text-gray-600'
+                            }`}>
+                              {submission.file_url.split('/').pop()}
+                            </span>
+                            {submission.is_active && (
+                              <a 
+                                href={submission.file_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex-shrink-0 text-xs text-green-600 hover:text-green-700 font-medium hover:underline"
+                              >
+                                ดาวน์โหลด
+                              </a>
+                            )}
                           </div>
                         )}
                         
-                        {submission.file_url && (
-                          <div className="flex items-center space-x-1 text-xs bg-blue-100 rounded p-1.5">
-                            <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                            <span className="text-blue-800 font-medium truncate">
-                              {submission.file_url.split('/').pop()}
-                            </span>
+                        {/* Comments */}
+                        {submission.comments && (
+                          <div className="bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                            <div className="flex items-start space-x-2">
+                              <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                              </svg>
+                              <p className="text-xs text-gray-700 leading-relaxed flex-1 break-words" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                                {submission.comments}
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1510,65 +1933,50 @@ export default function TaskDetailPage() {
               {/* Task Information Card */}
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">ข้อมูล Task</h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {/* Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-2">สถานะ</label>
-                    <div className={`inline-flex items-center space-x-3 px-4 py-3 ${statusConfig.bgColor} border ${statusConfig.borderColor} rounded-lg`}>
-                      {/* Status Indicator */}
-                      <div className={`w-3 h-3 rounded-full ${statusConfig.indicatorColor} flex-shrink-0`}></div>
-                      
-                      {/* Status Badge */}
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig.badgeColor} text-white`}>
+                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">สถานะ</span>
+                    <div className={`flex items-center space-x-2 px-3 py-1.5 ${statusConfig.bgColor} border ${statusConfig.borderColor} rounded-lg`}>
+                      <div className={`w-2 h-2 rounded-full ${statusConfig.indicatorColor}`}></div>
+                      <span className={`text-xs font-medium ${statusConfig.textColor}`}>
                         {statusConfig.statusText}
-                      </div>
-                      
-                      {/* Status Icon */}
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${statusConfig.iconBg}`}>
-                        {statusConfig.icon}
-                      </div>
+                      </span>
                     </div>
                   </div>
 
                   {/* Assigned User */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-2">ผู้รับผิดชอบ</label>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 text-sm font-medium">
+                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">ผู้รับผิดชอบ</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 text-xs font-medium">
                           {assignedUser ? assignedUser.username.charAt(0).toUpperCase() : '?'}
                         </span>
                       </div>
-                      <span className="text-gray-900 font-medium">
+                      <span className="text-sm text-gray-900 font-medium">
                         {assignedUser ? assignedUser.username : 'ไม่ได้กำหนด'}
                       </span>
                     </div>
                   </div>
 
                   {/* Due Date */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-2">กำหนดส่ง</label>
-                    <div className="flex items-center space-x-2 text-gray-900">
+                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">กำหนดส่ง</span>
+                    <div className="flex items-center space-x-2">
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <span>{formatDate(task.due_date)}</span>
+                      <span className="text-sm text-gray-900">{formatDate(task.due_date)}</span>
                     </div>
                   </div>
 
                   {/* Last Updated */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-2">อัปเดตล่าสุด</label>
-                    <div className="flex items-center space-x-2 text-gray-900">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>{formatDate(task.updatedAt)}</span>
-                    </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm text-gray-600">อัปเดตล่าสุด</span>
+                    <span className="text-sm text-gray-900">{formatDate(task.updatedAt)}</span>
                   </div>
                 </div>
-
-
               </div>
 
               {/* Task Actions for Assignee */}
@@ -1579,32 +1987,37 @@ export default function TaskDetailPage() {
                   {/* Countdown Timer */}
                   {timeLeft && (
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-500 mb-2">เวลาที่เหลือ</label>
+                      <label className="block text-sm font-medium text-black-500 mb-2">เวลาที่เหลือ</label>
                       {timeLeft.isOverdue ? (
-                        <div className={`${statusConfig.bgColor} border ${statusConfig.borderColor} rounded-lg p-3`}>
-                          <div className="flex items-center space-x-2">
-                            <div className={`w-3 h-3 rounded-full ${statusConfig.indicatorColor}`}></div>
-                            <span className={`${statusConfig.textColor} font-medium`}>เลยกำหนดส่งแล้ว</span>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-center space-x-2">
+                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-gray-700 font-medium text-sm">เลยกำหนดส่งแล้ว</span>
                           </div>
                         </div>
                       ) : (
-                        <div className={`${statusConfig.bgColor} border ${statusConfig.borderColor} rounded-lg p-3`}>
-                          <div className="grid grid-cols-4 gap-2 text-center">
-                            <div className="bg-white rounded-lg p-2 border border-gray-100">
-                              <div className={`text-lg font-bold ${statusConfig.textColor.replace('text-', 'text-').replace('-800', '-600')}`}>{timeLeft.days}</div>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-center space-x-3">
+                            <div className="flex items-center space-x-1">
+                              <div className="text-xl font-bold text-gray-900">{timeLeft.days}</div>
                               <div className="text-xs text-gray-500">วัน</div>
                             </div>
-                            <div className="bg-white rounded-lg p-2 border border-gray-100">
-                              <div className={`text-lg font-bold ${statusConfig.textColor.replace('text-', 'text-').replace('-800', '-600')}`}>{timeLeft.hours}</div>
+                            <div className="text-gray-400">:</div>
+                            <div className="flex items-center space-x-1">
+                              <div className="text-xl font-bold text-gray-900">{String(timeLeft.hours).padStart(2, '0')}</div>
                               <div className="text-xs text-gray-500">ชม.</div>
                             </div>
-                            <div className="bg-white rounded-lg p-2 border border-gray-100">
-                              <div className={`text-lg font-bold ${statusConfig.textColor.replace('text-', 'text-').replace('-800', '-600')}`}>{timeLeft.minutes}</div>
+                            <div className="text-gray-400">:</div>
+                            <div className="flex items-center space-x-1">
+                              <div className="text-xl font-bold text-gray-900">{String(timeLeft.minutes).padStart(2, '0')}</div>
                               <div className="text-xs text-gray-500">นาที</div>
                             </div>
-                            <div className="bg-white rounded-lg p-2 border border-gray-100">
-                              <div className={`text-lg font-bold ${statusConfig.textColor.replace('text-', 'text-').replace('-800', '-600')}`}>{timeLeft.seconds}</div>
-                              <div className="text-xs text-gray-500">วิ.</div>
+                            <div className="text-gray-400">:</div>
+                            <div className="flex items-center space-x-1">
+                              <div className="text-xl font-bold text-gray-900">{String(timeLeft.seconds).padStart(2, '0')}</div>
+                              <div className="text-xs text-gray-500">วินาที.</div>
                             </div>
                           </div>
                         </div>
@@ -1634,7 +2047,7 @@ export default function TaskDetailPage() {
                           </>
                         )}
                       </button>
-                    ) : selectedFiles.length > 0 ? (
+                    ) : (
                       <button
                         onClick={handleSubmitWork}
                         disabled={submitting}
@@ -1650,17 +2063,14 @@ export default function TaskDetailPage() {
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
-                            <span>ส่งงาน ({selectedFiles.length} ไฟล์)</span>
+                            <span>
+                              {selectedFiles.length > 0 
+                                ? `ส่งงาน (${selectedFiles.length} ไฟล์)` 
+                                : 'ส่งงาน'}
+                            </span>
                           </>
                         )}
                       </button>
-                    ) : (
-                      <div className="text-center py-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <svg className="w-6 h-6 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <p className="text-gray-600 text-sm">เลือกไฟล์เพื่อส่งงาน</p>
-                      </div>
                     )}
                   </div>
                 </div>
@@ -1933,177 +2343,191 @@ export default function TaskDetailPage() {
         </div>
       )}
 
-      {/* Submit Work Modal */}
+      {/* Submit Work Modal - Enhanced */}
       {showSubmitModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                <span>ยืนยันการส่งงาน</span>
-              </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">ยืนยันการส่งงาน</h3>
+                  <p className="text-sm text-gray-600">กรุณาตรวจสอบข้อมูลก่อนส่ง</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowSubmitModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-white/80 rounded-lg transition-colors"
                 disabled={submitting}
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="mb-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-blue-900 font-medium mb-2">ไฟล์ที่จะส่ง:</p>
-                <div className="space-y-1">
-                  {selectedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-sm text-blue-800">
-                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {/* Task Information */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5">
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-900 mb-1">Task</p>
+                    <p className="text-base font-semibold text-blue-800">{task.task_name}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Files Section */}
+              {selectedFiles.length > 0 ? (
+                <div className="mb-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-base font-semibold text-gray-900 flex items-center space-x-2">
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="truncate">{getFileName(index, file.name)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ความเห็น / หมายเหตุ (ไม่บังคับ)
-                </label>
-                <textarea
-                  value={submitComment}
-                  onChange={(e) => setSubmitComment(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none"
-                  placeholder="เขียนความเห็นหรือข้อความเพิ่มเติม (เช่น หมายเหตุเกี่ยวกับการส่งงาน ปัญหาที่พบ ฯลฯ)"
-                  disabled={submitting}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  ถ้าไม่เขียนอะไร จะใช้ข้อความเริ่มต้นแทน
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowSubmitModal(false)}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-lg transition-all"
-                disabled={submitting}
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={handleConfirmSubmit}
-                disabled={submitting}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-              >
-                {submitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>กำลังส่งงาน...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>ยืนยันและส่งงาน</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add File Modal */}
-      {showAddFileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span>เพิ่มไฟล์</span>
-              </h3>
-              <button
-                onClick={() => {
-                  setShowAddFileModal(false);
-                  setPendingFiles([]);
-                  setPendingFileNames({});
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-blue-900 font-medium mb-3">ไฟล์ที่จะเพิ่ม:</p>
-                <div className="space-y-2">
-                  {pendingFiles.map((file, index) => (
-                    <div key={index} className="p-4 bg-white border border-blue-200 rounded-lg space-y-3">
-                      <div className="flex items-start space-x-3">
-                        <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">ชื่อไฟล์เดิม</p>
-                          <p className="text-xs text-gray-600 truncate">{file.name}</p>
-                          <p className="text-xs text-gray-500 mt-1">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                      <span>ไฟล์ที่จะส่ง</span>
+                    </h4>
+                    <span className="text-sm text-gray-500">
+                      {selectedFiles.length} ไฟล์ • {(selectedFiles.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                #{index + 1}
+                              </span>
+                              <span className="text-xs text-gray-500">{file.type || 'Unknown'}</span>
+                            </div>
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {fileNames[index] || file.name}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              ขนาด: {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="border-t border-gray-100 pt-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Save Name As <span className="text-gray-500 text-xs">(เปลี่ยนชื่อไฟล์)</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={pendingFileNames[index] || ''}
-                          onChange={(e) => handleRenamePendingFile(index, e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                          placeholder={file.name}
-                        />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-5">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-start space-x-3">
+                      <svg className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-amber-900 mb-1">ส่งงานโดยไม่มีไฟล์</p>
+                        <p className="text-sm text-amber-700">คุณกำลังจะส่งงานโดยไม่แนบไฟล์ กรุณาตรวจสอบความเห็นด้านล่าง</p>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
+              )}
+
+              {/* Comments Section */}
+              <div className="mb-5">
+                <h4 className="text-base font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                  </svg>
+                  <span>ความเห็น / หมายเหตุ</span>
+                </h4>
+                {taskComment ? (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap break-words leading-relaxed">
+                      {taskComment}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                    <p className="text-sm text-gray-500 italic">ไม่มีความเห็นหรือหมายเหตุ</p>
+                  </div>
+                )}
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">
-                <strong>หมายเหตุ:</strong> คุณสามารถเปลี่ยนชื่อไฟล์ได้ในช่องด้านบน โดยค่าเริ่มต้นจะใช้ชื่อไฟล์เดิม
-              </p>
+              {/* Warning */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-900 mb-1">โปรดตรวจสอบก่อนส่ง</p>
+                    <p className="text-sm text-yellow-700">กรุณาตรวจสอบไฟล์และข้อมูลให้ถูกต้อง หลังจากส่งงานแล้ว สถานะของ Task จะเปลี่ยนเป็น "รอการตรวจสอบ"</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowAddFileModal(false);
-                  setPendingFiles([]);
-                  setPendingFileNames({});
-                }}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-lg transition-all"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={handleConfirmAddFile}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>ยืนยันและเพิ่มไฟล์</span>
-              </button>
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  {selectedFiles.length > 0 ? (
+                    <span>กำลังส่ง <strong className="text-gray-900">{selectedFiles.length} ไฟล์</strong></span>
+                  ) : (
+                    <span>ส่งงาน<strong className="text-gray-900">โดยไม่มีไฟล์</strong></span>
+                  )}
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setShowSubmitModal(false)}
+                    className="px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium hover:bg-gray-200 rounded-lg transition-all"
+                    disabled={submitting}
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    onClick={handleConfirmSubmit}
+                    disabled={submitting}
+                    className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-lg"
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>กำลังส่งงาน...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>ยืนยันและส่งงาน</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

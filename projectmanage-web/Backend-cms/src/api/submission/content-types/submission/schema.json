@@ -43,6 +43,11 @@
     },
     "comments": {
       "type": "text"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "required": true
     }
   }
 }
