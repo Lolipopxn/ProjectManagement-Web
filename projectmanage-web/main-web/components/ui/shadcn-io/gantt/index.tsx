@@ -814,11 +814,32 @@ export const GanttFeatureItemCard: FC<GanttFeatureItemCardProps> = ({
   const [, setDragging] = useGanttDragging();
   const { attributes, listeners, setNodeRef } = useDraggable({ id });
   const isPressed = Boolean(attributes['aria-pressed']);
+  const [colorCard, setColorCard] = useState("");
+
+  const pastelColors = [
+    "#FFD2CF",
+    "#FFE2C2",
+    "#FCEBC7",
+    "#FBF6E2",
+    "#EDF7CB",
+    "#D8F2C9",
+    "#BDF0D8",
+    "#B6E9F0",
+  ];
+
+  function getStatusColor() {
+    const randomIndex = Math.floor(Math.random() * pastelColors.length);
+    setColorCard(pastelColors[randomIndex]);
+  }
 
   useEffect(() => setDragging(isPressed), [isPressed, setDragging]);
 
+  useEffect( () => {
+    getStatusColor()
+  }, []);
+
   return (
-    <Card className="h-full w-full rounded-md bg-background p-2 text-xs shadow-sm">
+    <Card className="h-full w-full rounded-md p-2 text-xs shadow-sm" style={{ backgroundColor: colorCard }}>
       <div
         className={cn(
           'flex h-full w-full items-center justify-between gap-2 text-left',
