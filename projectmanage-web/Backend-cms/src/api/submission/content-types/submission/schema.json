@@ -48,6 +48,9 @@
       "type": "boolean",
       "default": true,
       "required": true
+    },
+    "cancelled_at": {
+      "type": "datetime"
     }
   }
 }

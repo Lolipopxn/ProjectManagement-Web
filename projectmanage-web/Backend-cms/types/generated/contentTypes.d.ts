@@ -561,6 +561,7 @@ export interface ApiSubmissionSubmission extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    cancelled_at: Schema.Attribute.DateTime;
     comments: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
