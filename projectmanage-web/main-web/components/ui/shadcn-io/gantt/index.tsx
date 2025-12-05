@@ -522,7 +522,7 @@ export const GanttSidebarItem: FC<GanttSidebarItemProps> = ({
       <p className="pointer-events-none flex-1 truncate text-left font-medium">
         {feature.name}
       </p>
-      <p className="pointer-events-none text-muted-foreground">{duration}</p>
+      <p className="pointer-events-none hidden md:flex text-muted-foreground">{duration}</p>
     </div>
   );
 };
@@ -534,7 +534,7 @@ export const GanttSidebarHeader: FC = () => (
   >
     {/* <Checkbox className="shrink-0" /> */}
     <p className="flex-1 truncate text-left">โปรเจค</p>
-    <p className="shrink-0">ระยะเวลา</p>
+    <p className="shrink-0 hidden md:flex">ระยะเวลา</p>
   </div>
 );
 
@@ -1413,14 +1413,14 @@ export const GanttProvider: FC<GanttProviderProps> = ({
     >
       <div
         className={cn(
-          'gantt relative grid h-full w-full flex-none select-none overflow-auto rounded-sm bg-secondary',
+          'gantt relative grid h-full w-full flex-none select-none overflow-auto rounded-sm bg-secondary grid-cols-[80px_1fr] md:grid-cols-[300px_1fr]',
           range,
           className
         )}
         ref={scrollRef}
         style={{
           ...cssVariables,
-          gridTemplateColumns: 'var(--gantt-sidebar-width) 1fr',
+          // gridTemplateColumns: 'var(--gantt-sidebar-width) 1fr',
         }}
       >
         {children}

@@ -1676,7 +1676,7 @@ export default function ProjectDetailPage() {
     <div className="min-h-screen w-auto md:w-full bg-white">
       <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
-        <div className={`flex-1 p-6 ${!ToggleGantt ? 'max-w-[1900px]' : 'max-w-[1900px]'}`}>
+        <div className={`flex-1 p-6 ${!ToggleGantt ? 'max-w-sm md:max-w-[1900px]' : 'max-w-sm md:max-w-[1900px]'}`}>
           {/* Breadcrumb */}
           <div className="flex items-center space-x-2 text-gray-600 mb-6">
             <a href="/main_pages/overview" className="hover:text-blue-600">Home</a>
@@ -1691,7 +1691,7 @@ export default function ProjectDetailPage() {
             <div className="flex items-center justify-between gap-2 md:gap-0">
               {/* Project Info */}
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+                <div className="hidden w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl md:flex items-center justify-center shadow-sm">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
@@ -1699,10 +1699,10 @@ export default function ProjectDetailPage() {
                 <div>
                   <div className="flex items-center space-x-2 md:space-x-2 mb-1">
                     <h1 className="text-xl font-bold text-gray-900">{project.project_name}</h1>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
+                    <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
                       {project.project_status}
                     </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${
                       userRole === 'Leader' 
                         ? 'bg-purple-100 text-purple-700 border border-purple-200' 
                         : 'bg-green-100 text-green-700 border border-green-200'
@@ -1710,7 +1710,7 @@ export default function ProjectDetailPage() {
                       {userRole}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <div className="hidden md:flex items-center space-x-4 text-sm text-gray-600">
                     <div className="flex items-center space-x-1">
                       <svg className="hidden md:inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1766,7 +1766,7 @@ export default function ProjectDetailPage() {
             </div>
           </div>
 
-          {ToggleGantt ? (
+          {!ToggleGantt ? (
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Tasks */}

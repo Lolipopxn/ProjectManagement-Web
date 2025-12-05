@@ -34,6 +34,8 @@ import { IoMdTime } from "react-icons/io";
 import { GrStatusGood } from "react-icons/gr";
 import { RiGroupLine } from "react-icons/ri";
 
+import { useRouter } from "next/navigation";
+
 
 interface Task {
   id: number;
@@ -45,7 +47,7 @@ interface Task {
   createdAt: string;
   project_document_id: string;
   assigned_to_user_ids_number: number;
-  assigned_to_user_ids?: ProjectMember | null;
+  assigned_to_user_ids?: User[] | null;
   project_id?: Project | null;
   attributes?: any;
 }
@@ -64,41 +66,27 @@ interface Project {
   slug: string;
 }
 
-interface ProjectMember {
+interface User {
   id: number;
   documentId?: string;
-  role_in_project: string;
-  join_date: string;
-  project_id_number: number;
-  user_id_in_project: number;
-  project_document_id: string;
-  user_ids?: any;
-  userInfo?: {
-    id: number;
-    documentId?: string;
-    username: string;
-    email?: string;
-  };
+  username: string;
+  email: string;
 }
 
 function mapTaskToFeature(task: Task) {
   return {
     id: task.id.toString(),
+    docId: task.documentId,
     name: task.task_name ?? "Untitled",
-
     startAt: new Date(task.createdAt),
     endAt: new Date(task.due_date),
-
-    group: { name: task.project_id?.project_name ?? "Unknown" },
-
+    group: { name: task.project_id?.project_name ?? "ไม่มี", projectId: task.project_id?.documentId},
     description: task.description ?? "",
-
     color: getTaskColor(), 
-
-    member_name: { name: task.assigned_to_user_ids?.userInfo?.username ?? "Unknown" },
-
+    member_name: { name: task.assigned_to_user_ids?.length ? task.assigned_to_user_ids.map(u => u.username).join(',') : "ไม่มี" },
     status: {
       name: task.task_status,
+      nameThai: getTextStatus(task.task_status),
       color: getStatusColor(task.task_status),
     },
   };
@@ -112,6 +100,17 @@ function getStatusColor(status: string) {
       return "#EF4444"; // red
     default:
       return "#6B7280"; // gray
+  }
+}
+
+function getTextStatus(status: string) {
+  switch (status) {
+    case "turn in":
+      return "ส่งเเล้ว";
+    case "not turn in":
+      return "ยังไม่ส่ง";
+    default:
+      return "ไม่ระบุ";
   }
 }
 
@@ -131,13 +130,12 @@ const pastelColors = [
 export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
   const [features, setFeatures] = useState<any[]>([]);
 
+  const router = useRouter();
+
   useEffect(() => {
     const load = async () => {
-
       const mapped = tasks.map((t: any, p: any) => mapTaskToFeature(t));
-
       // console.log("MAPPED RESULT:", mapped);
-
       setFeatures(mapped);
     };
 
@@ -146,15 +144,20 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
 
   const grouped = groupBy(features, (f) => f.group.name || "Unknown");
 
-  const handleViewFeature = (id: string) =>
-    console.log(`Feature selected: ${id}`);
+  const handleViewFeature = (feature: any) =>
+    router.push(`/main_pages/projects/${feature.group.projectId}/tasks/${feature.docId}`);
+
   const handleCopyLink = (id: string) => console.log(`Copy link: ${id}`);
+
   const handleRemoveFeature = (id: string) =>
     setFeatures((prev) => prev.filter((feature) => feature.id !== id));
+
   const handleRemoveMarker = (id: string) =>
     console.log(`Remove marker: ${id}`);
+
   const handleCreateMarker = (date: Date) =>
     console.log(`Create marker: ${date.toISOString()}`);
+
   const handleMoveFeature = (id: string, startAt: Date, endAt: Date | null) => {
     if (!endAt) {
       return;
@@ -172,14 +175,14 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
   return (
     <GanttProvider range="daily" zoom={150} className="border border-gray-200 shadow-md">
 
-      <GanttSidebar className='mb-30'>
+      <GanttSidebar className='mb-60 md:mb-30'>
         {Object.entries(grouped).map(([group, features]) => (
           <GanttSidebarGroup key={group} name={group}>
             {features.map((feature) => (
               <GanttSidebarItem
                 feature={feature}
                 key={feature.id}
-                onSelectItem={handleViewFeature}
+                // onSelectItem={handleViewFeature}
               />
             ))}
           </GanttSidebarGroup>
@@ -195,7 +198,7 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                   <ContextMenu>
                     <ContextMenuTrigger asChild>
                       <button
-                        onClick={() => handleViewFeature(feature.id)}
+                        onClick={() => handleViewFeature(feature)}
                         type="button" 
                         className='group'
                       >
@@ -213,16 +216,15 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                                 {feature.owner.name?.slice(0, 2)}
                               </AvatarFallback>
                             </Avatar>
-                          ): <p>{feature.description}</p>}
+                          ): <p>{feature.status.nameThai}</p>}
                         </GanttFeatureItem>
                         
                       </button>
                     </ContextMenuTrigger>
                     <div className='fixed group-hover:fixed group-hover:h-full group-hover:w-100 right-0 top-0 bg-[white] h-0 w-0 z-30 shadow-md'>
                       <div className='flex group-hover:flex flex-col mt-25 py-1 px-6 space-y-5 divide-gray-500'>
-                        <hr></hr>
-                        <div className='text-lg text-start'>เเสดงรายละเอียดงานเพิ่มเติม</div>
-                          <div className='grid grid-cols-2 text-sm space-y-5 gap-2 border-2 border-gray-400 px-5 py-5 rounded-lg '>
+                        <hr></hr>               
+                          <div className='grid grid-cols-2 text-sm space-y-5 gap-2 px-5 py-5 rounded-lg '>
                             <div className='col-span-1 font-bold'>
                               <div className='flex flex-row gap-3 items-center text-gray-500'>
                                 <VscGithubProject className='w-4 h-4'/>
@@ -270,7 +272,9 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                               </div>
                             </div>
                             <div className='col-span-1 font-normal'>
-                              <p style={{ color: feature.status.color }}>{feature.status.name}</p>
+                              <div className='flex py-1 w-1/2 justify-center items-center rounded-[25px]' style={{ backgroundColor: feature.status.color }}>
+                                <p style={{ color: 'white' }}>{feature.status.nameThai}</p>
+                              </div>                             
                             </div>   
                             <div className='col-span-1 font-bold'>
                               <div className='flex flex-row gap-3 items-center text-gray-500'>
