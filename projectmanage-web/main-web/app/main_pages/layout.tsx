@@ -13,7 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/*Navbar-Top*/}
         <Navbar />
 
-        <div className={`flex flex-row gap-2 mt-17 overflow-y-auto ${isNavOpen ? 'transition-all duration-500 md:ml-65' : 'transition-all duration-500 md:ml-20'}`}>
+        <div className={`flex flex-row gap-2 mt-13 overflow-y-auto ${isNavOpen ? 'transition-all duration-500 md:ml-65' : 'transition-all duration-500 md:ml-20'}`}>
           {/*Content*/}
           {children}
         </div>

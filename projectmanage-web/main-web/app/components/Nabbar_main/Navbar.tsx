@@ -8,7 +8,7 @@ import { FaFolder, FaPlus } from "react-icons/fa";
 
 export default function Navbar() {
   return (
-    <nav className="bg-[#50589C] text-white px-6 md:px-4 py-3 fixed top-0 left-0 w-full z-50">
+    <nav className="bg-[#50589C] text-white px-6 md:px-4 py-2 fixed top-0 left-0 w-full z-50">
       <div className="container reactive mx-auto h-auto max-w-full flex items-center justify-between">
         {/* Left side - App name and navigation */}
         <div className="flex items-center space-x-5 md:space-x-20 text-lg md:text-md">

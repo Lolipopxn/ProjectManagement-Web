@@ -142,8 +142,8 @@ export default function Sidebar() {
   const totalProjects = projects.length;
 
   return (
-    <aside className={`${isNavOpen ? 'transition-all duration-500 w-full md:w-64' : 'transition-all duration-500 md:w-18 '}  bg-white border border-gray-200 bottom-0 md:top-17 md:h-screen overflow-y-auto fixed`}>
-      <div className="p-3 md:p-4">
+    <aside className={`${isNavOpen ? 'transition-all duration-500 w-full md:w-64' : 'transition-all duration-500 md:w-18 '}  bg-white border border-gray-200 bottom-0 md:top-13 md:h-screen overflow-y-auto fixed`}>
+      <div className="p-3 md:px-4 md:py-3">
         {/* Breadcrumb */}
         <div className="hidden md:flex flex-row md:mt-5 justify-between items-center space-x-2 text-sm text-gray-500 mb-6">
           <div className={`${isNavOpen ? 'flex' : 'hidden'} flex flex-row justify-center items-center gap-1`}>

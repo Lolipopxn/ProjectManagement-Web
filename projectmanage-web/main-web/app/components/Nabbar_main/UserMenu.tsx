@@ -101,10 +101,10 @@ export default function UserMenu() {
   };
 
   const Avatar = ({ name }: { name?: string }) => (
-    <div className="h-6 w-6 md:h-9 md:w-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-semibold ring-2 ring-indigo-100">
+    <div className="size-5 md:size-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-semibold ring-2 ring-indigo-100">
       {name?.charAt(0)?.toUpperCase() || (
         <svg
-          className="w-5 h-5 text-white/90"
+          className="size-4 text-white/90"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

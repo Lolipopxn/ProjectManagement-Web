@@ -9,6 +9,9 @@ import ProjectChatPopup from "../../../components/ProjectChat";
 import VoiceRoomButton from "../../../components/VoiceRoomButton";
 import GanttChart from '@/app/components/GanttChart';
 
+import { AiFillReconciliation } from "react-icons/ai";
+import { IoMdClose } from "react-icons/io";
+
 // Interface สำหรับ project data
 interface Project {
   id: number;
@@ -95,7 +98,8 @@ export default function ProjectDetailPage() {
   const [taskManageLoading, setTaskManageLoading] = useState(false);
   const [showProjectManageModal, setShowProjectManageModal] = useState(false);
   const [projectManageLoading, setProjectManageLoading] = useState(false);
-  const [ToggleGantt, setToggleGantt] = useState(false);
+  const [ToggleView, setToggleView] = useState(1);
+  const [toggleMember, setToggleMember] = useState(false);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -759,20 +763,21 @@ export default function ProjectDetailPage() {
       <div 
         key={task.id} 
         className={`bg-white border border-gray-200 rounded-lg p-5 mb-4 hover:shadow-md hover:border-gray-300 transition-all duration-200 relative group`}
+        onClick={() => {
+          if (task.documentId) {
+            router.push(`/main_pages/projects/${projectId}/tasks/${task.documentId}`);
+          } else {
+            console.warn('Task documentId not found:', task);
+            // alert('ไม่พบ documentId ของ Task นี้');
+          }
+        }}
       >
         {/* Task Name with Actions */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <h4 
               className="font-semibold text-gray-900 text-xl cursor-pointer hover:text-blue-600 transition-colors leading-tight"
-              onClick={() => {
-                if (task.documentId) {
-                  router.push(`/main_pages/projects/${projectId}/tasks/${task.documentId}`);
-                } else {
-                  console.warn('Task documentId not found:', task);
-                  // alert('ไม่พบ documentId ของ Task นี้');
-                }
-              }}
+              
             >
               {task.task_name}
             </h4>
@@ -1676,33 +1681,91 @@ export default function ProjectDetailPage() {
     <div className="min-h-screen w-auto md:w-full bg-white">
       <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
-        <div className={`flex-1 p-6 ${!ToggleGantt ? 'max-w-sm md:max-w-[1900px]' : 'max-w-sm md:max-w-[1900px]'}`}>
-          {/* Breadcrumb */}
-          <div className="flex items-center space-x-2 text-gray-600 mb-6">
-            <a href="/main_pages/overview" className="hover:text-blue-600">Home</a>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            <span className="text-gray-900 font-medium">{project.project_name}</span>
+        <div className={`flex-1 p-6 space-y-3 ${ToggleView === 3 ? 'max-w-sm md:max-w-[1900px]' : 'max-w-sm md:max-w-[1900px]'}`}>
+          <div className='flex flex-row justify-between items-center'>
+            {/* Breadcrumb */}
+            <div className="flex items-center space-x-2 text-gray-600">
+              <a href="/main_pages/overview" className="hover:text-blue-600">Home</a>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span className="text-gray-900 font-medium">{project.project_name}</span>
+            </div>
+
+            {/*Other option*/}
+            <div className='hidden md:flex'>
+              <div className="flex items-center  divide-x-2 divide-gray-300">               
+                {/* Voice button */}
+                <div className='flex justify-center items-center px-2'>
+                  <VoiceRoomButton slug={project.slug}>
+                    ห้องพูดคุย
+                  </VoiceRoomButton>
+                </div>
+                {/* Chat button */}
+                <div className='flex justify-center items-center px-2'>
+                  <button
+                    onClick={() => setOpen(true)}
+                      className="relative flex items-center space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors"
+                  >
+                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.474L3 21l2.474-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
+                    </svg>
+                    <span>เเชท</span>
+                    {unread > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {unread > 9 ? "9+" : unread}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Member button */}
+                <div className="flex justify-center items-center px-2">
+                  <button
+                    className="relative flex items-center space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors"
+                    onClick={() => setToggleMember(!toggleMember)}
+                  >
+                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>สมาชิก</span>
+                  </button>
+                </div>
+
+                {/* Project Management Button - Only for Leaders */}
+                {userRole === 'Leader' && (
+                  <div className="flex justify-center items-center px-2">
+                    <button
+                      onClick={() => setShowProjectManageModal(true)}
+                      className="flex items-center space-x-2 px-3 py-1.5 bg-[#636CCB] hover:bg-[#636CCB]/80 text-white rounded-sm text-sm font-medium transition-colors shadow-sm"
+                      title="จัดการโปรเจค"
+                    >
+                      <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      </svg>
+                      <span>จัดการ</span>
+                    </button>
+                  </div>
+                )}        
+              </div>
+            </div>
           </div>
 
           {/* Project Header - Compact Design */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div className="flex items-center justify-between gap-2 md:gap-0">
+          <div className="bg-white border-b-1 border-gray-300 p-4 mb-6">
+            <div className="flex flex-col md:flex-row items-center md:justify-between gap-2 md:gap-0">
               {/* Project Info */}
               <div className="flex items-center space-x-4">
-                <div className="hidden w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl md:flex items-center justify-center shadow-sm">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
+                <div className="hidden size-9 bg-[#6E8CFB] rounded-sm md:flex items-center justify-center shadow-sm">
+                  <AiFillReconciliation  className='size-6 text-white'/>
                 </div>
                 <div>
-                  <div className="flex items-center space-x-2 md:space-x-2 mb-1">
-                    <h1 className="text-xl font-bold text-gray-900">{project.project_name}</h1>
-                    <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
+                  <div className="flex items-center space-x-2 md:space-x-2">
+                    <div className="text-2xl mb-1 font-medium text-gray-900">{project.project_name}</div>
+                    {/* <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
                       {project.project_status}
-                    </span>
-                    <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${
+                    </span> */}
+                    <span className={`flex px-2 py-1 rounded-full text-xs font-medium ${
                       userRole === 'Leader' 
                         ? 'bg-purple-100 text-purple-700 border border-purple-200' 
                         : 'bg-green-100 text-green-700 border border-green-200'
@@ -1710,111 +1773,48 @@ export default function ProjectDetailPage() {
                       {userRole}
                     </span>
                   </div>
-                  <div className="hidden md:flex items-center space-x-4 text-sm text-gray-600">
-                    <div className="flex items-center space-x-1">
-                      <svg className="hidden md:inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
-                    </div>
-                    <div className="flex items-center  space-x-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      <span>{projectMembers.length} <div className="hidden md:inline">สมาชิก</div></span>
-                    </div>
+                </div>
+                {/* Date begin - end */}
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <div className="flex items-center space-x-1">
+                    <svg className="hidden md:inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
                   </div>
                 </div>
               </div>
 
-              
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-2">         
-                <div className='flex justify-center items-center'>
-                  <button onClick={() => setToggleGantt(!ToggleGantt)} className="bg-white py-1 px-5 ring-1 rounded-lg shadow-sm hover:bg-gray-100 ring-gray-500">
-                    Gantt Chart
+              <div className='flex flex-row justify-center space-x-2'>
+                {/* overview button */}        
+                <div className={`flex justify-center items-center ${ToggleView === 1 ? 'text-black border-b-2' : 'text-gray-500'}`}>
+                  <button onClick={() => setToggleView(1)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500`}>
+                    Overview
                   </button>
                 </div>
-                {/* Project Management Button - Only for Leaders */}
-                {userRole === 'Leader' && (
-                  <button
-                    onClick={() => setShowProjectManageModal(true)}
-                    className="flex items-center space-x-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
-                    title="จัดการโปรเจค"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    </svg>
-                    <span>จัดการ</span>
+
+                {/* Board button */}        
+                <div className={`flex justify-center items-center ${ToggleView === 2 ? 'text-black border-b-2' : 'text-gray-500'}`}>
+                  <button onClick={() => setToggleView(2)} className="bg-white py-1 px-2 font-medium rounded-sm text-gray-500 hover:bg-gray-100 ring-gray-500">
+                    Board
                   </button>
-                )}
-                
-                {/* Project Description Tooltip */}
-                <div className="relative group">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                </div>
+
+                {/* GanttChart button */}        
+                <div className={`flex justify-center items-center ${ToggleView === 3 ? 'text-black border-b-2' : 'text-gray-500'}`}>
+                  <button onClick={() => setToggleView(3)} className="bg-white py-1 px-2 font-medium rounded-sm text-gray-500 hover:bg-gray-100 ring-gray-500">
+                    Timeline
                   </button>
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-gray-900 text-white text-sm rounded-lg shadow-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                    <div className="font-medium mb-1">คำอธิบายโปรเจค:</div>
-                    <div className="text-gray-300">{project.description}</div>
-                    <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {!ToggleGantt ? (
+          {ToggleView === 1 && (
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Tasks */}
-            <div className="lg:col-span-2">
-              {/* Quick Actions Bar */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <h2 className="text-lg font-semibold text-gray-900">การดำเนินงาน</h2>
-                    <span className="text-sm text-gray-500">•</span>
-                    <span className="text-sm text-gray-500">เครื่องมือจัดการโปรเจค</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                     <VoiceRoomButton slug={project.slug}>
-                      Voice
-                    </VoiceRoomButton>
-                    
-                    <button
-                      onClick={() => setOpen(true)}
-                      className="relative flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.474L3 21l2.474-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
-                      </svg>
-                      <span>Chat</span>
-                      {unread > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                          {unread > 9 ? "9+" : unread}
-                        </span>
-                      )}
-                    </button>
-                    
-                    <ProjectChatPopup
-                      projectSlug={project.slug}
-                      projectName={project.project_name}
-                      getToken={token}
-                      open={open}
-                      onOpenChange={(o) => {
-                        if (!o) setUnread(0);
-                        setOpen(o);
-                      }}
-                      currentUserId={user?.id}
-                      onUnreadChange={setUnread}
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="lg:col-span-3">
 
               {/* Tasks Overview */}
               <div className="space-y-4">
@@ -1827,15 +1827,15 @@ export default function ProjectDetailPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       </div>
-                      <div>
+                      <div className='flex flex-row items-center space-x-2'>
                         <h3 className="font-semibold text-gray-900">งานของฉัน</h3>
-                        <p className="text-sm text-gray-500">{myTasks.length} งาน</p>
+                        <p className="text-sm text-gray-500">( {myTasks.length} งาน )</p>
                       </div>
                     </div>
                     {userRole === 'Leader' && (
                       <button 
                         onClick={() => setShowCreateTaskModal(true)}
-                        className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        className="flex items-center space-x-2 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1845,11 +1845,11 @@ export default function ProjectDetailPage() {
                     )}
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 max-h-[calc(4*56px)] px-2 overflow-y-auto md:grid-cols-3 lg:grid-cols-4 gap-2 ">
                     {myTasks.length > 0 ? (
                       myTasks.map(task => renderTaskCard(task, true))
                     ) : (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="col-span-full text-center py-8 text-gray-500">
                         <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
@@ -1873,11 +1873,11 @@ export default function ProjectDetailPage() {
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 max-h-[calc(4*56px)] px-2 overflow-y-auto md:grid-cols-3 lg:grid-cols-4 gap-2">
                     {otherTasks.length > 0 ? (
                       otherTasks.map(task => renderTaskCard(task, false))
                     ) : (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="col-span-full text-center py-8 text-gray-500">
                         <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
@@ -1889,45 +1889,10 @@ export default function ProjectDetailPage() {
               </div>
             </div>
 
-            {/* Right Column - Gantt Chart & Members */}
-            <div className="space-y-6">
-              {/* Gantt Chart */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Gantt Chart</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  {/* Mock Gantt Chart */}
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                      <span className="font-medium">Task</span>
-                      <span className="font-medium">Timeline</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-4">
-                      <span className="w-20 text-xs">Planning</span>
-                      <div className="flex-1 bg-gray-200 rounded h-4">
-                        <div className="bg-pink-400 h-4 rounded" style={{ width: '30%' }}></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-4">
-                      <span className="w-20 text-xs">Development</span>
-                      <div className="flex-1 bg-gray-200 rounded h-4">
-                        <div className="bg-blue-400 h-4 rounded" style={{ width: '60%', marginLeft: '30%' }}></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-4">
-                      <span className="w-20 text-xs">Testing</span>
-                      <div className="flex-1 bg-gray-200 rounded h-4">
-                        <div className="bg-purple-400 h-4 rounded" style={{ width: '40%', marginLeft: '60%' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+            {/* Members */}
+            <div className={`${toggleMember ? 'fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50 p-4' : 'hidden '}`}>
               {/* Members */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="bg-white rounded-lg shadow-sm p-6 space-y-3">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -1940,7 +1905,15 @@ export default function ProjectDetailPage() {
                       <p className="text-sm text-gray-500">จัดการสมาชิกในโปรเจ็กต์</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  <div>
+                    <button onClick={() => setToggleMember(!toggleMember)}>
+                      <IoMdClose className='size-5'/>
+                    </button>
+                    
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between space-x-3">
                     <span className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 text-sm px-3 py-2 rounded-full font-medium border border-blue-300">
                       {projectMembers.length} สมาชิก
                     </span>
@@ -1966,7 +1939,6 @@ export default function ProjectDetailPage() {
                       </button>
                     )}
                   </div>
-                </div>
                 
                 <div className="space-y-2">
                   {membersLoading ? (
@@ -2081,15 +2053,34 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
             </div>
-          </div>)
-          : (          
+          </div>)}
+
+        {ToggleView === 2 && (
+          <div>boarding</div>
+        )}
+
+        {ToggleView === 3 && (
           <div className="grid grid-cols-1">
             {/*GanttChart*/}
             <GanttChart tasks={myTasks} />
           </div> 
-          )}
+        )} 
+
         </div>
       </div>
+
+      <ProjectChatPopup
+        projectSlug={project.slug}
+        projectName={project.project_name}
+        getToken={token}
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) setUnread(0);
+            setOpen(o);
+          }}
+        currentUserId={user?.id}
+        onUnreadChange={setUnread}
+      />
 
       {/* Create Task Modal - Only for Leaders */}
       {userRole === 'Leader' && (

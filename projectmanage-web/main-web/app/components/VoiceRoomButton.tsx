@@ -20,7 +20,7 @@ export default function VoiceRoomButton({
     <button
       type="button"
       onClick={() => openVoiceRoom(slug)}
-      className={`inline-flex items-center text-sm gap-2 whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 ${className}`}
+      className={`inline-flex items-center text-sm gap-2 whitespace-nowrap rounded-sm bg-white px-4 py-1.5 text-black hover:text-white focus:text-white transition-colors hover:bg-[#636CCB] focus:outline-none focus:bg-[#636CCB] focus:ring-offset-2 ${className}`}
     >
       <Mic className="h-4 w-4 shrink-0" aria-hidden="true" />
       <span className="truncate">{children || "เปิด Voice Room"}</span>
