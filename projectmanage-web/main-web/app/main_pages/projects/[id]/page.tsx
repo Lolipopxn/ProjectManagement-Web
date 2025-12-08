@@ -8,6 +8,7 @@ import CreateTaskModal from '../../../components/CreateTaskModal';
 import ProjectChatPopup from "../../../components/ProjectChat";
 import VoiceRoomButton from "../../../components/VoiceRoomButton";
 import GanttChart from '@/app/components/GanttChart';
+import FreeDragBoard from '@/app/components/task_board/freeDragBoard';
 
 import { AiFillReconciliation } from "react-icons/ai";
 import { IoMdClose } from "react-icons/io";
@@ -757,7 +758,7 @@ export default function ProjectDetailPage() {
     
     // Use utility status configuration for card colors
     const taskStatusConfig = getTaskStatusConfig(task.task_status);
-    const isCompleted = task.task_status.toLowerCase() === 'completed' || task.task_status.toLowerCase() === 'turn in';
+    
 
     return (
       <div 
@@ -2056,7 +2057,9 @@ export default function ProjectDetailPage() {
           </div>)}
 
         {ToggleView === 2 && (
-          <div>boarding</div>
+          <div>
+            <FreeDragBoard task={myTasks}/>
+          </div>
         )}
 
         {ToggleView === 3 && (
