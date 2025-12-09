@@ -3,26 +3,57 @@
 import { useDraggable } from "@dnd-kit/core";
 import TaskCard from "./TaskCard";
 
-export default function DraggableTask ({ task, position }: any) {
-    const { attributes, listeners, setNodeRef, transform } = useDraggable({
-        id: task.id,
-        data: { container: task.container },
-    });
+// Left Draggable Task
+export function LeftDraggable({ task }: any) {
+  const { setNodeRef, listeners, attributes, transform } = useDraggable({
+    id: task.id,
+    data: { from: "left" },
+  });
 
-    const style: React.CSSProperties = {
-        position: "absolute",
-        top: position.y,
-        left: position.x,
-        transform: transform
-            ? `translate(${transform.x}px, ${transform.y}px)`
-            : "none",
-        cursor: "grab",
-        width: "fit-content",
-    };
+  const style = {
+    transform: transform
+      ? `translate(${transform.x}px, ${transform.y}px)`
+      : undefined,
+  };
 
-    return (
-        <div ref={setNodeRef} {...listeners} {...attributes} style={style}>
-            <TaskCard task={task} />
-        </div>
-    );
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className="border p-2 my-2 bg-gray-100 cursor-grab rounded"
+    >
+      {task.task_name}
+    </div>
+  );
+}
+
+// Right Draggable Task
+export function RightDraggable({ task, position }: any) {
+  const { setNodeRef, listeners, attributes, transform } = useDraggable({
+    id: task.id,
+    data: { from: "right" },
+  });
+
+  const style: React.CSSProperties = {
+    position: "absolute",
+    left: position.x,
+    top: position.y,
+    transform: transform
+      ? `translate(${transform.x}px, ${transform.y}px)`
+      : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className="cursor-grab"
+    >
+      <TaskCard task={task} />
+    </div>
+  );
 }

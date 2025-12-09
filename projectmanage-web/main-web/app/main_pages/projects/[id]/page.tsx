@@ -2058,7 +2058,7 @@ export default function ProjectDetailPage() {
 
         {ToggleView === 2 && (
           <div>
-            <FreeDragBoard task={myTasks}/>
+            <FreeDragBoard tasks={myTasks} />
           </div>
         )}
 
