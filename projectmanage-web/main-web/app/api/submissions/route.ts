@@ -118,8 +118,8 @@ export async function POST(request: NextRequest) {
       task_document_id,
       task_id_number,
       submitted_by_user_id_number,
-      comments,
-      file_url
+      submission_description,
+      file_urls // เปลี่ยนจาก file_url เป็น file_urls (array)
     } = body;
 
     // Validate required fields
@@ -139,8 +139,8 @@ export async function POST(request: NextRequest) {
       task_id_number: parseInt(task_id_number),
       submitted_by_user_id_number: submitted_by_user_id_number || currentUser.id,
       submission_date: new Date().toISOString(),
-      comments: comments || '',
-      file_url: file_url || null,
+      submission_description: submission_description || '',
+      file_urls: file_urls || [], // เก็บเป็น array
       publishedAt: new Date().toISOString(),
       // เพิ่ม relations เหมือนการสร้าง project member
       task_id: { connect: [task_document_id] },

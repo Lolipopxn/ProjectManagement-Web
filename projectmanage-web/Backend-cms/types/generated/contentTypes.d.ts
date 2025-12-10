@@ -566,10 +566,7 @@ export interface ApiSubmissionSubmission extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    file_url: Schema.Attribute.String &
-      Schema.Attribute.SetMinMaxLength<{
-        maxLength: 255;
-      }>;
+    file_urls: Schema.Attribute.JSON;
     is_active: Schema.Attribute.Boolean &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<true>;
@@ -581,6 +578,7 @@ export interface ApiSubmissionSubmission extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     submission_date: Schema.Attribute.DateTime;
+    submission_description: Schema.Attribute.Text;
     submitted_by_user_id: Schema.Attribute.Relation<
       'oneToOne',
       'plugin::users-permissions.user'

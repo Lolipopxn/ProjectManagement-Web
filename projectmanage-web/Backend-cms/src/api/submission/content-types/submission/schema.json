@@ -37,9 +37,11 @@
     "submission_date": {
       "type": "datetime"
     },
-    "file_url": {
-      "type": "string",
-      "maxLength": 255
+    "file_urls": {
+      "type": "json"
+    },
+    "submission_description": {
+      "type": "text"
     },
     "comments": {
       "type": "text"
