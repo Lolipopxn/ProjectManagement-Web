@@ -5,47 +5,57 @@ import { useState } from "react";
 import { LeftDraggable, RightDraggable } from "./draggableTask";
 import TaskCard from "./TaskCard";
 import { LeftDroppable, RightDroppable } from "./DroppableBoard";
-import addTaskPage from "./AddTaskInBoard";
+import { AddTaskPage, AddBoardPage } from "./AddTaskInBoard";
 
 import dayjs from "dayjs";
 
 import { FaPlus } from "react-icons/fa";
 
-interface Task {
-  id: number;
-  documentId?: string;
-  task_name: string;
-  description: string;
-  task_status: string;
-  due_date: string;
-  createdAt: string;
-  project_document_id: string;
-  assigned_to_user_ids_number: number;
-  assigned_to_user_ids?: any;
-  project_id?: any;
-  attributes?: any;
-}
-
 const clamp = (v: number, min: number, max: number) =>
   Math.min(Math.max(v, min), max);
 
-export default function FreeDragBoard({ tasks }: any) {
-  const [currentDate, setCurrentDate] = useState(dayjs().format("YYYY-MM-DD"));
+export default function FreeDragBoard({ tasks, project, projectId }: any) {
+  const [boards, setBoards] = useState(["สิ่งที่ต้องทำ"]);
   const [leftBoard, setLeftBoard] = useState(tasks);
+  const [currentBoard, setCurrentBoard] = useState("สิ่งที่ต้องทำ");
   const [rightBoard, setRightBoard] = useState<Record<
     string,
     Record<string, { x: number; y: number }>
-  >>({});
+  >>({
+    "สิ่งที่ต้องทำ": {}
+  });
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const activeTask = tasks.find((t: any) => t.id === activeId) ?? null;
 
   const [showAddTask, setAddTask] = useState(false);
-  const [newTask, setNewTask] = useState<Task>();
+  const [showAddBoard, setShowAddBoard] = useState(false);
+
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    boardName: "",
+  });
 
   // ensure date exists
-  if (!rightBoard[currentDate]) {
-    rightBoard[currentDate] = {};
+  if (!rightBoard[currentBoard]) {
+    rightBoard[currentBoard] = {};
   }
+
+  const handleRightClick = (e: React.MouseEvent, boardName: string) => {
+  e.preventDefault(); // ❗ ป้องกัน context menu default ของ browser
+
+  console.log("คลิกขวาที่บอร์ด:", boardName);
+
+
+  setContextMenu({
+    visible: true,
+    x: e.clientX,
+    y: e.clientY,
+    boardName: boardName,
+  });
+};
 
   return (
     <div className="flex gap-4">
@@ -59,7 +69,7 @@ export default function FreeDragBoard({ tasks }: any) {
           const from = active.data.current?.from;
           const dropZone = over.id;
 
-          const dayPositions = rightBoard[currentDate] || {};
+          const boardPositions = rightBoard[currentBoard] || {};
 
           // Drop into right
           if (dropZone === "right") {
@@ -71,14 +81,14 @@ export default function FreeDragBoard({ tasks }: any) {
             const CARD_H = 100;
 
             const newPos = {
-              x: clamp((dayPositions[active.id]?.x ?? 20) + delta.x, 0, rect.width - CARD_W),
-              y: clamp((dayPositions[active.id]?.y ?? 20) + delta.y, 0, rect.height - CARD_H),
+              x: clamp((boardPositions[active.id]?.x ?? 20) + delta.x, 0, rect.width - CARD_W),
+              y: clamp((boardPositions[active.id]?.y ?? 20) + delta.y, 0, rect.height - CARD_H),
             };
 
             setRightBoard((prev) => ({
               ...prev,
-              [currentDate]: {
-                ...prev[currentDate],
+              [currentBoard]: {
+                ...prev[currentBoard],
                 [active.id]: newPos,
               },
             }));
@@ -89,28 +99,25 @@ export default function FreeDragBoard({ tasks }: any) {
             }
           }
 
-          // Drop into left
-          if (over.id === "left") {
-            // remove from right
+          if (dropZone === "left") {
             setRightBoard((prev) => {
-                const newDay = { ...prev[currentDate] };
-                delete newDay[active.id];
+              const newBoardData = { ...prev[currentBoard] };
+              delete newBoardData[active.id];
 
-                return {
+              return {
                 ...prev,
-                [currentDate]: newDay,
-                };
+                [currentBoard]: newBoardData,
+              };
             });
 
-            // add back to left board
             const task = tasks.find((t: any) => t.id == active.id);
             setLeftBoard((prev: any) => {
-                if (!prev.find((t: any) => t.id === task.id)) {
+              if (!prev.find((t: any) => t.id === task.id)) {
                 return [...prev, task];
-                }
-                return prev;
+              }
+              return prev;
             });
-         }
+          }
 
           setActiveId(null);
         }}
@@ -135,29 +142,57 @@ export default function FreeDragBoard({ tasks }: any) {
         </LeftDroppable>
 
         {/* Right Board */}
-        <div className="w-full">
-          <input
-            type="date"
-            value={currentDate}
-            onChange={(e) => setCurrentDate(e.target.value)}
-            className="border mb-3 p-1 rounded"
-          />
+        <div className="w-full flex flex-col gap-3">
+          <div className="flex flex-row justify-start items-center space-x-3">        
+            <div className="flex flex-row space-x-5 px-4 max-w-full">
+              {boards.map((b) => (
+                <div className="space-y-1">
+                  <button
+                    key={b}
+                    onClick={() => setCurrentBoard(b)}
+                    onContextMenu={(e) => handleRightClick(e, b)}
+                    className={`p-2 hover:bg-gray-100 rounded-lg font-bold max-w-30 overflow-x-clip ${currentBoard === b ? "text-black" : "text-gray-500"}`}
+                  >
+                    {b}
+                  </button>
+                  <div className={`${currentBoard === b ? "border-b-3 border-[#6E8CFB]" : ""}`}></div>
+                </div>
+              ))}
+            </div>
+
+            <div onClick={() => setShowAddBoard(!showAddBoard)} className="p-1 bg-white hover:bg-gray-100">
+              <FaPlus className="text-gray-600 size-4 mb-1" />
+            </div>
+          </div>
 
           <div id="right-drop-zone">
             <RightDroppable>
-              {Object.keys(rightBoard[currentDate]).map((id) => {
+              {Object.keys(rightBoard[currentBoard]).map((id) => {
                 const task = tasks.find((t: any) => t.id == id);
                 return (
                   <RightDraggable
                     key={id}
                     task={task}
-                    position={rightBoard[currentDate][id]}
+                    position={rightBoard[currentBoard][id]}
                   />
                 );
               })}
             </RightDroppable>
           </div>
         </div>
+
+        {showAddTask && (
+            <AddTaskPage project={project} projectId={projectId} onClose={() => setAddTask(false)}/>
+        )}
+        {showAddBoard && (
+          <AddBoardPage 
+            boards={boards}
+            setBoards={setBoards}
+            rightBoard={rightBoard}
+            setRightBoard={setRightBoard}
+            onClose={() => setShowAddBoard(false)}
+          />
+        )}
 
         <DragOverlay>
           {activeTask ? <TaskCard task={activeTask} overlay /> : null}
