@@ -1,6 +1,42 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Custom scrollbar auto-hide */
+.scrollbar-autohide {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.scrollbar-autohide::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-autohide::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-autohide::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.scrollbar-autohide:hover,
+.scrollbar-autohide:focus-within {
+  scrollbar-color: #d1d5db transparent;
+}
+
+.scrollbar-autohide:hover::-webkit-scrollbar-thumb,
+.scrollbar-autohide:focus-within::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+.scrollbar-autohide:hover::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
 /* Custom utilities for enhanced task cards */
 @layer utilities {
   .line-clamp-2 {

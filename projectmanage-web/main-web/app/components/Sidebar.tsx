@@ -62,6 +62,14 @@ export default function Sidebar() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const { isNavOpen, toggleNav } = useSidebarStore();
+  
+  // Pagination state for My Tasks
+  const [currentPage, setCurrentPage] = useState(1);
+  const TASKS_PER_PAGE = 4; // จำนวน tasks ต่อหน้า
+  
+  // Pagination state for My Projects
+  const [projectCurrentPage, setProjectCurrentPage] = useState(1);
+  const PROJECTS_PER_PAGE = 4; // จำนวน projects ต่อหน้า
 
   useEffect(() => {
     (async () => {
@@ -141,8 +149,40 @@ export default function Sidebar() {
   const totalTasks = tasks.length;
   const totalProjects = projects.length;
 
+  // Pagination logic for tasks - แบ่งตาม individual tasks ไม่ใช่ project groups
+  const allTasks = useMemo(() => {
+    const taskList: Array<{ task: Task; projectInfo: Project | null }> = [];
+    Object.values(groupedTasks).forEach(group => {
+      group.tasks.forEach(task => {
+        taskList.push({ task, projectInfo: group.projectInfo });
+      });
+    });
+    return taskList;
+  }, [groupedTasks]);
+
+  const totalPages = Math.ceil(allTasks.length / TASKS_PER_PAGE);
+  const startIndex = (currentPage - 1) * TASKS_PER_PAGE;
+  const endIndex = startIndex + TASKS_PER_PAGE;
+  const paginatedTaskList = allTasks.slice(startIndex, endIndex);
+
+  // Pagination logic for projects
+  const projectTotalPages = Math.ceil(projects.length / PROJECTS_PER_PAGE);
+  const projectStartIndex = (projectCurrentPage - 1) * PROJECTS_PER_PAGE;
+  const projectEndIndex = projectStartIndex + PROJECTS_PER_PAGE;
+  const paginatedProjects = projects.slice(projectStartIndex, projectEndIndex);
+
+  // Reset to page 1 when tasks change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [tasks.length]);
+
+  // Reset to page 1 when projects change
+  useEffect(() => {
+    setProjectCurrentPage(1);
+  }, [projects.length]);
+
   return (
-    <aside className={`${isNavOpen ? 'transition-all duration-500 w-full md:w-64' : 'transition-all duration-500 md:w-18 '}  bg-white border border-gray-200 bottom-0 md:top-13 md:h-screen overflow-y-auto fixed`}>
+    <aside className={`${isNavOpen ? 'transition-all duration-500 w-full md:w-64' : 'transition-all duration-500 md:w-18 '}  bg-white border border-gray-200 bottom-0 md:top-13 md:h-screen overflow-y-auto fixed scrollbar-autohide`}>
       <div className="p-3 md:px-4 md:py-3">
         {/* Breadcrumb */}
         <div className="hidden md:flex flex-row md:mt-5 justify-between items-center space-x-2 text-sm text-gray-500 mb-6">
@@ -244,7 +284,7 @@ export default function Sidebar() {
         )}
 
         {/* My Projects */}
-        <div className={`${isNavOpen ? 'hidden md:flex flex-col mb-6' : 'hidden'}`}>
+        <div className={`${isNavOpen ? 'hidden md:flex flex-col mb-2' : 'hidden'}`}>
           <button
             onClick={() => setMyProjectOpen((v) => !v)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
@@ -273,29 +313,182 @@ export default function Sidebar() {
           </button>
 
           {myProjectOpen && (
-            <div className="space-y-2 ml-4">
+            <div className="ml-4 relative">
               {loading ? (
-                <div className="space-y-2">
-                  {[...Array(4)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-6 bg-gray-100 rounded animate-pulse"
-                    />
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="bg-gray-50 p-3 rounded-lg">
+                      <div className="h-4 w-32 bg-gray-100 rounded mb-2 animate-pulse" />
+                      <div className="space-y-2">
+                        {[...Array(2)].map((__, j) => (
+                          <div
+                            key={j}
+                            className="h-6 bg-gray-100 rounded animate-pulse"
+                          />
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : projects.length > 0 ? (
-                projects.map((p) => {
-                  const href = `/main_pages/projects/${p.documentId ?? p.id}`;
-                  return (
-                    <Link
-                      key={p.documentId ?? p.id}
-                      href={href}
-                      className="block text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 p-2 rounded transition-colors"
-                    >
-                      📁 {p.project_name}
-                    </Link>
-                  );
-                })
+                <div className="flex flex-col">
+                  <div className="space-y-1 h-[320px]">
+                      {paginatedProjects.map((p) => {
+                        const href = `/main_pages/projects/${p.documentId ?? p.id}`;
+                        return (
+                          <div key={p.documentId ?? p.id} className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[76px]">
+                            <Link href={href} className="block p-2.5 h-full flex flex-col justify-between">
+                              {/* Project Name & Status */}
+                              <div className="flex items-start gap-2 mb-1.5">
+                                <span className="font-semibold text-sm text-gray-800 flex-1 line-clamp-1">
+                                  {p.project_name}
+                                </span>
+                                {p.project_status && (
+                                  <span className="px-1.5 py-0.5 rounded bg-gray-200 text-[10px] uppercase tracking-wide flex-shrink-0">
+                                    {p.project_status}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Date Range */}
+                              <div className="flex items-center gap-1 text-[11px] text-gray-500">
+                                <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>{formatDate(p.start_date)} - {formatDate(p.end_date)}</span>
+                              </div>
+                            </Link>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Pagination Controls for Projects */}
+                  {projectTotalPages > 1 && (
+                    <div className="flex flex-col gap-2 mt-4">
+                      {/* Navigation Buttons */}
+                      <div className="flex items-center justify-center gap-1.5">
+                        {/* First Page Button */}
+                        <button
+                          onClick={() => setProjectCurrentPage(1)}
+                          disabled={projectCurrentPage === 1}
+                          className={`p-1 rounded transition-all duration-200 ${
+                            projectCurrentPage === 1
+                              ? 'text-gray-300 cursor-not-allowed opacity-50'
+                              : 'text-blue-600 hover:bg-blue-50 hover:scale-110 active:scale-95'
+                          }`}
+                          title="หน้าแรก"
+                          aria-label="ไปหน้าแรก"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                          </svg>
+                        </button>
+
+                        {/* Previous Button */}
+                        <button
+                          onClick={() => setProjectCurrentPage(prev => Math.max(1, prev - 1))}
+                          disabled={projectCurrentPage === 1}
+                          className={`p-1 rounded transition-all duration-200 ${
+                            projectCurrentPage === 1
+                              ? 'text-gray-300 cursor-not-allowed opacity-50'
+                              : 'text-blue-600 hover:bg-blue-50 hover:scale-110 active:scale-95'
+                          }`}
+                          title="ก่อนหน้า"
+                          aria-label="หน้าก่อนหน้า"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+
+                        {/* Page Display */}
+                        <div className="flex items-center gap-1 px-2">
+                          <span className="text-xs font-bold text-blue-600">{projectCurrentPage}</span>
+                          <span className="text-xs text-gray-400">/</span>
+                          <span className="text-xs font-medium text-gray-500">{projectTotalPages}</span>
+                        </div>
+
+                        {/* Next Button */}
+                        <button
+                          onClick={() => setProjectCurrentPage(prev => Math.min(projectTotalPages, prev + 1))}
+                          disabled={projectCurrentPage === projectTotalPages}
+                          className={`p-1 rounded transition-all duration-200 ${
+                            projectCurrentPage === projectTotalPages
+                              ? 'text-gray-300 cursor-not-allowed opacity-50'
+                              : 'text-blue-600 hover:bg-blue-50 hover:scale-110 active:scale-95'
+                          }`}
+                          title="ถัดไป"
+                          aria-label="หน้าถัดไป"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+
+                        {/* Last Page Button */}
+                        <button
+                          onClick={() => setProjectCurrentPage(projectTotalPages)}
+                          disabled={projectCurrentPage === projectTotalPages}
+                          className={`p-1 rounded transition-all duration-200 ${
+                            projectCurrentPage === projectTotalPages
+                              ? 'text-gray-300 cursor-not-allowed opacity-50'
+                              : 'text-blue-600 hover:bg-blue-50 hover:scale-110 active:scale-95'
+                          }`}
+                          title="หน้าสุดท้าย"
+                          aria-label="ไปหน้าสุดท้าย"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      {/* Page Dots Indicator */}
+                      <div className="flex items-center justify-center gap-1">
+                        {(() => {
+                          const renderPageDot = (page: number) => (
+                            <button
+                              key={page}
+                              onClick={() => setProjectCurrentPage(page)}
+                              className={`transition-all duration-200 ${
+                                projectCurrentPage === page
+                                  ? 'w-6 h-1.5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700'
+                                  : 'w-1.5 h-1.5 rounded-full bg-gray-300 hover:bg-blue-400 hover:w-3'
+                              }`}
+                              title={`หน้า ${page}`}
+                              aria-label={`ไปหน้า ${page}`}
+                              aria-current={projectCurrentPage === page ? 'page' : undefined}
+                            />
+                          );
+
+                          // Show all dots if projectTotalPages <= 10
+                          if (projectTotalPages <= 10) {
+                            return Array.from({ length: projectTotalPages }, (_, i) => i + 1).map(renderPageDot);
+                          }
+
+                          // For many pages, show smart dots
+                          const dots: number[] = [];
+                          
+                          if (projectCurrentPage <= 5) {
+                            // Near start
+                            for (let i = 1; i <= Math.min(7, projectTotalPages); i++) dots.push(i);
+                          } else if (projectCurrentPage >= projectTotalPages - 4) {
+                            // Near end
+                            for (let i = Math.max(1, projectTotalPages - 6); i <= projectTotalPages; i++) dots.push(i);
+                          } else {
+                            // Middle
+                            for (let i = projectCurrentPage - 3; i <= projectCurrentPage + 3; i++) {
+                              if (i >= 1 && i <= projectTotalPages) dots.push(i);
+                            }
+                          }
+
+                          return dots.map(renderPageDot);
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="text-sm text-gray-500">
                   ไม่มีโปรเจ็กต์ที่เป็นสมาชิก
@@ -335,7 +528,7 @@ export default function Sidebar() {
           </button>
 
           {myTaskOpen && (
-            <div className="space-y-4 ml-4">
+            <div className="ml-4 relative">
               {loading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
@@ -352,105 +545,198 @@ export default function Sidebar() {
                     </div>
                   ))}
                 </div>
-              ) : Object.keys(groupedTasks).length > 0 ? (
-                Object.entries(groupedTasks).map(
-                  ([projectKey, projectData]) => {
-                    // ลิงก์โปรเจ็กต์: ใช้ documentId จาก projectInfo ถ้ามี
-                    const projHref = projectData.projectInfo
-                      ? `/main_pages/projects/${
-                          projectData.projectInfo.documentId ??
-                          projectData.projectInfo.id
-                        }`
-                      : undefined;
-                    const projectName =
-                      projectData.projectInfo?.project_name ?? "งานอื่นๆ";
+              ) : allTasks.length > 0 ? (
+                <div className="flex flex-col">
+                <div className="space-y-1 h-[320px]">
+                {paginatedTaskList.map(({ task, projectInfo }, index) => {
+                  const projectKey =
+                    projectInfo?.documentId ??
+                    projectInfo?.id ??
+                    task.project_document_id;
+                  const taskKey = task.documentId ?? task.id;
+                  const href = `/main_pages/projects/${projectKey}/tasks/${taskKey}`;
+                  const isOverdue =
+                    task.due_date &&
+                    new Date(task.due_date).getTime() < Date.now() &&
+                    task.task_status !== "done";
+                  const projectName = projectInfo?.project_name ?? "งานอื่นๆ";
 
-                    return (
-                      <div
-                        key={projectKey}
-                        className="bg-gray-50 p-2 rounded-lg"
+                  return (
+                    <div key={`${task.id}-${index}`} className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[76px]">
+                      <Link
+                        href={href}
+                        className="block p-2.5 h-full flex flex-col justify-between"
                       >
-                        {projectKey !== "no-project" && (
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center space-x-2 text-blue-600 font-medium text-sm px-2">
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
-                                />
-                              </svg>
-                              {projHref ? (
-                                <Link
-                                  href={projHref}
-                                  className="hover:underline"
-                                >
-                                  {projectName}
-                                </Link>
-                              ) : (
-                                <span>{projectName}</span>
-                              )}
-                            </div>
-                            <span className="text-[11px] text-gray-500 mr-2">
-                              ทั้งหมด {projectData.tasks.length} งาน
+                        {/* Task Name & Status */}
+                        <div className="flex items-start gap-2 mb-1.5">
+                          <span className="font-semibold text-sm text-gray-800 flex-1 line-clamp-1">
+                            {task.task_name}
+                          </span>
+                          {task.task_status && (
+                            <span className="px-1.5 py-0.5 rounded bg-gray-200 text-[10px] uppercase tracking-wide flex-shrink-0">
+                              {task.task_status}
                             </span>
-                          </div>
-                        )}
-
-                        <div className="space-y-0.5">
-                          {projectData.tasks.map((task) => {
-                            const projectKey =
-                              projectData.projectInfo?.documentId ??
-                              projectData.projectInfo?.id ??
-                              task.project_document_id;
-                            const taskKey = task.documentId ?? task.id;
-                            const href = `/main_pages/projects/${projectKey}/tasks/${taskKey}`;
-                            const isOverdue =
-                              task.due_date &&
-                              new Date(task.due_date).getTime() < Date.now() &&
-                              task.task_status !== "done";
-
-                            return (
-                              <Link
-                                key={task.id}
-                                href={href}
-                                className="block p-2 hover:bg-gray-100 rounded-md text-xs text-gray-700 transition-colors"
-                              >
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-semibold text-lg text-gray-800 truncate">
-                                    {task.task_name}
-                                  </span>
-                                  {task.task_status && (
-                                    <span className="px-1.5 py-0.5 rounded bg-gray-200 text-[10px] uppercase tracking-wide">
-                                      {task.task_status}
-                                    </span>
-                                  )}
-                                </div>
-                                <div
-                                  className={`flex items-center gap-1 text-[11px] ${
-                                    isOverdue
-                                      ? "text-red-600 font-semibold"
-                                      : "text-gray-500"
-                                  }`}
-                                >
-                                  <span>
-                                    กำหนดส่ง: {formatDate(task.due_date)}
-                                  </span>
-                                </div>
-                              </Link>
-                            );
-                          })}
+                          )}
                         </div>
+
+                        {/* Project Name */}
+                        <div className="flex items-center gap-1.5 text-[11px] text-blue-600 mb-1">
+                          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+                            />
+                          </svg>
+                          <span className="truncate">{projectName}</span>
+                        </div>
+
+                        {/* Due Date */}
+                        <div
+                          className={`flex items-center gap-1 text-[11px] ${
+                            isOverdue
+                              ? "text-red-600 font-semibold"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>กำหนดส่ง: {formatDate(task.due_date)}</span>
+                        </div>
+                      </Link>
+                    </div>
+                  );
+                })}
+                </div>
+                
+                {/* Pagination Controls - Enhanced UX/UI */}
+                {totalPages > 1 && (
+                  <div className="flex flex-col gap-2 mt-10 pb-15">
+                    {/* Navigation Buttons */}
+                    <div className="flex items-center justify-center gap-1.5">
+                      {/* First Page Button */}
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className={`p-1 rounded transition-all duration-200 ${
+                          currentPage === 1
+                            ? 'text-gray-300 cursor-not-allowed opacity-50'
+                            : 'text-blue-600 hover:bg-blue-50 hover:scale-110 active:scale-95'
+                        }`}
+                        title="หน้าแรก"
+                        aria-label="ไปหน้าแรก"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                        </svg>
+                      </button>
+
+                      {/* Previous Button */}
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className={`p-1 rounded transition-all duration-200 ${
+                          currentPage === 1
+                            ? 'text-gray-300 cursor-not-allowed opacity-50'
+                            : 'text-blue-600 hover:bg-blue-50 hover:scale-110 active:scale-95'
+                        }`}
+                        title="ก่อนหน้า"
+                        aria-label="หน้าก่อนหน้า"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+
+                      {/* Page Display */}
+                      <div className="flex items-center gap-1 px-2">
+                        <span className="text-xs font-bold text-blue-600">{currentPage}</span>
+                        <span className="text-xs text-gray-400">/</span>
+                        <span className="text-xs font-medium text-gray-500">{totalPages}</span>
                       </div>
-                    );
-                  }
-                )
+
+                      {/* Next Button */}
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                        className={`p-1 rounded transition-all duration-200 ${
+                          currentPage === totalPages
+                            ? 'text-gray-300 cursor-not-allowed opacity-50'
+                            : 'text-blue-600 hover:bg-blue-50 hover:scale-110 active:scale-95'
+                        }`}
+                        title="ถัดไป"
+                        aria-label="หน้าถัดไป"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+
+                      {/* Last Page Button */}
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className={`p-1 rounded transition-all duration-200 ${
+                          currentPage === totalPages
+                            ? 'text-gray-300 cursor-not-allowed opacity-50'
+                            : 'text-blue-600 hover:bg-blue-50 hover:scale-110 active:scale-95'
+                        }`}
+                        title="หน้าสุดท้าย"
+                        aria-label="ไปหน้าสุดท้าย"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Page Dots Indicator */}
+                    <div className="flex items-center justify-center gap-1">
+                      {(() => {
+                        const renderPageDot = (page: number) => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`transition-all duration-200 ${
+                              currentPage === page
+                                ? 'w-6 h-1.5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700'
+                                : 'w-1.5 h-1.5 rounded-full bg-gray-300 hover:bg-blue-400 hover:w-3'
+                            }`}
+                            title={`หน้า ${page}`}
+                            aria-label={`ไปหน้า ${page}`}
+                            aria-current={currentPage === page ? 'page' : undefined}
+                          />
+                        );
+
+                        // Show all dots if totalPages <= 10
+                        if (totalPages <= 10) {
+                          return Array.from({ length: totalPages }, (_, i) => i + 1).map(renderPageDot);
+                        }
+
+                        // For many pages, show smart dots
+                        const dots: number[] = [];
+                        
+                        if (currentPage <= 5) {
+                          // Near start
+                          for (let i = 1; i <= Math.min(7, totalPages); i++) dots.push(i);
+                        } else if (currentPage >= totalPages - 4) {
+                          // Near end
+                          for (let i = Math.max(1, totalPages - 6); i <= totalPages; i++) dots.push(i);
+                        } else {
+                          // Middle
+                          for (let i = currentPage - 3; i <= currentPage + 3; i++) {
+                            if (i >= 1 && i <= totalPages) dots.push(i);
+                          }
+                        }
+
+                        return dots.map(renderPageDot);
+                      })()}
+                    </div>
+                  </div>
+                )}
+                </div>
               ) : (
                 <div className="text-sm text-gray-500">
                   ไม่มีงานที่ได้รับมอบหมาย
