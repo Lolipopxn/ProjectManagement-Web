@@ -615,14 +615,18 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
     >;
     assigned_to_user_ids_number: Schema.Attribute.Integer &
       Schema.Attribute.Required;
+    board_name: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
     due_date: Schema.Attribute.DateTime;
+    is_left: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::task.task'> &
       Schema.Attribute.Private;
+    pos_x: Schema.Attribute.Decimal;
+    pos_y: Schema.Attribute.Decimal;
     project_document_id: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{

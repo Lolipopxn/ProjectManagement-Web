@@ -1,11 +1,12 @@
 "use client";
 
 import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LeftDraggable, RightDraggable } from "./draggableTask";
 import TaskCard from "./TaskCard";
 import { LeftDroppable, RightDroppable } from "./DroppableBoard";
 import { AddTaskPage, AddBoardPage } from "./AddTaskInBoard";
+import axios from "axios";
 
 import dayjs from "dayjs";
 
@@ -44,18 +45,70 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
   }
 
   const handleRightClick = (e: React.MouseEvent, boardName: string) => {
-  e.preventDefault(); // ❗ ป้องกัน context menu default ของ browser
+    e.preventDefault();
 
-  console.log("คลิกขวาที่บอร์ด:", boardName);
+    console.log("คลิกขวาที่บอร์ด:", boardName);
 
 
-  setContextMenu({
-    visible: true,
-    x: e.clientX,
-    y: e.clientY,
-    boardName: boardName,
-  });
-};
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      boardName: boardName,
+    });
+  };
+
+  const saveTaskPosition = async (
+    documentId: string,
+    boardName: string,
+    x: number,
+    y: number,
+    isLeft: boolean
+  ) => {
+    try {
+      await axios.put(`/api/tasks/updatePosition`, {
+        documentId,
+        board_name: boardName,
+        pos_x: x,
+        pos_y: y,
+        is_left: isLeft,
+      });
+
+      console.log("ตำแหน่งถูกบันทึกแล้ว");
+    } catch (error) {
+      console.error("Error saving position", error);
+    }
+  };
+
+  useEffect(() => {
+    const leftData: any[] = [];
+    const rightData: Record<string, Record<string, { x: number; y: number }>> = {};
+
+    tasks.forEach((task: any) => {
+      if (
+        !task.board_name || 
+        task.is_left === true || 
+        task.pos_x === undefined ||
+        task.pos_y === undefined
+      ) {
+        leftData.push(task);
+        return;
+      }
+
+      if (!rightData[task.board_name]) {
+        rightData[task.board_name] = {};
+      }
+
+      rightData[task.board_name][task.id] = {
+        x: task.pos_x,
+        y: task.pos_y,
+      };
+    });
+
+    // เซ็ตค่าให้ state
+    setLeftBoard(leftData);
+    setRightBoard(rightData);
+  }, [tasks]);
 
   return (
     <div className="flex gap-4">
@@ -97,6 +150,8 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
             if (from === "left") {
               setLeftBoard((prev: any) => prev.filter((t: any) => t.id !== active.id));
             }
+
+            saveTaskPosition(activeTask.documentId, currentBoard, newPos.x, newPos.y, false);
           }
 
           if (dropZone === "left") {
@@ -117,6 +172,8 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
               }
               return prev;
             });
+
+            saveTaskPosition(activeTask.documentId, currentBoard, 0, 0, true);
           }
 
           setActiveId(null);
@@ -124,16 +181,19 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
       >
         {/* Left Board */}
         <LeftDroppable>
-            <div className="w-full border bg-white rounded-md p-4">
-                <div className="flex flex-row justify-between items-center">
-                    <h2 className="font-semibold">Task List</h2>
-                    <div onClick={() => setAddTask(!showAddTask)} className="p-1 bg-white border-dashed hover:bg-gray-100">
-                        <FaPlus  className="text-[#6E8CFB] size-4" />
-                    </div>
+            <div className="w-full bg-[#F9F8F8] rounded-lg p-3 space-y-4">
+                <div className="flex flex-row justify-between items-center px-3">
+                  <div className="flex flex-row gap-2">
+                    <h2 className="font-semibold">รายการงาน</h2>
+                    <div className="text-gray-500/90">( {leftBoard.length} )</div>
+                  </div>
+                  <div onClick={() => setAddTask(!showAddTask)} className="p-1 border-dashed hover:bg-gray-100">
+                    <FaPlus  className="text-gray-500/90 size-4" />
+                  </div>
                     
                 </div>
                 
-                <div className="p-2 h-100 overflow-y-auto overflow-x-clip">
+                <div className="px-3 h-100 overflow-y-auto overflow-x-clip">
                     {leftBoard.map((task: any) => (
                         <LeftDraggable key={task.id} task={task} />
                     ))}
@@ -146,9 +206,8 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
           <div className="flex flex-row justify-start items-center space-x-3">        
             <div className="flex flex-row space-x-5 px-4 max-w-full">
               {boards.map((b) => (
-                <div className="space-y-1">
+                <div key={b} className="space-y-1">
                   <button
-                    key={b}
                     onClick={() => setCurrentBoard(b)}
                     onContextMenu={(e) => handleRightClick(e, b)}
                     className={`p-2 hover:bg-gray-100 rounded-lg font-bold max-w-30 overflow-x-clip ${currentBoard === b ? "text-black" : "text-gray-500"}`}

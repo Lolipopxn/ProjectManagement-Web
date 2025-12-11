@@ -50,6 +50,19 @@
       "type": "string",
       "maxLength": 50,
       "required": true
+    },
+    "board_name": {
+      "type": "string"
+    },
+    "pos_x": {
+      "type": "decimal"
+    },
+    "pos_y": {
+      "type": "decimal"
+    },
+    "is_left": {
+      "type": "boolean",
+      "default": true
     }
   }
 }

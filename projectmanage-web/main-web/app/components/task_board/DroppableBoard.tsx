@@ -7,7 +7,7 @@ export function LeftDroppable({ children }: any) {
   const { setNodeRef } = useDroppable({ id: "left" });
 
   return (
-    <div ref={setNodeRef} className="w-1/5">
+    <div ref={setNodeRef} className="w-1/4">
       {children}
     </div>
   );
@@ -20,7 +20,7 @@ export function RightDroppable({ children }: any) {
   return (
     <div
       ref={setNodeRef}
-      className="relative w-full h-[400px] bg-gray-100 rounded border overflow-hidden"
+      className="relative w-full h-[400px] bg-gray-50 rounded border border-gray-400/80 overflow-hidden"
     >
       {children}
     </div>
