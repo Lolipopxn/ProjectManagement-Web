@@ -201,3 +201,39 @@ export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onC
     </div>
   );
 }
+
+export function PopupDeleteBoard ( {confirmDelete, setConfirmDelete, onDelete}: 
+  {
+    confirmDelete:{ visible: boolean; boardName: string | null },
+    setConfirmDelete: any,
+    onDelete: () => void
+  }
+  ) {
+
+  return ( 
+    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 ">
+      <div className="bg-white p-6 flex flex-col rounded-lg shadow-lg w-80 space-y-4">
+        <h3 className="font-semibold text-lg ">ยืนยันการลบ</h3>
+        <p className="text-gray-700">
+          ต้องการลบกระดาน "<b>{confirmDelete.boardName}</b>" หรือไม่?
+        </p>
+
+        <div className="flex justify-end gap-3">
+          <button
+            className="px-3 py-1 rounded hover:bg-gray-100 "
+            onClick={() => setConfirmDelete({ visible: false, boardName: null })}
+          >
+            ยกเลิก
+          </button>
+
+          <button
+            className="px-6 py-1 rounded bg-red-500 hover:bg-red-500/80 text-white"
+            onClick={onDelete}
+          >
+            ลบ
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

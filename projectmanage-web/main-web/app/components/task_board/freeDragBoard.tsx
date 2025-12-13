@@ -1,24 +1,30 @@
 "use client";
 
 import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { LeftDraggable, RightDraggable } from "./draggableTask";
 import TaskCard from "./TaskCard";
 import { LeftDroppable, RightDroppable } from "./DroppableBoard";
-import { AddTaskPage, AddBoardPage } from "./AddTaskInBoard";
+import { AddTaskPage, AddBoardPage, PopupDeleteBoard } from "./AddTaskInBoard";
 import axios from "axios";
 
 import dayjs from "dayjs";
 
 import { FaPlus } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa6";
+import { set } from "date-fns";
 
 const clamp = (v: number, min: number, max: number) =>
   Math.min(Math.max(v, min), max);
 
 export default function FreeDragBoard({ tasks, project, projectId }: any) {
-  const [boards, setBoards] = useState(["สิ่งที่ต้องทำ"]);
+  const [boards, setBoards] = useState<string[]>(
+    Array.isArray(project.boards) && project.boards.length > 0
+      ? project.boards
+      : ["สิ่งที่ต้องทำ"]
+  );
   const [leftBoard, setLeftBoard] = useState(tasks);
-  const [currentBoard, setCurrentBoard] = useState("สิ่งที่ต้องทำ");
+  const [currentBoard, setCurrentBoard] = useState(project.currentBoard || "สิ่งที่ต้องทำ");
   const [rightBoard, setRightBoard] = useState<Record<
     string,
     Record<string, { x: number; y: number }>
@@ -34,9 +40,15 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
 
   const [contextMenu, setContextMenu] = useState({
     visible: false,
-    x: 0,
-    y: 0,
     boardName: "",
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState<{
+    visible: boolean;
+    boardName: string | null;
+  }>({
+    visible: false,
+    boardName: null,
   });
 
   // ensure date exists
@@ -49,13 +61,62 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
 
     console.log("คลิกขวาที่บอร์ด:", boardName);
 
+    setContextMenu(prev => ({
+      visible:
+        prev.boardName === boardName
+          ? !prev.visible
+          : true,
+      boardName,
+    }));
+  };
 
-    setContextMenu({
-      visible: true,
-      x: e.clientX,
-      y: e.clientY,
-      boardName: boardName,
+  //delete board in project
+  const handleDeleteBoard = async (boardName: string) => {
+    const tasksInDeletedBoard = rightBoard[boardName]
+      ? Object.keys(rightBoard[boardName])
+      : [];
+
+    setLeftBoard((prev: any) => {
+      const returned = tasks.filter((t: any) =>
+        tasksInDeletedBoard.includes(String(t.id))
+      );
+
+      const already = prev.map((t:any) => t.id);
+      const merged = [...prev, ...returned.filter((t:any) => !already.includes(t.id))];
+
+      return merged;
     });
+
+    for (const id of tasksInDeletedBoard) {
+      const t = tasks.find((task: any) => task.id == id);
+      if (t) {
+        await saveTaskPosition(
+          t.documentId,
+          "",
+          0,
+          0,
+          true
+        );
+      }
+    }
+
+    setRightBoard(prev => {
+      const copy = { ...prev };
+      delete copy[boardName];
+      return copy;
+    });
+
+    setBoards(prev => prev.filter(b => b !== boardName));
+
+    if (currentBoard === boardName) {
+      const newList = boards.filter(b => b !== boardName);
+      if (newList.length > 0) {
+        setCurrentBoard(newList[0]);
+      }
+    }
+
+    setContextMenu({ visible: false, boardName: "" });
+    setConfirmDelete({ visible: false, boardName: null });
   };
 
   const saveTaskPosition = async (
@@ -80,6 +141,7 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
     }
   };
 
+  //Set position task in board
   useEffect(() => {
     const leftData: any[] = [];
     const rightData: Record<string, Record<string, { x: number; y: number }>> = {};
@@ -105,10 +167,40 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
       };
     });
 
-    // เซ็ตค่าให้ state
     setLeftBoard(leftData);
     setRightBoard(rightData);
   }, [tasks]);
+
+  //save boards to db when boards change
+  useEffect(() => {
+    const updateBoardsToStrapi = setTimeout(async () => {
+      try {
+        const Payload: any = {
+          documentId: projectId,
+        };
+
+        if (boards) Payload.boards = boards;
+        if (currentBoard) Payload.currentBoard = currentBoard;
+
+        if(!Payload.boards || !Payload.currentBoard) return;
+
+        await axios.put("/api/projects/updateBoards", Payload);
+
+        console.log("บันทึกบอร์ดสำเร็จ");
+      } catch (err) {
+        console.error("บันทึกบอร์ดล้มเหลว", err);
+      }
+    }, 500);
+
+    return () => clearTimeout(updateBoardsToStrapi);
+  },[boards, currentBoard]);
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu({ visible: false, boardName: "" });
+    window.addEventListener("click", closeMenu);
+
+    return () => window.removeEventListener("click", closeMenu);
+  }, []);
 
   return (
     <div className="flex gap-4">
@@ -206,7 +298,7 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
           <div className="flex flex-row justify-start items-center space-x-3">        
             <div className="flex flex-row space-x-5 px-4 max-w-full">
               {boards.map((b) => (
-                <div key={b} className="space-y-1">
+                <div key={b} className="space-y-1 relative">
                   <button
                     onClick={() => setCurrentBoard(b)}
                     onContextMenu={(e) => handleRightClick(e, b)}
@@ -214,6 +306,25 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
                   >
                     {b}
                   </button>
+
+                  {/* Right click show popup */}
+                  {contextMenu.visible && contextMenu.boardName === b && (
+                    <div className="absolute bg-white rounded shadow p-2 z-50 w-20">
+                      <button
+                        className="text-red-600 hover:text-red-800 flex flex-row justify-center items-center w-full space-x-2"
+                        onClick={() => {
+                          setConfirmDelete({ visible: true, boardName: b });
+                          setContextMenu({ visible: false, boardName: "" });
+                        }}
+                      >
+                        <FaTrash className="size-3" />
+                        <span>ลบ</span>
+                        
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Bottom line  */}
                   <div className={`${currentBoard === b ? "border-b-3 border-[#6E8CFB]" : ""}`}></div>
                 </div>
               ))}
@@ -250,6 +361,13 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
             rightBoard={rightBoard}
             setRightBoard={setRightBoard}
             onClose={() => setShowAddBoard(false)}
+          />
+        )}
+        {confirmDelete.visible && (
+          <PopupDeleteBoard
+            confirmDelete={confirmDelete}
+            setConfirmDelete={setConfirmDelete}
+            onDelete={() => handleDeleteBoard(confirmDelete.boardName as string)}
           />
         )}
 

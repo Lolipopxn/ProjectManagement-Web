@@ -62,6 +62,13 @@
       "relation": "oneToMany",
       "target": "api::voice-session.voice-session",
       "mappedBy": "project"
+    },
+    "boards": {
+      "type": "json"
+    },
+    "currentBoard": {
+      "type": "string",
+      "default": "สิ่งที่ต้องทำ"
     }
   }
 }

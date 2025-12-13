@@ -26,6 +26,8 @@ interface Project {
   created_by_user: number;
   created_by_user_info?: any;
   slug: string;
+  boards: string[];
+  currentBoard: string;
 }
 
 // Interface สำหรับ task data จาก Strapi

@@ -506,6 +506,7 @@ export interface ApiProjectProject extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    boards: Schema.Attribute.JSON;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -514,6 +515,8 @@ export interface ApiProjectProject extends Struct.CollectionTypeSchema {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
+    currentBoard: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'\u0E2A\u0E34\u0E48\u0E07\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33'>;
     description: Schema.Attribute.Text;
     end_date: Schema.Attribute.Date;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
