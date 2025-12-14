@@ -11,6 +11,7 @@ import { AiOutlineCheckCircle, AiOutlineClockCircle, AiOutlineCloseCircle } from
 import { RiProgress8Fill } from "react-icons/ri";
 import ProgressAnimation from "../IconAnimation/ProgressAnimation";
 import { getTaskStatusConfig } from "../../utils/taskStatusColors";
+import { LuExpand } from "react-icons/lu";
 import { JSX } from "react";
 
   const statusIcon: Record<string, JSX.Element> = {
@@ -45,7 +46,7 @@ import { JSX } from "react";
   };
 
 // Left Draggable Task
-export function LeftDraggable({ task }: any) {
+export function LeftDraggable({ task, onClickTask}: any) {
   const { setNodeRef, listeners, attributes, transform } = useDraggable({
     id: task.id,
     data: { from: "left" },
@@ -64,8 +65,12 @@ export function LeftDraggable({ task }: any) {
       {...listeners}
       {...attributes}
       className="border-1 border-gray-500/50 shadow-md py-2 px-3 my-2 bg-white cursor-grab rounded-lg"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClickTask();
+      }}
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 select-none">
 
         <div className="flex flex-row justify-between items-center">
           <div>{task.task_name}</div>
@@ -82,8 +87,8 @@ export function LeftDraggable({ task }: any) {
 }
 
 // Right Draggable Task
-export function RightDraggable({ task, position }: any) {
-  const { setNodeRef, listeners, attributes, transform } = useDraggable({
+export function RightDraggable({ task, position, onClickTask }: any) {
+  const { setNodeRef, listeners, attributes, transform, isDragging  } = useDraggable({
     id: task.id,
     data: { from: "right" },
   });
@@ -101,11 +106,23 @@ export function RightDraggable({ task, position }: any) {
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
-      {...attributes}
-      className="cursor-grab"
+      className={`reactive bg-white rounded shadow group
+        ${isDragging ? "opacity-50" : ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClickTask();
+      }}
     >
+      {/* Drag handle */}
+      <LuExpand 
+        {...listeners}
+        {...attributes}
+        className="hidden absolute top-3 right-3 size-3 cursor-grab active:cursor-grabbing select-none group-hover:flex focus:outline-none focus:ring-0"
+        onClick={(e) => e.stopPropagation()}
+      />
+
       <TaskCard task={task} />
+
     </div>
   );
 }

@@ -12,7 +12,7 @@ async function getToken() {
 async function updateBoards (documentId: string, boards: string[], token: string) {
     return await axios.put(`${process.env.STRAPI_BASE_URL}/api/projects/${documentId}`,
         {
-            data: { boards }
+            data: { boards: { name: boards } }
         },
         {
             headers: {

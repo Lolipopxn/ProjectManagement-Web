@@ -54,8 +54,8 @@ export default function TaskCard({ task, overlay = false }: any) {
 
   return (
     <div
-      className={`flex flex-col space-y-3 p-4 shadow-md border border-gray-200 bg-white min-w-[150px] max-w-[250px]
-        ${overlay ? "shadow-xl scale-105" : ""}`}
+      className={`flex flex-col space-y-3 p-4 m-3 border-gray-200 bg-white min-w-[150px] max-w-[250px] select-none
+        ${overlay ? "shadow-xl scale-110" : ""}`}
     >
       
       {/*Task Name*/}

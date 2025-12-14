@@ -19,8 +19,8 @@ const clamp = (v: number, min: number, max: number) =>
 
 export default function FreeDragBoard({ tasks, project, projectId }: any) {
   const [boards, setBoards] = useState<string[]>(
-    Array.isArray(project.boards) && project.boards.length > 0
-      ? project.boards
+    Array.isArray(project.boards.name) && project.boards.name.length > 0
+      ? project.boards.name
       : ["สิ่งที่ต้องทำ"]
   );
   const [leftBoard, setLeftBoard] = useState(tasks);
@@ -37,6 +37,7 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
 
   const [showAddTask, setAddTask] = useState(false);
   const [showAddBoard, setShowAddBoard] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any | null>(null);
 
   const [contextMenu, setContextMenu] = useState({
     visible: false,
@@ -273,7 +274,7 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
       >
         {/* Left Board */}
         <LeftDroppable>
-            <div className="w-full bg-[#F9F8F8] rounded-lg p-3 space-y-4">
+            <div className="w-full bg-[#F9F8F8] pb-10 rounded-lg p-3 space-y-4">
                 <div className="flex flex-row justify-between items-center px-3">
                   <div className="flex flex-row gap-2">
                     <h2 className="font-semibold">รายการงาน</h2>
@@ -285,7 +286,7 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
                     
                 </div>
                 
-                <div className="px-3 h-100 overflow-y-auto overflow-x-clip">
+                <div className="px-3 max-h-screen overflow-y-auto overflow-x-clip">
                     {leftBoard.map((task: any) => (
                         <LeftDraggable key={task.id} task={task} />
                     ))}
@@ -344,6 +345,7 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
                     key={id}
                     task={task}
                     position={rightBoard[currentBoard][id]}
+                    onClickTask={() => setSelectedTask(task)}
                   />
                 );
               })}
@@ -370,6 +372,33 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
             onDelete={() => handleDeleteBoard(confirmDelete.boardName as string)}
           />
         )}
+
+        {selectedTask && (
+          <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-xl w-[400px] shadow-xl">
+              <h2 className="text-lg font-semibold mb-3">{selectedTask.task_name}</h2>
+
+              <p className="text-gray-600 mb-3">{selectedTask.description || 'ไม่มีรายละเอียด'}</p>
+
+              <p className="text-sm text-gray-500">
+                วันที่สร้าง: {dayjs(selectedTask.createdAt).format("DD MMM YYYY")}
+              </p>
+              <p className="text-sm text-gray-500">
+                กำหนดส่ง: {dayjs(selectedTask.due_date).format("DD MMM YYYY")}
+              </p>
+
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={() => setSelectedTask(null)}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+                >
+                  ปิด
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         <DragOverlay>
           {activeTask ? <TaskCard task={activeTask} overlay /> : null}
