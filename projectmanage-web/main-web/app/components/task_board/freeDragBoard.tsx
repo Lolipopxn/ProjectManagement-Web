@@ -1,7 +1,8 @@
 "use client";
 
 import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
 import { LeftDraggable, RightDraggable } from "./draggableTask";
 import TaskCard from "./TaskCard";
 import { LeftDroppable, RightDroppable } from "./DroppableBoard";
@@ -18,6 +19,10 @@ const clamp = (v: number, min: number, max: number) =>
   Math.min(Math.max(v, min), max);
 
 export default function FreeDragBoard({ tasks, project, projectId }: any) {
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const router = useRouter();
+
   const [boards, setBoards] = useState<string[]>(
     Array.isArray(project.boards.name) && project.boards.name.length > 0
       ? project.boards.name
@@ -141,6 +146,22 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
       console.error("Error saving position", error);
     }
   };
+
+  useEffect(() => {
+      const checkAuth = async () => {
+        try {
+          const response = await axios.get('/api/auth/me');
+          console.log('User authenticated:', response.data.user); // Debug log
+          setCurrentUserId(response.data.user.id); // เก็บ user ID ของผู้สร้าง
+          setIsCheckingAuth(false);
+        } catch (error: any) {
+          console.log('No authentication found, redirecting to login'); // Debug log
+          router.push('/login');
+        }
+      };
+      
+      checkAuth();
+    }, [router]);
 
   //Set position task in board
   useEffect(() => {
@@ -354,7 +375,7 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
         </div>
 
         {showAddTask && (
-            <AddTaskPage project={project} projectId={projectId} onClose={() => setAddTask(false)}/>
+            <AddTaskPage user={currentUserId} project={project} projectId={projectId} onClose={() => setAddTask(false)}/>
         )}
         {showAddBoard && (
           <AddBoardPage 

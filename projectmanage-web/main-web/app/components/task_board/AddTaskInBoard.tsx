@@ -24,7 +24,7 @@ interface TaskForm {
 }
 
 //Add Task UI to Left Board
-export function AddTaskPage({ project, projectId, onClose }: {project: Project, projectId: string, onClose: () => void}) {
+export function AddTaskPage({ user, project, projectId, onClose }: {user:number | null , project: Project, projectId: string, onClose: () => void}) {
   const [form, setForm] = useState<TaskForm>({
     taskName: "",
     description: "",
@@ -50,7 +50,7 @@ export function AddTaskPage({ project, projectId, onClose }: {project: Project, 
         due_date: combinedDueDate,
         project_document_id: projectId,
         project_id_number: project?.id,
-        assigned_to_user_ids_number: form.assignedUserId ?? null,
+        assigned_to_user_ids_number: user,
         task_status: "not turn in"
         });
 
@@ -71,12 +71,12 @@ export function AddTaskPage({ project, projectId, onClose }: {project: Project, 
 
   return (
     <div className="fixed inset-0 bg-black/40 z-99 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-md w-80 shadow">
+      <div className="bg-white rounded-md w-100 py-8 px-6 flex flex-col space-y-4 shadow">
         <h3 className="font-semibold mb-3">เพิ่ม Task ใหม่</h3>
 
         {/* TASK NAME */}
         <input
-          className="border rounded w-full p-2 mb-3"
+          className="border border-gray-400 shadow rounded w-full p-2"
           placeholder="ชื่อ Task"
           value={form.taskName}
           onChange={(e) =>
@@ -86,7 +86,7 @@ export function AddTaskPage({ project, projectId, onClose }: {project: Project, 
 
         {/* DESCRIPTION */}
         <textarea
-          className="border rounded w-full p-2 mb-3"
+          className="border border-gray-400 shadow rounded w-full p-2"
           placeholder="รายละเอียด"
           value={form.description}
           onChange={(e) =>
@@ -97,7 +97,7 @@ export function AddTaskPage({ project, projectId, onClose }: {project: Project, 
         {/* DUE DATE */}
         <input
           type="date"
-          className="border rounded w-full p-2 mb-3"
+          className="border border-gray-400 shadow rounded w-full p-2"
           value={form.dueDate}
           onChange={(e) =>
             setForm({ ...form, dueDate: e.target.value })
@@ -107,21 +107,10 @@ export function AddTaskPage({ project, projectId, onClose }: {project: Project, 
         {/* DUE TIME */}
         <input
           type="time"
-          className="border rounded w-full p-2 mb-3"
+          className="border border-gray-400 shadow rounded w-full p-2 "
           value={form.dueTime}
           onChange={(e) =>
             setForm({ ...form, dueTime: e.target.value })
-          }
-        />
-
-        {/* ASSIGNED USER */}
-        <input
-          type="number"
-          className="border rounded w-full p-2 mb-3"
-          placeholder="Assign User ID"
-          value={form.assignedUserId ?? ""}
-          onChange={(e) =>
-            setForm({ ...form, assignedUserId: Number(e.target.value) })
           }
         />
 
