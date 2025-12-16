@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { UUID } from 'crypto';
+import { IoMdArrowRoundBack, IoMdAdd } from "react-icons/io";
+import { MdOutlinePostAdd } from "react-icons/md";
+import { FaAngleDoubleRight, FaAngleDoubleLeft  } from "react-icons/fa";
 
 // โปรเจ็กต์นี้ใช้ field created_by_user แทน relation เพื่อเก็บ user ID ของผู้สร้าง
 // สำหรับ project members ใช้ field ใหม่ project_idnumber และ user_id_in_project แทน relations
@@ -40,6 +43,7 @@ export default function CreateProjectPage() {
     project_status: 'active',
     slug: '',
   });
+  const [myId, setMyId] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -51,6 +55,13 @@ export default function CreateProjectPage() {
   const [selectedRole, setSelectedRole] = useState('member');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [ isAddUser, setAddUser ] = useState(false);
+
+  const MEMBERS_PER_PAGE = 3;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil((projectMembers.length) / MEMBERS_PER_PAGE);
+  const startIndex = (currentPage - 1) * MEMBERS_PER_PAGE;
+  const currentMembers = projectMembers.slice(startIndex, startIndex + MEMBERS_PER_PAGE);
 
   // ตรวจสอบ authentication เมื่อ component โหลด
   useEffect(() => {
@@ -59,6 +70,7 @@ export default function CreateProjectPage() {
         const response = await axios.get('/api/auth/me');
         console.log('User authenticated:', response.data.user); // Debug log
         setCurrentUserId(response.data.user.id); // เก็บ user ID ของผู้สร้าง
+        setMyId(response.data.user);
         setIsCheckingAuth(false);
       } catch (error: any) {
         console.log('No authentication found, redirecting to login'); // Debug log
@@ -75,6 +87,12 @@ export default function CreateProjectPage() {
       fetchUsers();
     }
   }, [currentUserId]);
+
+  useEffect(() => {
+    if (isAddUser) {
+      addMember();
+    }
+  }, [isAddUser]);
 
   // ฟังก์ชันสำหรับดึงรายการผู้ใช้ (ไม่รวมตัวเอง)
   const fetchUsers = async () => {
@@ -116,6 +134,7 @@ export default function CreateProjectPage() {
       setSearchTerm('');
       setShowDropdown(false);
       setError('');
+      setAddUser(false);
     } else {
       setError('กรุณาเลือกผู้ใช้และกำหนดบทบาท');
     }
@@ -406,383 +425,360 @@ export default function CreateProjectPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-50">
-      <div className="flex mt-3">    
+    <div className="min-h-screen w-full bg-white flex justify-center">   
+      <div className='flex-1 max-w-[1900px]'>
         {/* Main Content */}
-        <div className="flex-1 p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center space-x-2 text-gray-600 mb-4">
-              <button 
-                onClick={() => router.back()}
-                className="hover:text-blue-600 transition-colors"
-              >
-                ← กลับ
-              </button>
-              <span>สร้างโปรเจ็กต์ใหม่</span>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">สร้างโปรเจ็กต์ใหม่</h1>
-          </div>
-
-          {/* Form */}
-          <div className="flex gap-6 flex-col md:flex-row">
-            {/* Project Information Card - Left Side */}
-            <div className="flex-1">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">ข้อมูลโปรเจ็กต์</h2>
-                  <p className="text-sm text-gray-600">กรอกรายละเอียดพื้นฐานของโปรเจ็กต์</p>
+          <div className="flex flex-row justify-center px-8 py-8">
+            <div className='flex-1 md:pl-10 md:pr-20'>
+              {/* Header */}
+              <div className="mb-2 flex flex-row items-center space-x-6">
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <button 
+                    onClick={() => router.back()}
+                    className="hover:text-[#50589C] transition-colors"
+                  >
+                    <IoMdArrowRoundBack className='size-6'/>
+                  </button>
                 </div>
+              </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Project Name */}
-                  <div>
-                    <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 mb-2">
-                      ชื่อโปรเจ็กต์ *
-                    </label>
-                    <input
-                      type="text"
-                      id="project_name"
-                      name="project_name"
-                      value={formData.project_name}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="กรอกชื่อโปรเจ็กต์"
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                      คำอธิบาย *
-                    </label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      required
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="อธิบายรายละเอียดของโปรเจ็กต์"
-                    />
-                  </div>
-
-                  {/* Date Range */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
-                        วันที่เริ่มต้น *
-                      </label>
-                      <input
-                        type="date"
-                        id="start_date"
-                        name="start_date"
-                        value={formData.start_date}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+              {/* Form */}
+              <div className="flex gap-6 flex-col py-2 md:flex-row">
+                {/* Project Information Card - Left Side */}
+                <div className="flex-1">
+                  <div className="bg-white rounded-lg p-2">
+                    <div className="mb-6 flex flex-row items-center space-x-4 bg-[#50589C] py-2 pl-5 rounded-full">
+                      <MdOutlinePostAdd className='size-7 text-white'/>
+                      <h2 className="text-xl font-semibold text-white">เพิ่มโปรเจ็กต์</h2>
                     </div>
-                    <div>
-                      <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
-                        วันที่สิ้นสุด *
-                      </label>
-                      <input
-                        type="date"
-                        id="end_date"
-                        name="end_date"
-                        value={formData.end_date}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
 
-                  {/* Project Status */}
-                  <div>
-                    <label htmlFor="project_status" className="block text-sm font-medium text-gray-700 mb-2">
-                      สถานะโปรเจ็กต์
-                    </label>
-                    <select
-                      id="project_status"
-                      name="project_status"
-                      value={formData.project_status}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="active">กำลังดำเนินการ</option>
-                      <option value="completed">เสร็จสิ้น</option>
-                      <option value="on-hold">พักการทำงาน</option>
-                      <option value="cancelled">ยกเลิก</option>
-                    </select>
-                  </div>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      {/* Project Name */}
+                      <div>
+                        <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 mb-2">
+                          ชื่อโปรเจ็กต์ *
+                        </label>
+                        <input
+                          type="text"
+                          id="project_name"
+                          name="project_name"
+                          value={formData.project_name}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                          placeholder="กรอกชื่อโปรเจ็กต์"
+                        />
+                      </div>
 
-                  {/* Success Message */}
-                  {success && (
-                    <div className="bg-green-50 border border-green-200 rounded-md p-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
+                      {/* Description */}
+                      <div>
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                          คำอธิบาย *
+                        </label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleChange}
+                          required
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                          placeholder="อธิบายรายละเอียดของโปรเจ็กต์"
+                        />
+                      </div>
+
+                      {/* Date Range */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
+                            วันที่เริ่มต้น *
+                          </label>
+                          <input
+                            type="date"
+                            id="start_date"
+                            name="start_date"
+                            value={formData.start_date}
+                            onChange={handleChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                          />
                         </div>
-                        <div className="ml-3">
-                          <p className="text-sm text-green-800">{success}</p>
+                        <div>
+                          <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
+                            วันที่สิ้นสุด *
+                          </label>
+                          <input
+                            type="date"
+                            id="end_date"
+                            name="end_date"
+                            value={formData.end_date}
+                            onChange={handleChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                          />
                         </div>
                       </div>
-                    </div>
-                  )}
 
-                  {/* Error Message */}
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
+                      {/* Project Status */}
+                      {/* <div>
+                        <label htmlFor="project_status" className="block text-sm font-medium text-gray-700 mb-2">
+                          สถานะโปรเจ็กต์
+                        </label>
+                        <select
+                          id="project_status"
+                          name="project_status"
+                          value={formData.project_status}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="active">กำลังดำเนินการ</option>
+                          <option value="completed">เสร็จสิ้น</option>
+                          <option value="on-hold">พักการทำงาน</option>
+                          <option value="cancelled">ยกเลิก</option>
+                        </select>
+                      </div> */}
+
+                      {/* Success Message */}
+                      {success && (
+                        <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                          <div className="flex">
+                            <div className="flex-shrink-0">
+                              <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="ml-3">
+                              <p className="text-sm text-green-800">{success}</p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="ml-3">
-                          <p className="text-sm text-red-800">{error}</p>
+                      )}
+
+                      {/* Error Message */}
+                      {error && (
+                        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                          <div className="flex">
+                            <div className="flex-shrink-0">
+                              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="ml-3">
+                              <p className="text-sm text-red-800">{error}</p>
+                            </div>
+                          </div>
                         </div>
+                      )}
+
+                      {/* Submit Buttons */}
+                      <div className="flex space-x-6 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => router.back()}
+                          className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+                        >
+                          ยกเลิก
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isLoading}
+                          className="flex-1 bg-[#50589C] text-white py-2 px-4 rounded-md hover:bg-[#50589C]/80 focus:outline-none focus:ring-2 focus:ring-[#50589C] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {isLoading ? 'กำลังสร้าง...' : 'สร้างโปรเจ็กต์'}
+                        </button>  
                       </div>
-                    </div>
-                  )}
-
-                  {/* Submit Buttons */}
-                  <div className="flex space-x-3 pt-4">
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isLoading ? 'กำลังสร้าง...' : 'สร้างโปรเจ็กต์'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => router.back()}
-                      className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
-                    >
-                      ยกเลิก
-                    </button>
+                    </form>
                   </div>
-                </form>
+                </div>
               </div>
             </div>
 
             {/* Project Members Card - Right Side */}
-            <div className="flex-1">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">สมาชิกโปรเจ็กต์</h2>
-                  <p className="text-sm text-gray-600">เพิ่มสมาชิกเข้าร่วมโปรเจ็กต์ (คุณจะเป็นหัวหน้าโปรเจ็กต์อัตโนมัติ)</p>
-                </div>
-
-                {/* User Search Dropdown */}
-                <div className="mb-4 relative">
-                  <label htmlFor="user-search" className="block text-sm font-medium text-gray-700 mb-2">
-                    ค้นหาผู้ใช้
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      id="user-search"
-                      value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setShowDropdown(true);
-                      }}
-                      onFocus={() => setShowDropdown(true)}
-                      placeholder="พิมพ์ชื่อหรืออีเมลเพื่อค้นหาผู้ใช้"
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </div>
-
-                    {/* Dropdown */}
-                    {showDropdown && searchTerm && filteredUsers.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {filteredUsers.map((user) => (
-                          <div
-                            key={user.id}
-                            onClick={() => {
-                              setSelectedUserId(user.id);
-                              setSearchTerm(user.username);
-                              setShowDropdown(false);
-                            }}
-                            className="flex items-center px-4 py-3 cursor-pointer hover:bg-blue-50 transition-colors"
-                          >
-                            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900">{user.username}</div>
-                              <div className="text-sm text-gray-500">{user.email}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* No results message */}
-                    {showDropdown && searchTerm && filteredUsers.length === 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                        <div className="px-4 py-3 text-gray-500 text-center">
-                          ไม่พบผู้ใช้ที่ค้นหา
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Close dropdown when clicking outside */}
-                  {showDropdown && (
-                    <div 
-                      className="fixed inset-0 z-0" 
-                      onClick={() => setShowDropdown(false)}
-                    />
-                  )}
-                </div>
-
-                {/* Role Selection */}
-                <div className="mb-4">
-                  <label htmlFor="selectedRole" className="block text-sm font-medium text-gray-700 mb-2">
-                    บทบาทสำหรับสมาชิกใหม่
-                  </label>
-                  <select
-                    id="selectedRole"
-                    value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="member">สมาชิก</option>
-                    <option value="leader">หัวหน้าโปรเจ็กต์</option>
-                    <option value="developer">นักพัฒนา</option>
-                    <option value="designer">นักออกแบบ</option>
-                    <option value="tester">ผู้ทดสอบ</option>
-                  </select>
-                </div>
-
-                {/* Action Button */}
-                <div className="mb-6">
-                  <button
-                    type="button"
-                    onClick={addMember}
-                    disabled={!selectedUserId}
-                    className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded-md font-medium transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>เพิ่มสมาชิกในโปรเจ็กต์</span>
-                  </button>
-                </div>
-
-                {/* Current Project Members */}
-                {projectMembers.length > 0 && (
+              <div className=" w-1/3">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-3">สมาชิกในโปรเจ็กต์</h3>
-                    <div className="space-y-2">
-                      {projectMembers.map((member) => (
-                        <div key={member.userId} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-green-700" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-900">{getUserName(member.userId)}</div>
-                              <div className="text-sm text-green-700">{member.roleInProject}</div>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeMember(member.userId)}
-                            className="text-red-500 hover:text-red-700 p-1 transition-colors"
-                            title="ลบสมาชิก"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">สมาชิกโปรเจ็กต์</h2>
+                    <p className="text-sm text-gray-600">เพิ่มสมาชิกเข้าร่วมโปรเจ็กต์ (คุณจะเป็นหัวหน้าโปรเจ็กต์อัตโนมัติ)</p>
                   </div>
-                )}
 
-                {/* Summary */}
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-semibold text-blue-900">
-                      สรุปข้อมูลโปรเจ็กต์
-                    </span>
-                  </div>
-                  <div className="text-sm text-blue-800 space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <strong>จำนวนสมาชิก:</strong> {projectMembers.length + 1} คน
+                  {/* User Search Dropdown */}
+                  <div className="mb-4 relative">
+                    <label htmlFor="user-search" className="block text-sm font-medium text-gray-700 mb-2">
+                      ค้นหาเพื่อเพิ่มสมาชิก
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        id="user-search"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setShowDropdown(true);
+                        }}
+                        onFocus={() => setShowDropdown(true)}
+                        placeholder="พิมพ์ชื่อหรืออีเมลเพื่อค้นหาผู้ใช้"
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                       </div>
-                      <div>
-                        <strong>สถานะ:</strong> {
-                          formData.project_status === 'active' ? 'กำลังดำเนินการ' :
-                          formData.project_status === 'completed' ? 'เสร็จสิ้น' :
-                          formData.project_status === 'on-hold' ? 'พักการทำงาน' :
-                          formData.project_status === 'cancelled' ? 'ยกเลิก' : formData.project_status
-                        }
-                      </div>
-                    </div>
-                    
-                    {formData.start_date && formData.end_date && (
-                      <div>
-                        <strong>ระยะเวลา:</strong> {formatDate(formData.start_date)} - {formatDate(formData.end_date)}
-                      </div>
-                    )}
-                    
-                    <div className="border-t border-blue-200 pt-2 mt-2">
-                      <div className="font-medium mb-1">รายชื่อสมาชิก:</div>
-                      <div className="space-y-1 text-xs text-blue-700">
-                        <div className="flex items-center space-x-1">
-                          <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                          <span>คุณ - หัวหน้าโปรเจ็กต์ (ผู้สร้าง)</span>
-                        </div>
-                        {projectMembers.length > 0 && 
-                          projectMembers.map((member, index) => (
-                            <div key={member.userId} className="flex items-center space-x-1">
-                              <span className={`w-2 h-2 rounded-full ${
-                                member.roleInProject.toLowerCase() === 'leader' ? 'bg-purple-400' :
-                                member.roleInProject.toLowerCase() === 'developer' ? 'bg-green-400' :
-                                member.roleInProject.toLowerCase() === 'designer' ? 'bg-pink-400' :
-                                member.roleInProject.toLowerCase() === 'tester' ? 'bg-orange-400' :
-                                'bg-gray-400'
-                              }`}></span>
-                              <span>{getUserName(member.userId)} - {member.roleInProject}</span>
+
+                      {/* Dropdown */}
+                      {showDropdown && searchTerm && filteredUsers.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          {filteredUsers.map((user) => (
+                            <div
+                              key={user.id}
+                              onClick={() => {
+                                setSelectedUserId(user.id);
+                                setSearchTerm(user.username);
+                                setShowDropdown(false);
+                                setAddUser(true);
+                              }}
+                              className="flex items-center px-4 py-3 cursor-pointer hover:bg-[#A7AAE1] transition-colors"
+                            >
+                              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">{user.username}</div>
+                                <div className="text-sm text-gray-500">{user.email}</div>
+                              </div>
+                              <div>
+                                <IoMdAdd className='size-5'/>
+                              </div>
                             </div>
-                          ))
-                        }
-                        {projectMembers.length === 0 && (
-                          <div className="text-gray-500 italic">• ยังไม่มีสมาชิกเพิ่มเติม</div>
-                        )}
-                      </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* No results message */}
+                      {showDropdown && searchTerm && filteredUsers.length === 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                          <div className="px-4 py-3 text-gray-500 text-center">
+                            ไม่พบผู้ใช้ที่ค้นหา
+                          </div>
+                        </div>
+                      )}
                     </div>
+
+                    {/* Close dropdown when clicking outside */}
+                    {showDropdown && (
+                      <div 
+                        className="fixed inset-0 z-0" 
+                        onClick={() => setShowDropdown(false)}
+                      />
+                    )}
                   </div>
+
+                  {/* Role Selection */}
+                  {/* <div className="mb-4">
+                    <label htmlFor="selectedRole" className="block text-sm font-medium text-gray-700 mb-2">
+                      บทบาทสำหรับสมาชิกใหม่
+                    </label>
+                    <select
+                      id="selectedRole"
+                      value={selectedRole}
+                      onChange={(e) => setSelectedRole(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="member">สมาชิก</option>
+                      <option value="leader">หัวหน้าโปรเจ็กต์</option>
+                      <option value="developer">นักพัฒนา</option>
+                      <option value="designer">นักออกแบบ</option>
+                      <option value="tester">ผู้ทดสอบ</option>
+                    </select>
+                  </div> */}
+                  <div className='rounded-lg p-3 bg-gray-100 h-90'>                   
+                    <div className='flex flex-row items-center, justify-between'>
+                      <h3 className="text-md font-medium text-black mb-3">สมาชิก</h3>
+                       <div className='text-black text-md'>{projectMembers.length + 1} คน</div>
+                    </div>
+                    <div className='h-65'>
+                      <div className={`${currentPage > 1 ? 'hidden' : 'flex'} flex items-center justify-between py-2 px-3 bg-white rounded-md mb-2`}>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-[#636CCB] rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-[#3C467B]" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">{myId?.username}</div>
+                              <div className="text-sm text-[#636CCB]">Leader</div>
+                            </div>
+                          </div>  
+                        </div>
+                      {/* Current Project Members */}
+                      {projectMembers.length > 0 && (
+                        <div className="mb-6">
+                          <div className="space-y-2">
+                            {currentMembers.map((member) => (
+                              <div key={member.userId} className="flex items-center justify-between py-2 px-3 bg-white rounded-md">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-green-700" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">{getUserName(member.userId)}</div>
+                                    <div className="text-sm text-green-700">{member.roleInProject}</div>
+                                  </div>
+                                </div>
+
+                                <div className='flex flex-row items-center gap-1'>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeMember(member.userId)}
+                                    className="text-red-600 hover:text-red-800 p-1 transition-colors"
+                                    title="ลบสมาชิก"
+                                  >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+            
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between gap-3 mt-4">
+                        {/* Previous */}
+                        <button
+                          className="px-3 py-1 bg-[#6E8CFB] text-white rounded disabled:opacity-40"
+                          disabled={currentPage === 1}
+                          onClick={() => setCurrentPage(prev => prev - 1)}
+                        >
+                          <FaAngleDoubleLeft />
+                        </button>
+
+                        {/* Page Numbers */}
+                          <div className="flex gap-2 text-sm">         
+                            {currentPage} / {`${totalPages < 1 ? '1' : totalPages}`}
+                          </div>
+
+                          {/* Next */}
+                          <button
+                            className="px-3 py-1 bg-[#6E8CFB] text-white rounded disabled:opacity-40"
+                            disabled={currentPage === totalPages || totalPages === 0 }
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                          >                       
+                            <FaAngleDoubleRight />
+                          </button>
+                      </div>
+                  </div>             
                 </div>
               </div>
             </div>
           </div>
-        </div>
       </div>
-    </div>
   );
 }
