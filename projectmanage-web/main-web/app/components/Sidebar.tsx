@@ -182,7 +182,7 @@ export default function Sidebar() {
   }, [projects.length]);
 
   return (
-    <aside className={`${isNavOpen ? 'transition-all duration-500 w-full md:w-64' : 'transition-all duration-500 md:w-18 '}  bg-white border border-gray-200 bottom-0 md:top-13 md:h-screen overflow-y-auto fixed scrollbar-autohide`}>
+    <aside className={`${isNavOpen ? 'w-full md:w-64' : 'md:w-18 '} transition-width duration-500 scrollbar-autoHide bg-white border border-gray-200 bottom-0 md:top-13 md:h-screen overflow-y-auto fixed `}>
       <div className="p-3 md:px-4 md:py-3">
         {/* Breadcrumb */}
         <div className="hidden md:flex flex-row md:mt-5 justify-between items-center space-x-2 text-sm text-gray-500 mb-6">
@@ -289,7 +289,7 @@ export default function Sidebar() {
             onClick={() => setMyProjectOpen((v) => !v)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
           >
-            <span>My Projects</span>
+            <span className="flex-1 truncate">My Projects</span>
             <span className="flex items-center gap-2 text-xs text-gray-500">
               <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100">
                 {totalProjects}
@@ -313,7 +313,7 @@ export default function Sidebar() {
           </button>
 
           {myProjectOpen && (
-            <div className="ml-4 relative">
+            <div className="ml-4 relative truncate">
               {loading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
@@ -337,7 +337,7 @@ export default function Sidebar() {
                         const href = `/main_pages/projects/${p.documentId ?? p.id}`;
                         return (
                           <div key={p.documentId ?? p.id} className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[76px]">
-                            <Link href={href} className="block p-2.5 h-full flex flex-col justify-between">
+                            <Link href={href} className="p-2.5 h-full flex flex-col justify-between">
                               {/* Project Name & Status */}
                               <div className="flex items-start gap-2 mb-1.5">
                                 <span className="font-semibold text-sm text-gray-800 flex-1 line-clamp-1">
@@ -499,7 +499,7 @@ export default function Sidebar() {
         </div>
 
         {/* My Tasks */}
-        <div className={`${isNavOpen ? 'hidden md:flex flex-col' : 'hidden'} `}>
+        <div className={`${isNavOpen ? 'hidden md:flex flex-col' : 'hidden'} truncate`}>
           <button
             onClick={() => setMyTaskOpen((v) => !v)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
@@ -565,7 +565,7 @@ export default function Sidebar() {
                     <div key={`${task.id}-${index}`} className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[76px]">
                       <Link
                         href={href}
-                        className="block p-2.5 h-full flex flex-col justify-between"
+                        className="p-2.5 h-full flex flex-col justify-between"
                       >
                         {/* Task Name & Status */}
                         <div className="flex items-start gap-2 mb-1.5">
