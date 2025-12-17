@@ -284,12 +284,12 @@ export default function Sidebar() {
         )}
 
         {/* My Projects */}
-        <div className={`${isNavOpen ? 'hidden md:flex flex-col mb-2' : 'hidden'}`}>
+        <div className={`${isNavOpen ? 'hidden md:flex flex-col mb-2' : 'hidden'} truncate`}>
           <button
             onClick={() => setMyProjectOpen((v) => !v)}
             className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
           >
-            <span className="flex-1 truncate">My Projects</span>
+            <span className="flex-1">My Projects</span>
             <span className="flex items-center gap-2 text-xs text-gray-500">
               <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100">
                 {totalProjects}
