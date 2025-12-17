@@ -24,8 +24,8 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
   const router = useRouter();
 
   const [boards, setBoards] = useState<string[]>(
-    Array.isArray(project.boards.name) && project.boards.name.length > 0
-      ? project.boards.name
+    Array.isArray(project.boards) && project.boards.length > 0
+      ? project.boards
       : ["สิ่งที่ต้องทำ"]
   );
   const [leftBoard, setLeftBoard] = useState(tasks);
