@@ -616,8 +616,8 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
       'oneToMany',
       'plugin::users-permissions.user'
     >;
-    assigned_to_user_ids_number: Schema.Attribute.Integer &
-      Schema.Attribute.Required;
+    assigned_to_user_ids_number: Schema.Attribute.Integer;
+    begin_date: Schema.Attribute.DateTime;
     board_name: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -638,6 +638,7 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
     project_id: Schema.Attribute.Relation<'oneToOne', 'api::project.project'>;
     project_id_number: Schema.Attribute.Integer & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
+    task_color: Schema.Attribute.String;
     task_name: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -648,6 +649,7 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 50;
       }>;
+    task_type: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

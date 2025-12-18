@@ -10,7 +10,7 @@ import VoiceRoomButton from "../../../components/VoiceRoomButton";
 import GanttChart from '@/app/components/GanttChart';
 import FreeDragBoard from '@/app/components/task_board/freeDragBoard';
 
-import { AiFillReconciliation } from "react-icons/ai";
+import { AiFillReconciliation, AiFillEnvironment, AiFillFileText } from "react-icons/ai";
 import { IoMdClose } from "react-icons/io";
 
 // Interface สำหรับ project data
@@ -38,7 +38,9 @@ interface Task {
   description: string;
   task_status: string;
   due_date: string;
+  begin_date: string;
   createdAt: string;
+  task_color: string;
   project_document_id: string;
   assigned_to_user_ids_number: number;
   assigned_to_user_ids?: any;
@@ -103,6 +105,7 @@ export default function ProjectDetailPage() {
   const [projectManageLoading, setProjectManageLoading] = useState(false);
   const [ToggleView, setToggleView] = useState(1);
   const [toggleMember, setToggleMember] = useState(false);
+  const [openOptions, setOpenOptions] = useState(false);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -316,18 +319,25 @@ export default function ProjectDetailPage() {
       
       // รวมวันที่และเวลา
       let combinedDueDate = taskData.dueDate;
+      let combineBeginDate = taskData.beginDate;
       if (taskData.dueTime) {
         combinedDueDate = `${taskData.dueDate}T${taskData.dueTime}:00.000Z`;
+      }
+
+      if (taskData.beginTime) {
+        combineBeginDate = `${taskData.beginDate}T${taskData.beginTime}:00.000Z`;
       }
       
       const response = await axios.post('/api/tasks/create', {
         task_name: taskData.taskName,
         description: taskData.description,
         due_date: combinedDueDate,
+        begin_date: combineBeginDate,
         project_document_id: projectId,
         project_id_number: project?.id,
         assigned_to_user_ids_number: taskData.assignedUserId,
-        task_status: 'not turn in'
+        task_status: 'not turn in',
+        task_color: taskData.color,
       });
 
       if (response.data.success) {
@@ -760,7 +770,6 @@ export default function ProjectDetailPage() {
     
     // Use utility status configuration for card colors
     const taskStatusConfig = getTaskStatusConfig(task.task_status);
-    
 
     return (
       <div 
@@ -1836,16 +1845,70 @@ export default function ProjectDetailPage() {
                       </div>
                     </div>
                     {userRole === 'Leader' && (
-                      <button 
-                        onClick={() => setShowCreateTaskModal(true)}
-                        className="flex items-center space-x-2 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      <div className='relative'>
+                        <button 
+                          onClick={() => {setOpenOptions(prev => !prev) }}
+                          className="flex items-center space-x-2 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          <span>สร้างงาน</span>
+                        </button>
+
+                        {/* Options */}
+                      <div
+                        className={`
+                          absolute right-0 mt-2 w-40 bg-white shadow-md border border-gray-200 z-50
+                          transform transition-all duration-500 divide-y divide-gray-200
+                          ${openOptions
+                            ? "opacity-100 scale-100 translate-y-0"
+                            : "opacity-0 scale-95 -translate-y-3 pointer-events-none"}
+                        `}
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        <span>สร้างงาน</span>
-                      </button>
-                    )}
+                        <div className={`
+                          transform transition-all duration-200 truncate
+                          ${openOptions
+                            ? "opacity-100 scale-100 translate-y-0"
+                            : "opacity-0 scale-95 -translate-y-4"}
+                        `}>
+                          <button
+                            onClick={() => {
+                              setShowCreateTaskModal(true);
+                              setOpenOptions(false);
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 hover:text-[#50589C]"
+                          >
+                            <div className='flex flex-row items-center gap-2'>
+                              <AiFillFileText className='size-4'/>
+                              <span className='text-md flex-1'>งานทั่วไป</span>
+                            </div>
+                             
+                          </button>
+                        </div>
+
+                        <div className={`
+                          transform transition-all duration-200 delay-200
+                          ${openOptions
+                            ? "opacity-100 scale-100 translate-y-0"
+                            : "opacity-0 scale-95 -translate-y-4"}
+                        `}>
+                          <button
+                            onClick={() => {
+                              setOpenOptions(false);
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 hover:text-[#50589C]"
+                          >
+                            <div className='flex flex-row items-center gap-2'>
+                              <AiFillEnvironment className='size-4'/>
+                              <span className='text-md flex-1'>นัดหมาย</span>
+                            </div>
+                          </button>
+                        </div>
+                                          
+                        </div>    
+                      </div>               
+                    )}                    
                   </div>
                   
                   <div className="grid grid-cols-1 max-h-[calc(4*56px)] px-2 overflow-y-auto md:grid-cols-3 lg:grid-cols-4 gap-2 ">

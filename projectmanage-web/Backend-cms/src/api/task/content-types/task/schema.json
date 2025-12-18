@@ -41,7 +41,7 @@
     },
     "assigned_to_user_ids_number": {
       "type": "integer",
-      "required": true
+      "required": false
     },
     "due_date": {
       "type": "datetime"
@@ -63,6 +63,15 @@
     "is_left": {
       "type": "boolean",
       "default": true
+    },
+    "begin_date": {
+      "type": "datetime"
+    },
+    "task_type": {
+      "type": "string"
+    },
+    "task_color": {
+      "type": "string"
     }
   }
 }

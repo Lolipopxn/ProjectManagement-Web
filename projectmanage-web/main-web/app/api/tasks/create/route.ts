@@ -44,11 +44,14 @@ export async function POST(request: NextRequest) {
     const { 
       task_name, 
       description, 
-      due_date, 
+      due_date,
+      begin_date, 
+      task_color,
       project_document_id, 
       project_id_number,
       assigned_to_user_ids_number,
-      task_status = 'not turn in'
+      task_status = 'not turn in',
+      task_type = 'normal_task',
     } = body;
 
     // Validate required fields
@@ -64,7 +67,10 @@ export async function POST(request: NextRequest) {
       task_name,
       description: description || '',
       task_status,
+      task_type,
       due_date,
+      begin_date,
+      task_color,
       project_document_id,
       project_id_number: parseInt(project_id_number),
       assigned_to_user_ids_number: assigned_to_user_ids_number ? parseInt(assigned_to_user_ids_number) : null,
