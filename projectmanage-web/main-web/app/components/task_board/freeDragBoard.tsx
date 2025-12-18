@@ -396,7 +396,7 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
 
         {selectedTask && (
           <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-xl w-[400px] shadow-xl">
+            <div className="bg-white p-6 rounded-xl w-[400px] shadow-xl truncate">
               <h2 className="text-lg font-semibold mb-3">{selectedTask.task_name}</h2>
 
               <p className="text-gray-600 mb-3">{selectedTask.description || 'ไม่มีรายละเอียด'}</p>

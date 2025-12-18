@@ -785,14 +785,14 @@ export default function ProjectDetailPage() {
         }}
       >
         {/* Task Name with Actions */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h4 
-              className="font-semibold text-gray-900 text-xl cursor-pointer hover:text-blue-600 transition-colors leading-tight"
+        <div className="flex items-start justify-between mb-10">
+          <div className="flex-1 truncate">
+            <h5 
+              className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-[#50589C] transition-colors leading-tight"
               
             >
               {task.task_name}
-            </h4>
+            </h5>
           </div>
           
           {/* Task Management Button - Only for Leaders */}
@@ -821,20 +821,12 @@ export default function ProjectDetailPage() {
             <span>{taskStatusConfig.statusText}</span>
           </div>
           
-          {/* Assignee */}
-          <div className="flex items-center space-x-2">
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <span className="font-medium text-gray-700 text-sm">{assigneeInfo.name}</span>
-          </div>
-          
           {/* Due Date */}
           <div className="flex items-center space-x-2">
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span className="text-gray-700 text-sm">{formatDate(task.due_date)}</span>
+            <span className="text-gray-700 text-sm">{formatDate(task.begin_date)} - {formatDate(task.due_date)}</span>
           </div>
         </div>
       </div>
@@ -1911,7 +1903,7 @@ export default function ProjectDetailPage() {
                     )}                    
                   </div>
                   
-                  <div className="grid grid-cols-1 max-h-[calc(4*56px)] px-2 overflow-y-auto md:grid-cols-3 lg:grid-cols-4 gap-2 ">
+                  <div className="grid grid-cols-1 max-h-[calc(4*90px)] px-2 overflow-y-auto lg:grid-cols-2 gap-2 ">
                     {myTasks.length > 0 ? (
                       myTasks.map(task => renderTaskCard(task, true))
                     ) : (
@@ -1939,7 +1931,7 @@ export default function ProjectDetailPage() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 max-h-[calc(4*56px)] px-2 overflow-y-auto md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-1 max-h-[calc(4*56px)] px-2 overflow-y-auto lg:grid-cols-2 gap-2">
                     {otherTasks.length > 0 ? (
                       otherTasks.map(task => renderTaskCard(task, false))
                     ) : (

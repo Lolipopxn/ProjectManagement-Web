@@ -72,7 +72,7 @@ export function LeftDraggable({ task, onClickTask}: any) {
     >
       <div className="flex flex-col gap-4 select-none">
 
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-between items-center truncate">
           <div>{task.task_name}</div>
           <div>
             {/* <ProgressAnimation size={20} speed={300} /> */}

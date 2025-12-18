@@ -61,7 +61,7 @@ export default function TaskCard({ task, overlay = false }: any) {
       {/*Task Name*/}
       <div className="flex items-center">
         <div className="flex-grow border border-gray-300"></div>
-        <span className="px-2 bg-white text-gray-700 font-semibold max-w-[200px]">{task.task_name}</span>
+        <span className="px-2 bg-white text-gray-700 font-semibold max-w-[200px] truncate">{task.task_name}</span>
         <div className="flex-grow border border-gray-300"></div>
       </div>
 
