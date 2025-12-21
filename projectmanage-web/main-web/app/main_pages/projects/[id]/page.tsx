@@ -9,6 +9,7 @@ import ProjectChatPopup from "../../../components/ProjectChat";
 import VoiceRoomButton from "../../../components/VoiceRoomButton";
 import GanttChart from '@/app/components/GanttChart';
 import FreeDragBoard from '@/app/components/task_board/freeDragBoard';
+import TaskPopup from '@/app/components/taskPopup';
 
 import { AiFillReconciliation, AiFillEnvironment, AiFillFileText } from "react-icons/ai";
 import { IoMdClose } from "react-icons/io";
@@ -100,6 +101,7 @@ export default function ProjectDetailPage() {
   const [unread, setUnread] = useState(0);
   const [showTaskManageModal, setShowTaskManageModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [popupTask, setPopupTask] = useState(false);
   const [taskManageLoading, setTaskManageLoading] = useState(false);
   const [showProjectManageModal, setShowProjectManageModal] = useState(false);
   const [projectManageLoading, setProjectManageLoading] = useState(false);
@@ -776,12 +778,14 @@ export default function ProjectDetailPage() {
         key={task.id} 
         className={`bg-white border border-gray-200 rounded-lg p-5 mb-4 hover:shadow-md hover:border-gray-300 transition-all duration-200 relative group`}
         onClick={() => {
-          if (task.documentId) {
-            router.push(`/main_pages/projects/${projectId}/tasks/${task.documentId}`);
-          } else {
-            console.warn('Task documentId not found:', task);
-            // alert('ไม่พบ documentId ของ Task นี้');
-          }
+          setSelectedTask(task);
+          setPopupTask(true);
+          // if (task.documentId) {
+          //   router.push(`/main_pages/projects/${projectId}/tasks/${task.documentId}`);
+          // } else {
+          //   console.warn('Task documentId not found:', task);
+          //   // alert('ไม่พบ documentId ของ Task นี้');
+          // }
         }}
       >
         {/* Task Name with Actions */}
@@ -1823,7 +1827,7 @@ export default function ProjectDetailPage() {
               {/* Tasks Overview */}
               <div className="space-y-4">
                 {/* My Tasks */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+                <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-100 p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -1918,7 +1922,7 @@ export default function ProjectDetailPage() {
                 </div>
 
                 {/* Other Members Tasks */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+                <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-100 p-5">
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                       <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2128,6 +2132,16 @@ export default function ProjectDetailPage() {
 
         </div>
       </div>
+
+      {/* task popup */}
+      {popupTask && (
+        <TaskPopup 
+          task={selectedTask} 
+          onClose={() => {setSelectedTask(null); setPopupTask(false)}} 
+          onSubmit={() => {router.push(`/main_pages/projects/${projectId}/tasks/${selectedTask?.documentId}`);}}
+        />
+      )}
+      
 
       <ProjectChatPopup
         projectSlug={project.slug}
