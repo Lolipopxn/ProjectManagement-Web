@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 interface SidebarState {
   isNavOpen: boolean;
@@ -8,16 +9,24 @@ interface SidebarState {
   setNavOpen: (v: boolean) => void;
 }
 
-export const useSidebarStore = create<SidebarState>((set) => ({
-  isNavOpen: true,
+export const useSidebarStore = create<SidebarState>()(
+  persist(
+    (set) => ({
+      isNavOpen: true,
 
-  toggleNav: () =>
-    set((state) => ({
-      isNavOpen: !state.isNavOpen,
-    })),
+      toggleNav: () =>
+        set((state) => ({
+          isNavOpen: !state.isNavOpen,
+        })),
 
-  setNavOpen: (v) =>
-    set(() => ({
-      isNavOpen: v,
-    })),
-}));
+      setNavOpen: (v) =>
+        set(() => ({
+          isNavOpen: v,
+        })),
+    }),
+    {
+      name: "sidebar-state",
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);
