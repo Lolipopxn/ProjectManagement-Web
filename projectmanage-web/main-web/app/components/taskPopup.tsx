@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import axios from 'axios'
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
+
 
 interface Task {
   id: number;
@@ -21,8 +23,63 @@ interface Task {
   attributes?: any;
 }
 
+interface Submission {
+  id: number;
+  documentId?: string;
+  task_document_id: string;
+  task_id_number: number;
+  submitted_by_user_id_number: number;
+  submission_date: string;
+  submission_description?: string;
+  comments?: string;
+  file_urls?: string[];
+  is_active: boolean;
+  cancelled_at?: string;
+}
+
 export default function TaskPopup({task, onClose, onSubmit}: {task: Task | any, onClose?: () => void, onSubmit?: () => void}) {
     const [changePage, setChangePage] = useState(0);
+    const [submission, setSubmissions] = useState<Submission[]>([]);
+    const fetchedRef = useRef(false);
+
+    const formatThaiDate = (date?: string) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+    };
+
+    useEffect(() => {
+        if (fetchedRef.current) return;
+        if (!task?.documentId) return;
+
+        fetchedRef.current = true;
+
+        const fetchSubmission = async () => {
+            try {
+            const submissionsResponse = await axios.get(
+                `/api/submissions?taskDocumentId=${task.documentId}`
+            );
+
+            if (
+                submissionsResponse.data.success &&
+                submissionsResponse.data.submissions
+            ) {
+                setSubmissions(submissionsResponse.data.submissions);
+            }
+            } catch (submissionsError) {
+            console.error('Could not fetch submissions:', submissionsError);
+            }
+        };
+
+        fetchSubmission();
+        }, [task?.documentId]);
+
+        // useEffect(() => {
+        //     console.log('submissions updated:', submission);
+        // }, [submission]);
 
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 truncate">
@@ -80,6 +137,84 @@ export default function TaskPopup({task, onClose, onSubmit}: {task: Task | any, 
                                           
                             </div>                    
                         </div>                    
+                    )}
+                    {changePage === 2 && (
+                    <div className='flex flex-col space-y-3 text-lg'>
+                        <span className="border-b pb-2 border-gray-200">งานที่ส่งแล้ว</span>
+
+                        <div className='px-6 py-4 h-85 w-250 rounded-lg overflow-y-scroll scrollbar-autoHide space-y-4'>
+                            {/* Placeholder submission list */}
+                            {submission.length > 0 ? (
+                            <div className="flex flex-col space-y-3">
+                                {submission.map((item, index) => (
+                                <div
+                                    key={item.id ?? index}
+                                    className="flex flex-col space-y-2 border border-gray-200 rounded-lg p-4"
+                                >
+                                    <div className="flex flex-row justify-between items-center">
+                                    {item.submission_description && (
+                                        <p className="text-sm text-gray-600">
+                                            {item.submission_description}
+                                        </p>
+                                    )}
+                                    <span className="text-sm text-gray-400">
+                                        ส่งเมื่อ{' '}
+                                        {item.submission_date
+                                        ? new Date(item.submission_date).toLocaleDateString('th-TH')
+                                        : '-'}
+                                    </span>
+                                    </div>                               
+                                </div>
+                                ))}
+                            </div>
+                            ) : (
+                            <div className="text-center text-gray-400 text-sm">
+                                ไม่มีงานที่ส่ง
+                            </div>
+                            )}
+                        </div>
+                    </div>
+                    )}
+
+                    {changePage === 3 && (
+                    <div className='flex flex-col space-y-4 text-lg'>
+                        <span className="border-b pb-2 border-gray-200">สถานะงาน</span>
+
+                        <div className='px-6 py-4 space-y-4'>
+                        {/* Status */}
+                        <div className='flex flex-row justify-between items-center'>
+                            <span className='text-gray-500'>สถานะปัจจุบัน</span>
+                            <span className='px-4 py-1 rounded-full text-sm bg-gray-100 text-gray-700'>
+                            {task.task_status}
+                            </span>
+                        </div>
+
+                        {/* Dates */}
+                        <div className='grid grid-cols-2 gap-4'>
+                            <div className='flex flex-col space-y-1'>
+                            <span className='text-gray-500 text-sm'>วันที่เริ่มงาน</span>
+                            <span className='font-medium'>
+                                {formatThaiDate(task.begin_date)}
+                            </span>
+                            </div>
+
+                            <div className='flex flex-col space-y-1'>
+                            <span className='text-gray-500 text-sm'>กำหนดส่ง</span>
+                            <span className='font-medium'>
+                                {formatThaiDate(task.due_date)}
+                            </span>
+                            </div>
+                        </div>
+
+                        {/* Created */}
+                        <div className='flex flex-row justify-between items-center'>
+                            <span className='text-gray-500'>สร้างเมื่อ</span>
+                            <span className='text-sm text-gray-600'>
+                            {new Date(task.createdAt).toLocaleDateString()}
+                            </span>
+                        </div>
+                        </div>
+                    </div>
                     )}
                     
                 </div>
