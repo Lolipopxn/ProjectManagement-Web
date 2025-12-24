@@ -441,6 +441,62 @@ export interface ApiDirectMessageDirectMessage
   };
 }
 
+export interface ApiNotificationPreferenceNotificationPreference
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'notification_preferences';
+  info: {
+    displayName: 'Notification Preference';
+    pluralName: 'notification-preferences';
+    singularName: 'notification-preference';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::notification-preference.notification-preference'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiNotificationNotification
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'notifications';
+  info: {
+    displayName: 'Notification';
+    pluralName: 'notifications';
+    singularName: 'notification';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::notification.notification'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiProjectMemberProjectMember
   extends Struct.CollectionTypeSchema {
   collectionName: 'project_members';
@@ -1235,6 +1291,8 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::chat.chat': ApiChatChat;
       'api::direct-message.direct-message': ApiDirectMessageDirectMessage;
+      'api::notification-preference.notification-preference': ApiNotificationPreferenceNotificationPreference;
+      'api::notification.notification': ApiNotificationNotification;
       'api::project-member.project-member': ApiProjectMemberProjectMember;
       'api::project.project': ApiProjectProject;
       'api::submission.submission': ApiSubmissionSubmission;

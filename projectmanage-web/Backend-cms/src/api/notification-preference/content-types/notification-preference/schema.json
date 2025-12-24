@@ -1,0 +1,14 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notification_preferences",
+  "info": {
+    "singularName": "notification-preference",
+    "pluralName": "notification-preferences",
+    "displayName": "Notification Preference"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {}
+}
