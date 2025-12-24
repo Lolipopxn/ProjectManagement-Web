@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
+import dayjs from "dayjs";
+import "dayjs/locale/th";
 import TaskStatusIcon from '../../../components/TaskStatusIcon';
 import CreateTaskModal from '../../../components/CreateTaskModal';
 import ProjectChatPopup from "../../../components/ProjectChat";
@@ -76,6 +78,8 @@ interface User {
   email: string;
 }
 
+type TaskFilter = "All" | "not turn in" | "pending_review" | "completed" | "late" | "myTask";
+
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -86,6 +90,8 @@ export default function ProjectDetailPage() {
   const [user, setUser] = useState<User | null>(null);
   const [myTasks, setMyTasks] = useState<Task[]>([]);
   const [otherTasks, setOtherTasks] = useState<Task[]>([]);
+  const [taskFilter, setTaskFilter] = useState<TaskFilter>("All");
+  const [openFilter, setOpenFilter] = useState(false);
   const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +115,7 @@ export default function ProjectDetailPage() {
   const [toggleMember, setToggleMember] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
 
+  
   useEffect(() => {
     const fetchProjectData = async () => {
       try {
@@ -723,6 +730,92 @@ export default function ProjectDetailPage() {
     });
   };
 
+  const getTimeLeft = (dueDate: string, beginDate: string) => {
+        const now = dayjs();
+        const due = dayjs(dueDate);
+        const begin = dayjs(beginDate);
+
+        const daysBegin = dayjs.duration(begin.diff(now)).asDays();
+
+        if(now.isBefore(begin)) {
+          return <div>เริ่มในอีก {Math.floor(daysBegin)} วัน</div>
+        }
+
+        if(begin.isBefore(now)){
+          if (due.isBefore(now)) {
+            return <div className="text-red-500">เลยกำหนด</div>;
+          }
+
+          const diff = dayjs.duration(due.diff(now));
+          const days = diff.asDays();
+
+          if (days >= 1) {
+            return <div>เหลือ {Math.floor(days)} วัน</div>;
+          }
+      
+          const hours = diff.asHours();
+          if (hours >= 1) {
+            return <div>เหลือ {Math.floor(hours)} ชั่วโมง</div>;
+          }
+      
+          const minutes = diff.asMinutes();
+          return <div>เหลือ {Math.floor(minutes)} นาที</div>;
+        }
+      };
+
+      //filter task data
+      const filterLabelMap = {
+        "All": "ทั้งหมด",
+        "myTask": "งานของฉัน",
+        "not turn in": "ยังไม่ส่ง",
+        "pending_review": "รอตรวจสอบ",
+        "rejected": "ไม่ผ่าน",   
+        "completed": "เสร็จแล้ว",
+        "late": "เลยกำหนด",
+      }; 
+
+      const today = new Date();
+
+      const filteredTasks = (
+        taskFilter === "myTask"
+          ? myTasks
+          : taskFilter === "All"
+          ? [...myTasks, ...otherTasks]
+          : [...myTasks, ...otherTasks]
+      )
+        .filter((task) => {
+          if (taskFilter === "All" || taskFilter === "myTask") return true;
+          if (taskFilter === "late") {
+            if (!task.due_date) return false;
+            return (
+              new Date(task.due_date) < today &&
+              task.task_status !== "completed"
+            );
+          }
+          return task.task_status === taskFilter;
+        })
+        .sort((a, b) => {
+          const statusPriority = (status: string) => {
+            if (status === "completed") return 3;
+            if (status === "pending_review") return 2;
+            return 1;
+          };
+
+          const priorityDiff =
+            statusPriority(a.task_status) -
+            statusPriority(b.task_status);
+
+          if (priorityDiff !== 0) return priorityDiff;
+
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+
+          return (
+            new Date(a.due_date).getTime() -
+            new Date(b.due_date).getTime()
+          );
+        });
+
   // Import color utility
   const { getTaskStatusConfig: getUtilityTaskStatusConfig } = require('../../../utils/taskStatusColors');
   
@@ -776,7 +869,7 @@ export default function ProjectDetailPage() {
     return (
       <div 
         key={task.id} 
-        className={`bg-white border border-gray-200 rounded-lg p-5 mb-4 hover:shadow-md hover:border-gray-300 transition-all duration-200 relative group`}
+        className={`bg-white border border-gray-200 rounded-lg p-5 mb-4 hover:shadow-md hover:border-gray-300 hover:bg-gray-100 hover:-translate-y-2 hover:-translate-x-1 transition-all duration-200 relative group`}
         onClick={() => {
           setSelectedTask(task);
           setPopupTask(true);
@@ -792,7 +885,7 @@ export default function ProjectDetailPage() {
         <div className="flex items-start justify-between mb-10">
           <div className="flex-1 truncate">
             <h5 
-              className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-[#50589C] transition-colors leading-tight"
+              className="font-semibold  text-lg cursor-pointer transition-colors leading-tight"
               
             >
               {task.task_name}
@@ -818,7 +911,7 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* Task Details - Compact Layout */}
-        <div className="flex flex-wrap items-center justify-between text-sm text-gray-600 gap-4">
+        <div className="flex flex-wrap items-center justify-between text-sm text-gray-600 gap-4 px-2">
           {/* Status */}
           <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium ${taskStatusConfig.bgColor} ${taskStatusConfig.textColor}`}>
             <TaskStatusIcon status={task.task_status} className="w-4 h-4" />
@@ -826,12 +919,11 @@ export default function ProjectDetailPage() {
           </div>
           
           {/* Due Date */}
-          <div className="flex items-center space-x-2">
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span className="text-gray-700 text-sm">{formatDate(task.begin_date)} - {formatDate(task.due_date)}</span>
-          </div>
+          <div className={`flex flex-row items-center space-x-2 
+            ${task.task_status === "completed" || task.task_status === "pending_review" ? 'hidden' : 'flex'} `}
+          >
+            <span className="text-gray-700 text-sm">{getTimeLeft(task.due_date, task.begin_date)}</span>
+          </div>        
         </div>
       </div>
     );
@@ -1770,15 +1862,15 @@ export default function ProjectDetailPage() {
                 <div>
                   <div className="flex items-center space-x-2 md:space-x-2">
                     <div className="text-2xl mb-1 font-medium text-gray-900">{project.project_name}</div>
-                    {/* <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
-                      {project.project_status}
-                    </span> */}
                     <span className={`flex px-2 py-1 rounded-full text-xs font-medium ${
                       userRole === 'Leader' 
                         ? 'bg-purple-100 text-purple-700 border border-purple-200' 
                         : 'bg-green-100 text-green-700 border border-green-200'
                     }`}>
                       {userRole}
+                    </span>
+                    <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
+                      {project.project_status}
                     </span>
                   </div>
                 </div>
@@ -1827,8 +1919,8 @@ export default function ProjectDetailPage() {
               {/* Tasks Overview */}
               <div className="space-y-4">
                 {/* My Tasks */}
-                <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-100 p-5">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="bg-white border-b-2 border-gray-200 px-3">
+                  <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                         <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1836,10 +1928,65 @@ export default function ProjectDetailPage() {
                         </svg>
                       </div>
                       <div className='flex flex-row items-center space-x-2'>
-                        <h3 className="font-semibold text-gray-900">งานของฉัน</h3>
+                        <h3 className="font-semibold text-gray-900">งานของโปรเจค</h3>
                         <p className="text-sm text-gray-500">( {myTasks.length} งาน )</p>
                       </div>
+                      <div className="relative inline-block">
+                        {/* Trigger */}
+                        <button
+                          onClick={() => setOpenFilter((prev) => !prev)}
+                          className="flex items-center gap-2 py-1 px-4 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-700"
+                        >
+                          <span>{filterLabelMap[taskFilter]}</span>
+
+                          {/* Arrow Icon */}
+                          <svg
+                            className={`w-4 h-4 transition-transform duration-200 ${
+                              openFilter ? "rotate-180" : "rotate-0"
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+
+                        {/* Dropdown */}
+                        <div
+                          className={`
+                            absolute left-0 mt-2 w-36 bg-white rounded-lg shadow-lg z-20
+                            transform transition-all duration-200 origin-top
+                            ${
+                              openFilter
+                                ? "opacity-100 scale-100 translate-y-0"
+                                : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                            }
+                          `}
+                        >
+                          {Object.entries(filterLabelMap).map(([key, label]) => (
+                            <button
+                              key={key}
+                              onClick={() => {
+                                setTaskFilter(key as any);
+                                setOpenFilter(false);
+                              }}
+                              className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100
+                                ${taskFilter === key ? "text-[#50589C] font-medium" : "text-gray-700"}
+                              `}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                     </div>
+                      <div>
+                        <div>
+
+                        </div>
+                      </div>
                     {userRole === 'Leader' && (
                       <div className='relative'>
                         <button 
@@ -1907,9 +2054,9 @@ export default function ProjectDetailPage() {
                     )}                    
                   </div>
                   
-                  <div className="grid grid-cols-1 max-h-[calc(4*90px)] px-2 overflow-y-auto lg:grid-cols-2 gap-2 ">
-                    {myTasks.length > 0 ? (
-                      myTasks.map(task => renderTaskCard(task, true))
+                  <div className="grid grid-cols-1 max-h-[calc(90vh-240px)] px-2 py-2 mb-6 overflow-y-auto lg:grid-cols-2 gap-2 ">
+                    {filteredTasks.length > 0 ? (
+                      filteredTasks.map(task => renderTaskCard(task, true))
                     ) : (
                       <div className="col-span-full text-center py-8 text-gray-500">
                         <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1922,7 +2069,7 @@ export default function ProjectDetailPage() {
                 </div>
 
                 {/* Other Members Tasks */}
-                <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-100 p-5">
+                {/* <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-100 p-5">
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                       <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1947,7 +2094,7 @@ export default function ProjectDetailPage() {
                       </div>
                     )}
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 
