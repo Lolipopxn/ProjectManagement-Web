@@ -2371,6 +2371,8 @@ export default function ProjectDetailPage() {
       {popupTask && (
         <TaskPopup 
           task={selectedTask} 
+          currentUser={user}
+          userRole={userRole}
           onClose={() => {setSelectedTask(null); setPopupTask(false)}} 
           onSubmit={() => {router.push(`/main_pages/projects/${projectId}/tasks/${selectedTask?.documentId}`);}}
         />
