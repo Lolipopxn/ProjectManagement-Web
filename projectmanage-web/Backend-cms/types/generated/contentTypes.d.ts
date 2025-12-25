@@ -512,6 +512,7 @@ export interface ApiNotificationNotification
     type: Schema.Attribute.Enumeration<
       [
         'project_invitation',
+        'project_created',
         'task_assigned',
         'task_status_changed',
         'task_due_soon',
