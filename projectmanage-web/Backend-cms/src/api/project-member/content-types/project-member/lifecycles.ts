@@ -67,11 +67,11 @@ export default {
 
       // Get project creator/owner (sender)
       let sender = null;
-      if ((project as any).created_by_user_id) {
+      if ((project as any).created_by_user) {
         const senderResult = await strapi.entityService.findMany(
           'plugin::users-permissions.user',
           {
-            filters: { id: (project as any).created_by_user_id },
+            filters: { id: (project as any).created_by_user },
             limit: 1,
           }
         );
@@ -82,48 +82,119 @@ export default {
         userEmail: user.email,
         projectName: (project as any).project_name,
         senderName: sender?.username || 'Unknown',
+        senderId: (project as any).created_by_user,
+        recipientId: user.id,
       });
 
-      // Create notification record
-      const notification = await strapi.entityService.create(
-        'api::notification.notification',
-        {
-          data: {
-            type: 'project_invitation',
-            title: 'Added to Project',
-            message: `You have been added to project "${(project as any).project_name}" as ${projectMember.role_in_project}`,
-            recipient: user.id,
-            sender: sender?.id || null,
-            related_project: project.id,
-            is_read: false,
-            email_sent: false,
-          },
-        }
-      );
+      // Check if the recipient is the same as the project creator
+      const isCreator = sender && user.id === sender.id;
 
-      console.log('✅ [LIFECYCLE] Notification created:', notification.id);
+      console.log('🔍 [LIFECYCLE] Checking user type:', {
+        isCreator,
+        creatorId: sender?.id,
+        recipientId: user.id,
+      });
 
-      // Send email
-      const emailService = strapi.service('api::notification.email');
-      const emailSent = await emailService.sendProjectInvitationEmail(
-        user,
-        project,
-        sender
-      );
+      // Determine notification type and email to send
+      let notificationType;
+      let notificationTitle;
+      let notificationMessage;
+      let emailSent = false;
 
-      // Update notification with email status
-      if (emailSent) {
-        await strapi.entityService.update(
+      if (isCreator) {
+        // If recipient is the creator, send "Project Created Successfully" email
+        notificationType = 'project_created';
+        notificationTitle = 'Project Created';
+        notificationMessage = `Your project "${(project as any).project_name}" has been created successfully`;
+
+        console.log('📧 [LIFECYCLE] Sending project created email to creator');
+
+        // Create notification record
+        const notification = await strapi.entityService.create(
           'api::notification.notification',
-          notification.id,
           {
             data: {
-              email_sent: true,
-              email_sent_at: new Date(),
+              type: notificationType,
+              title: notificationTitle,
+              message: notificationMessage,
+              recipient: user.id,
+              sender: user.id, // Creator is both sender and recipient
+              related_project: project.id,
+              is_read: false,
+              email_sent: false,
             },
           }
         );
-        console.log('✅ [LIFECYCLE] Email sent and notification updated');
+
+        console.log('✅ [LIFECYCLE] Notification created:', notification.id);
+
+        // Send project created email
+        const emailService = strapi.service('api::notification.email');
+        emailSent = await emailService.sendProjectCreatedEmail(user, project);
+
+        // Update notification with email status
+        if (emailSent) {
+          await strapi.entityService.update(
+            'api::notification.notification',
+            notification.id,
+            {
+              data: {
+                email_sent: true,
+                email_sent_at: new Date(),
+              },
+            }
+          );
+          console.log('✅ [LIFECYCLE] Project created email sent and notification updated');
+        }
+      } else {
+        // If recipient is a different user, send "Project Invitation" email
+        notificationType = 'project_invitation';
+        notificationTitle = 'Added to Project';
+        notificationMessage = `You have been added to project "${(project as any).project_name}" as ${projectMember.role_in_project}`;
+
+        console.log('📧 [LIFECYCLE] Sending project invitation email to member');
+
+        // Create notification record
+        const notification = await strapi.entityService.create(
+          'api::notification.notification',
+          {
+            data: {
+              type: notificationType,
+              title: notificationTitle,
+              message: notificationMessage,
+              recipient: user.id,
+              sender: sender?.id || null,
+              related_project: project.id,
+              is_read: false,
+              email_sent: false,
+            },
+          }
+        );
+
+        console.log('✅ [LIFECYCLE] Notification created:', notification.id);
+
+        // Send invitation email
+        const emailService = strapi.service('api::notification.email');
+        emailSent = await emailService.sendProjectInvitationEmail(
+          user,
+          project,
+          sender
+        );
+
+        // Update notification with email status
+        if (emailSent) {
+          await strapi.entityService.update(
+            'api::notification.notification',
+            notification.id,
+            {
+              data: {
+                email_sent: true,
+                email_sent_at: new Date(),
+              },
+            }
+          );
+          console.log('✅ [LIFECYCLE] Invitation email sent and notification updated');
+        }
       }
 
     } catch (error) {

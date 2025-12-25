@@ -179,10 +179,53 @@ export async function PUT(
 
     const submission = submissionResponse.data.data;
 
-    // ตรวจสอบว่าผู้ใช้เป็นเจ้าของ submission หรือไม่
-    if (submission.submitted_by_user_id_number !== currentUser.id) {
+    // ดึงข้อมูล task เพื่อหา project
+    let isLeader = false;
+    if (submission.task_document_id) {
+      try {
+        // ใช้ task_document_id แทน task_id_number
+        const taskResponse = await axios.get(
+          `${process.env.STRAPI_BASE_URL}/api/tasks/${submission.task_document_id}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            }
+          }
+        );
+
+        if (taskResponse.data?.data?.project_document_id) {
+          // ใช้ project_document_id แทน project_id_number
+          const projectResponse = await axios.get(
+            `${process.env.STRAPI_BASE_URL}/api/projects/${taskResponse.data.data.project_document_id}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              }
+            }
+          );
+
+          // ตรวจสอบว่าเป็น project leader หรือไม่
+          if (projectResponse.data?.data) {
+            const project = projectResponse.data.data;
+            isLeader = project.created_by_user === currentUser.id || 
+                      project.created_by_user_id === currentUser.id;
+            
+            console.log('Leader check:', {
+              currentUserId: currentUser.id,
+              projectCreator: project.created_by_user || project.created_by_user_id,
+              isLeader
+            });
+          }
+        }
+      } catch (projectError) {
+        console.log('Could not check project leader status:', projectError);
+      }
+    }
+
+    // ตรวจสอบสิทธิ์: เจ้าของ submission หรือ project leader
+    if (submission.submitted_by_user_id_number !== currentUser.id && !isLeader) {
       return NextResponse.json(
-        { success: false, message: 'You can only update your own submissions' },
+        { success: false, message: 'You can only update your own submissions or submissions in your project (if you are the leader)' },
         { status: 403 }
       );
     }

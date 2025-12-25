@@ -648,50 +648,51 @@ export default function TaskDetailPage() {
       
       const newStatus = reviewAction === 'approve' ? 'completed' : 'rejected';
       
-      // Update task status first
+      // ⚠️ สำคัญ: อัปเดต comment ใน submission ก่อน เพื่อให้ backend อ่านได้
+      if (reviewComment.trim()) {
+        try {
+          // หา submission ที่ active อยู่ของ task นี้
+          const activeSubmissions = submissions.filter(s => s.is_active && s.task_document_id === taskDocumentId);
+          
+          if (activeSubmissions.length > 0) {
+            // อัปเดต comment ใน submission ที่ active (ใส่เฉพาะข้อความที่พิมพ์เข้ามา)
+            for (const submission of activeSubmissions) {
+              if (submission.documentId) {
+                await axios.put(`/api/submissions/${submission.documentId}`, {
+                  comments: reviewComment
+                });
+                console.log('Updated review comment in submission BEFORE status change:', submission.documentId);
+              }
+            }
+            
+            // รอให้ข้อมูลถูกบันทึกก่อนเปลี่ยน status
+            await new Promise(resolve => setTimeout(resolve, 300));
+          } else {
+            // ถ้าไม่มี active submission ให้สร้างใหม่ (กรณี edge case)
+            console.log('No active submission found, creating new one for review comment');
+            await axios.post('/api/submissions', {
+              task_document_id: taskDocumentId,
+              task_id_number: task.id,
+              comments: reviewComment,
+              submission_description: '',
+              file_urls: [],
+              submitted_by_user_id_number: task.assigned_to_user_ids_number,
+              is_active: true
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+        } catch (submissionError) {
+          console.error('Error updating review comment in submission:', submissionError);
+        }
+      }
+      
+      // จากนั้นค่อยเปลี่ยน task status (จะ trigger lifecycle hook ที่อ่าน comment)
       const response = await axios.put(`/api/tasks/${task.documentId}`, {
         task_status: newStatus
       });
 
       if (response.data.success) {
-        // Update comment in active submission(s) if review comment is provided
-        if (reviewComment.trim()) {
-          try {
-            // หา submission ที่ active อยู่ของ task นี้
-            const activeSubmissions = submissions.filter(s => s.is_active && s.task_document_id === taskDocumentId);
-            
-            if (activeSubmissions.length > 0) {
-              // อัปเดต comment ใน submission ที่ active
-              const reviewCommentText = `${reviewAction === 'approve' ? '✅ อนุมัติ' : '❌ ไม่อนุมัติ'}: ${reviewComment}`;
-              
-              for (const submission of activeSubmissions) {
-                if (submission.documentId) {
-                  await axios.put(`/api/submissions/${submission.documentId}`, {
-                    comments: reviewCommentText
-                  });
-                  console.log('Updated review comment in submission:', submission.documentId);
-                }
-              }
-            } else {
-              // ถ้าไม่มี active submission ให้สร้างใหม่ (กรณี edge case)
-              console.log('No active submission found, creating new one for review comment');
-              await axios.post('/api/submissions', {
-                task_document_id: taskDocumentId,
-                task_id_number: task.id,
-                comments: `${reviewAction === 'approve' ? '✅ อนุมัติ' : '❌ ไม่อนุมัติ'}: ${reviewComment}`,
-                submission_description: '',
-                file_urls: [],
-                submitted_by_user_id_number: task.assigned_to_user_ids_number,
-                is_active: true
-              });
-            }
-          } catch (submissionError) {
-            console.error('Error updating review comment in submission:', submissionError);
-          }
-        }
-
-        // Update task status in state
-        setTask(prev => prev ? { ...prev, task_status: newStatus } : null);
         
         // Refresh submissions to show updated review comment
         await refreshSubmissions();

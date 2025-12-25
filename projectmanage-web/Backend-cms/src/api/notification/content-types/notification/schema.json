@@ -14,7 +14,7 @@
   "attributes": {
     "type": {
       "type": "enumeration",
-      "enum": ["project_invitation", "task_assigned", "task_status_changed", "task_due_soon"],
+      "enum": ["project_invitation", "project_created", "task_assigned", "task_status_changed", "task_due_soon"],
       "required": true
     },
     "title": {
