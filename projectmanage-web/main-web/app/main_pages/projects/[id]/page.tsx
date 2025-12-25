@@ -731,53 +731,53 @@ export default function ProjectDetailPage() {
   };
 
   const getTimeLeft = (dueDate: string, beginDate: string) => {
-        const now = dayjs();
-        const due = dayjs(dueDate);
-        const begin = dayjs(beginDate);
+    const now = dayjs();
+    const due = dayjs(dueDate);
+    const begin = dayjs(beginDate);
 
-        const daysBegin = dayjs.duration(begin.diff(now)).asDays();
+    const daysBegin = dayjs.duration(begin.diff(now)).asDays();
 
-        if(now.isBefore(begin)) {
-          return <div>เริ่มในอีก {Math.floor(daysBegin)} วัน</div>
-        }
+    if(now.isBefore(begin)) {
+      return <div>เริ่มในอีก {Math.floor(daysBegin)} วัน</div>
+    }
 
-        if(begin.isBefore(now)){
-          if (due.isBefore(now)) {
-            return <div className="text-red-500">เลยกำหนด</div>;
-          }
+    if(begin.isBefore(now)){
+      if (due.isBefore(now)) {
+        return <div className="text-red-500">เลยกำหนด</div>;
+      }
 
-          const diff = dayjs.duration(due.diff(now));
-          const days = diff.asDays();
+      const diff = dayjs.duration(due.diff(now));
+      const days = diff.asDays();
 
-          if (days >= 1) {
-            return <div>เหลือ {Math.floor(days)} วัน</div>;
-          }
+      if (days >= 1) {
+        return <div>เหลือ {Math.floor(days)} วัน</div>;
+      }
       
-          const hours = diff.asHours();
-          if (hours >= 1) {
-            return <div>เหลือ {Math.floor(hours)} ชั่วโมง</div>;
-          }
+      const hours = diff.asHours();
+      if (hours >= 1) {
+        return <div>เหลือ {Math.floor(hours)} ชั่วโมง</div>;
+      }
       
-          const minutes = diff.asMinutes();
-          return <div>เหลือ {Math.floor(minutes)} นาที</div>;
-        }
-      };
+      const minutes = diff.asMinutes();
+      return <div>เหลือ {Math.floor(minutes)} นาที</div>;
+    }
+  };
 
-      //filter task data
-      const filterLabelMap = {
-        "All": "ทั้งหมด",
-        "myTask": "งานของฉัน",
-        "not turn in": "ยังไม่ส่ง",
-        "pending_review": "รอตรวจสอบ",
-        "rejected": "ไม่ผ่าน",   
-        "completed": "เสร็จแล้ว",
-        "late": "เลยกำหนด",
-      }; 
+  //filter task data
+  const filterLabelMap = {
+    "All": "ทั้งหมด",
+    "myTask": "งานของฉัน",
+    "not turn in": "ยังไม่ส่ง",
+    "pending_review": "รอตรวจสอบ",
+    "rejected": "ไม่ผ่าน",   
+    "completed": "เสร็จแล้ว",
+    "late": "เลยกำหนด",
+  }; 
 
-      const today = new Date();
+  const today = new Date();
 
-      const filteredTasks = (
-        taskFilter === "myTask"
+  const filteredTasks = (
+      taskFilter === "myTask"
           ? myTasks
           : taskFilter === "All"
           ? [...myTasks, ...otherTasks]
@@ -2266,7 +2266,13 @@ export default function ProjectDetailPage() {
 
         {ToggleView === 2 && (
           <div>
-            <FreeDragBoard tasks={myTasks} project={project} projectId={projectId}/>
+            <FreeDragBoard 
+              tasks={myTasks} 
+              project={project} 
+              projectId={projectId}
+              SelectedTask={(task: Task) => setSelectedTask(task)}
+              onOpenPopup={() => setPopupTask(true)}
+            />
           </div>
         )}
 

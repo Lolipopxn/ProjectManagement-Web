@@ -87,7 +87,7 @@ export function LeftDraggable({ task, onClickTask}: any) {
 }
 
 // Right Draggable Task
-export function RightDraggable({ task, position, onClickTask }: any) {
+export function RightDraggable({ task, position, onClickTask, onOpenPopup }: any) {
   const { setNodeRef, listeners, attributes, transform, isDragging  } = useDraggable({
     id: task.id,
     data: { from: "right" },
@@ -111,6 +111,7 @@ export function RightDraggable({ task, position, onClickTask }: any) {
       onClick={(e) => {
         e.stopPropagation();
         onClickTask();
+        onOpenPopup();
       }}
     >
       {/* Drag handle */}
