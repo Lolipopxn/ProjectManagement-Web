@@ -18,7 +18,7 @@ import { set } from "date-fns";
 const clamp = (v: number, min: number, max: number) =>
   Math.min(Math.max(v, min), max);
 
-export default function FreeDragBoard({ tasks, project, projectId }: any) {
+export default function FreeDragBoard({ tasks, project, projectId, SelectedTask, onOpenPopup }: any) {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
@@ -42,7 +42,6 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
 
   const [showAddTask, setAddTask] = useState(false);
   const [showAddBoard, setShowAddBoard] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<any | null>(null);
 
   const [contextMenu, setContextMenu] = useState({
     visible: false,
@@ -366,7 +365,8 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
                     key={id}
                     task={task}
                     position={rightBoard[currentBoard][id]}
-                    onClickTask={() => setSelectedTask(task)}
+                    onClickTask={() => SelectedTask(task)}
+                    onOpenPopup={onOpenPopup}
                   />
                 );
               })}
@@ -392,34 +392,7 @@ export default function FreeDragBoard({ tasks, project, projectId }: any) {
             setConfirmDelete={setConfirmDelete}
             onDelete={() => handleDeleteBoard(confirmDelete.boardName as string)}
           />
-        )}
-
-        {selectedTask && (
-          <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-xl w-[400px] shadow-xl truncate">
-              <h2 className="text-lg font-semibold mb-3">{selectedTask.task_name}</h2>
-
-              <p className="text-gray-600 mb-3">{selectedTask.description || 'ไม่มีรายละเอียด'}</p>
-
-              <p className="text-sm text-gray-500">
-                วันที่สร้าง: {dayjs(selectedTask.createdAt).format("DD MMM YYYY")}
-              </p>
-              <p className="text-sm text-gray-500">
-                กำหนดส่ง: {dayjs(selectedTask.due_date).format("DD MMM YYYY")}
-              </p>
-
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={() => setSelectedTask(null)}
-                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
-                >
-                  ปิด
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
+        )}       
 
         <DragOverlay>
           {activeTask ? <TaskCard task={activeTask} overlay /> : null}

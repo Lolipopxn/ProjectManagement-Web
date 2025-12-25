@@ -37,7 +37,14 @@ interface Submission {
   cancelled_at?: string;
 }
 
-export default function TaskPopup({task, onClose, onSubmit}: {task: Task | any, onClose?: () => void, onSubmit?: () => void}) {
+interface User {
+  id: number;
+  documentId?: string;
+  username: string;
+  email: string;
+}
+
+export default function TaskPopup({task, currentUser, userRole, onClose, onSubmit}: {task: Task | any, currentUser: User | null, userRole: string, onClose?: () => void, onSubmit?: () => void}) {
     const [changePage, setChangePage] = useState(0);
     const [submission, setSubmissions] = useState<Submission[]>([]);
     const fetchedRef = useRef(false);
@@ -49,6 +56,16 @@ export default function TaskPopup({task, onClose, onSubmit}: {task: Task | any, 
         month: 'long',
         day: 'numeric',
     });
+    };
+
+    const isTaskOwner = () => {
+        if (!task?.assigned_to_user_ids || !currentUser && userRole === 'Member') return false;
+
+        if(userRole === 'Leader') return true;
+
+        return task.assigned_to_user_ids.some(
+            (u: any) => u.id === currentUser?.id
+        );
     };
 
     useEffect(() => {
@@ -108,9 +125,11 @@ export default function TaskPopup({task, onClose, onSubmit}: {task: Task | any, 
                                 onClick={() => setChangePage(3)}
                                 className={`p-2 bg-white rounded-md  ${changePage === 3 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>สถานะงาน</button>   
                         </div>
+                        
                         <button 
                         onClick={onSubmit}
-                        className='py-2 bg-[#50589C] text-white hover:bg-[#50589C]/90 px-6 rounded-lg scale-90'>
+                        disabled={!isTaskOwner()}
+                        className={`py-2  px-6 rounded-lg scale-90 ${isTaskOwner() ? 'bg-[#50589C] text-white hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}`}>
                             ส่งงาน
                         </button>
                         
