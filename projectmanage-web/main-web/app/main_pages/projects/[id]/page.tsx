@@ -2348,7 +2348,7 @@ export default function ProjectDetailPage() {
         {ToggleView === 2 && (
           <div>
             <FreeDragBoard 
-              tasks={myTasks} 
+              tasks={[...myTasks, ...otherTasks]} 
               project={project} 
               projectId={projectId}
               SelectedTask={(task: Task) => setSelectedTask(task)}
@@ -2360,7 +2360,7 @@ export default function ProjectDetailPage() {
         {ToggleView === 3 && (
           <div className="grid grid-cols-1">
             {/*GanttChart*/}
-            <GanttChart tasks={myTasks} />
+            <GanttChart tasks={[...myTasks, ...otherTasks]} />
           </div> 
         )} 
 
