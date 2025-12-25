@@ -118,6 +118,7 @@ export default function ProjectDetailPage() {
   const [toggleMember, setToggleMember] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
 
+  const allTasks = [...myTasks, ...otherTasks];
   
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -765,6 +766,16 @@ export default function ProjectDetailPage() {
       return <div>เหลือ {Math.floor(minutes)} นาที</div>;
     }
   };
+
+  //Success task
+  const totalTasks = allTasks.length;
+
+  const completedTasks = allTasks.filter(
+    (task) => task.task_status === "completed"
+  ).length;
+
+const progressPercent =
+  totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
   //filter task data
   const filterLabelMap = {
@@ -1925,7 +1936,7 @@ export default function ProjectDetailPage() {
               <div className="space-y-4">
                 {/* My Tasks */}
                 <div className="bg-white border-b-2 border-gray-200 px-3">
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-6 space-x-20">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                         <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2063,11 +2074,27 @@ export default function ProjectDetailPage() {
                       </div>
 
                     </div>
-                      <div>
-                        <div>
 
+                      <div className="flex-1 space-y-1 mb-1">
+                        {/* Label */}
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>ความคืบหน้า</span>
+                          <span>
+                            {completedTasks}/{totalTasks} งาน ({progressPercent}%)
+                          </span>
+                        </div>
+
+                        {/* Progress bar background */}
+                        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                          {/* Progress bar */}
+                          <div
+                            className="h-full bg-green-500 transition-all duration-500"
+                            style={{ width: `${progressPercent}%` }}
+                          />
                         </div>
                       </div>
+
+
                     {userRole === 'Leader' && (
                       <div className='relative'>
                         <button 
