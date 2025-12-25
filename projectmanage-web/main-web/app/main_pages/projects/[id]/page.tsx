@@ -14,7 +14,10 @@ import FreeDragBoard from '@/app/components/task_board/freeDragBoard';
 import TaskPopup from '@/app/components/taskPopup';
 
 import { AiFillReconciliation, AiFillEnvironment, AiFillFileText } from "react-icons/ai";
-import { IoMdClose } from "react-icons/io";
+import { IoMdClose, IoMdPerson } from "react-icons/io";
+import { FaTimes } from "react-icons/fa";
+import { CgSandClock } from "react-icons/cg";
+import { FcSurvey, FcOk, FcHighPriority, FcSearch  } from "react-icons/fc";
 
 // Interface สำหรับ project data
 interface Project {
@@ -769,10 +772,12 @@ export default function ProjectDetailPage() {
     "myTask": "งานของฉัน",
     "not turn in": "ยังไม่ส่ง",
     "pending_review": "รอตรวจสอบ",
-    "rejected": "ไม่ผ่าน",   
+    "rejected": "ไม่ผ่าน",
     "completed": "เสร็จแล้ว",
     "late": "เลยกำหนด",
-  }; 
+  };
+
+  type TaskFilter = keyof typeof filterLabelMap;
 
   const today = new Date();
 
@@ -1955,29 +1960,105 @@ export default function ProjectDetailPage() {
                         {/* Dropdown */}
                         <div
                           className={`
-                            absolute left-0 mt-2 w-36 bg-white rounded-lg shadow-lg z-20
-                            transform transition-all duration-200 origin-top
+                            absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl z-20
+                            border border-gray-100
+                            transform transition-all duration-300 ease-out origin-top
                             ${
                               openFilter
                                 ? "opacity-100 scale-100 translate-y-0"
-                                : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                                : "opacity-0 scale-95 -translate-y-3 pointer-events-none"
                             }
                           `}
                         >
-                          {Object.entries(filterLabelMap).map(([key, label]) => (
-                            <button
-                              key={key}
-                              onClick={() => {
-                                setTaskFilter(key as any);
-                                setOpenFilter(false);
-                              }}
-                              className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100
-                                ${taskFilter === key ? "text-[#50589C] font-medium" : "text-gray-700"}
-                              `}
-                            >
-                              {label}
-                            </button>
-                          ))}
+                          {/* Section: ภาพรวม */}
+                          <div className="px-3 py-2">
+                            <p className="text-xs font-semibold text-gray-400 mb-1">ภาพรวม</p>
+                            {["All", "myTask"].map((key) => (
+                              <button
+                                key={key}
+                                onClick={() => {
+                                  setTaskFilter(key as TaskFilter);
+                                  setOpenFilter(false);
+                                }}
+                                className={`
+                                  w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+                                  transition-all duration-200
+                                  ${
+                                    taskFilter === key
+                                      ? "bg-[#50589C]/10 text-[#50589C] font-medium"
+                                      : "text-gray-700 hover:bg-gray-100"
+                                  }
+                                `}
+                              >
+                                <span className="text-base">
+                                  {key === "All" ? <FcSurvey className="size-5"/> : <IoMdPerson className="size-5"/>}
+                                </span>
+                                {(filterLabelMap as any)[key]}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="h-px bg-gray-100 my-1" />
+
+                          {/* Section: สถานะงาน */}
+                          <div className="px-3 py-2">
+                            <p className="text-xs font-semibold text-gray-400 mb-1">สถานะงาน</p>
+                            {["not turn in", "pending_review", "rejected"].map((key) => (
+                              <button
+                                key={key}
+                                onClick={() => {
+                                  setTaskFilter(key as TaskFilter);
+                                  setOpenFilter(false);
+                                }}
+                                className={`
+                                  w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+                                  transition-all duration-200
+                                  ${
+                                    taskFilter === key
+                                      ? "bg-[#50589C]/10 text-[#50589C] font-medium"
+                                      : "text-gray-700 hover:bg-gray-100"
+                                  }
+                                `}
+                              >
+                                <span className="text-base">
+                                  {key === "not turn in" && <CgSandClock  className="size-5 text-yellow-600"/>}
+                                  {key === "pending_review" && <FcSearch className="size-5"/>}
+                                  {key === "rejected" && <FaTimes  className="size-5 text-red-600"/>}
+                                </span>
+                                {(filterLabelMap as any)[key]}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="h-px bg-gray-100 my-1" />
+
+                          {/* Section: ผลลัพธ์ */}
+                          <div className="px-3 py-2">
+                            <p className="text-xs font-semibold text-gray-400 mb-1">ผลลัพธ์</p>
+                            {["completed", "late"].map((key) => (
+                              <button
+                                key={key}
+                                onClick={() => {
+                                  setTaskFilter(key as TaskFilter);
+                                  setOpenFilter(false);
+                                }}
+                                className={`
+                                  w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+                                  transition-all duration-200
+                                  ${
+                                    taskFilter === key
+                                      ? "bg-[#50589C]/10 text-[#50589C] font-medium"
+                                      : "text-gray-700 hover:bg-gray-100"
+                                  }
+                                `}
+                              >
+                                <span className="text-base">
+                                  {key === "completed" ? <FcOk className="size-5"/> : <FcHighPriority className="size-5"/>}
+                                </span>
+                                {(filterLabelMap as any)[key]}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
