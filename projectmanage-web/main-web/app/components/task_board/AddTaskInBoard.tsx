@@ -134,10 +134,11 @@ export function AddTaskPage({ user, project, projectId, onClose }: {user:number 
 }
 
 //Add Board UI to Right Board
-export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onClose }: any) {
+export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onClose, setIsLoading , isLoading }: any) {
   const [name, setName] = useState("");
 
   const handleAddBoard = () => {
+    setIsLoading(true);
     if (!name.trim()) return;
 
     if (!boards.includes(name)) {
@@ -147,8 +148,6 @@ export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onC
         [name]: {} 
       }));
     }
-
-    onClose();
   };
 
   return (
@@ -173,15 +172,24 @@ export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onC
           />
 
           <div className="flex flex-row justify-end gap-2">
-            <button onClick={onClose} className="px-3 py-1 bg-gray-200 rounded hover:bg-red-400 hover:text-white">
+            <button onClick={onClose} disabled={isLoading} className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-400 hover:text-white">
               ยกเลิก
             </button>
 
             <button
               onClick={handleAddBoard}
-              className="px-3 py-1 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white rounded"
+              className="flex flex-row gap-2 items-center px-3 py-1 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white rounded"
             >
-              สร้าง
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>กำลังสร้าง...</span>
+                </>
+              ) : (
+                <>
+                  <span>เพิ่ม</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -191,11 +199,12 @@ export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onC
   );
 }
 
-export function PopupDeleteBoard ( {confirmDelete, setConfirmDelete, onDelete}: 
+export function PopupDeleteBoard ( {confirmDelete, setConfirmDelete, onDelete, isLoading}: 
   {
     confirmDelete:{ visible: boolean; boardName: string | null },
     setConfirmDelete: any,
     onDelete: () => void
+    isLoading: boolean,
   }
   ) {
 
@@ -211,15 +220,26 @@ export function PopupDeleteBoard ( {confirmDelete, setConfirmDelete, onDelete}:
           <button
             className="px-3 py-1 rounded hover:bg-gray-100 "
             onClick={() => setConfirmDelete({ visible: false, boardName: null })}
+            disabled={isLoading}
           >
             ยกเลิก
           </button>
 
           <button
-            className="px-6 py-1 rounded bg-red-500 hover:bg-red-500/80 text-white"
+            className="flex flex-row gap-2 items-center px-6 py-1 rounded bg-red-500 hover:bg-red-500/80 text-white"
             onClick={onDelete}
+            disabled={isLoading}
           >
-            ลบ
+           {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>กำลังลบ...</span>
+                </>
+              ) : (
+                <>
+                  <span>ลบ</span>
+                </>
+              )}
           </button>
         </div>
       </div>

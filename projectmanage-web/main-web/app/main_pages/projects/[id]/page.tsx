@@ -118,6 +118,8 @@ export default function ProjectDetailPage() {
   const [toggleMember, setToggleMember] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
 
+  const [reload, setReload] = useState(false);
+
   const allTasks = [...myTasks, ...otherTasks];
   
   useEffect(() => {
@@ -324,6 +326,33 @@ export default function ProjectDetailPage() {
       .then((data) => setToken(data.token));
 
   }, [projectId]);
+
+  //reload data
+  useEffect(() => {
+    //reload project
+        const ReloadData = async () => {
+          try {
+            // setLoading(true);
+            setError(null);
+
+            const projectResponse = await axios.get(`/api/projects/${projectId}`);
+            
+            if (projectResponse.data.success && projectResponse.data.project) {
+              setProject(projectResponse.data.project);
+              setReload(false);
+              setLoading(false);
+            } else {
+              setError('ไม่พบข้อมูลโปรเจ็กต์');
+              setReload(false);
+            }
+          }
+          catch(err) {
+            console.error("ดึงไม่สำเร็จ: ", err)
+          }
+      }
+      ReloadData()
+    
+  },[reload]);
 
   // Create task function
   const handleCreateTask = async (taskData: any) => {
@@ -2376,10 +2405,12 @@ const progressPercent =
           <div>
             <FreeDragBoard 
               tasks={[...myTasks, ...otherTasks]} 
-              project={project} 
+              project={project}
               projectId={projectId}
               SelectedTask={(task: Task) => setSelectedTask(task)}
               onOpenPopup={() => setPopupTask(true)}
+              onReload={setReload}
+              isReload={reload}
             />
           </div>
         )}
@@ -2405,7 +2436,6 @@ const progressPercent =
         />
       )}
       
-
       <ProjectChatPopup
         projectSlug={project.slug}
         projectName={project.project_name}

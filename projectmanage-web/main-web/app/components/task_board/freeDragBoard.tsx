@@ -18,7 +18,7 @@ import { set } from "date-fns";
 const clamp = (v: number, min: number, max: number) =>
   Math.min(Math.max(v, min), max);
 
-export default function FreeDragBoard({ tasks, project, projectId, SelectedTask, onOpenPopup }: any) {
+export default function FreeDragBoard({ tasks, project, projectId, SelectedTask, onOpenPopup, onReload, isReload }: any) {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
@@ -122,6 +122,7 @@ export default function FreeDragBoard({ tasks, project, projectId, SelectedTask,
 
     setContextMenu({ visible: false, boardName: "" });
     setConfirmDelete({ visible: false, boardName: null });
+    onReload(true);
   };
 
   const saveTaskPosition = async (
@@ -206,7 +207,6 @@ export default function FreeDragBoard({ tasks, project, projectId, SelectedTask,
         if(!Payload.boards || !Payload.currentBoard) return;
 
         await axios.put("/api/projects/updateBoards", Payload);
-
         console.log("บันทึกบอร์ดสำเร็จ");
       } catch (err) {
         console.error("บันทึกบอร์ดล้มเหลว", err);
@@ -215,6 +215,39 @@ export default function FreeDragBoard({ tasks, project, projectId, SelectedTask,
 
     return () => clearTimeout(updateBoardsToStrapi);
   },[boards, currentBoard]);
+
+  //create board
+  useEffect(() => {
+    if(isReload === true){
+      const createBoardsToStrapi = async () => {
+      try {
+        const Payload: any = {
+          documentId: projectId,
+        };
+
+        if (boards) Payload.boards = boards;
+        if (currentBoard) Payload.currentBoard = currentBoard;
+
+        if(!Payload.boards || !Payload.currentBoard) return;
+
+        await axios.put("/api/projects/updateBoards", Payload);
+        console.log("บันทึกบอร์ดสำเร็จ");
+
+      } catch (err) {
+        console.error("บันทึกบอร์ดล้มเหลว", err);
+      }
+    };
+
+    createBoardsToStrapi();
+    }
+    
+  },[isReload]);
+
+  useEffect(() => {
+    if (isReload === false) {
+      setShowAddBoard(false);
+    }
+  }, [isReload]);
 
   useEffect(() => {
     const closeMenu = () => setContextMenu({ visible: false, boardName: "" });
@@ -384,6 +417,8 @@ export default function FreeDragBoard({ tasks, project, projectId, SelectedTask,
             rightBoard={rightBoard}
             setRightBoard={setRightBoard}
             onClose={() => setShowAddBoard(false)}
+            setIsLoading={onReload}
+            isLoading={isReload}
           />
         )}
         {confirmDelete.visible && (
@@ -391,6 +426,7 @@ export default function FreeDragBoard({ tasks, project, projectId, SelectedTask,
             confirmDelete={confirmDelete}
             setConfirmDelete={setConfirmDelete}
             onDelete={() => handleDeleteBoard(confirmDelete.boardName as string)}
+            isLoading={isReload}
           />
         )}       
 
