@@ -12,6 +12,7 @@ import VoiceRoomButton from "../../../components/VoiceRoomButton";
 import GanttChart from '@/app/components/GanttChart';
 import FreeDragBoard from '@/app/components/task_board/freeDragBoard';
 import TaskPopup from '@/app/components/taskPopup';
+import SkeletonTask from '@/app/components/loading/TaskLoading/skeletonTask';
 
 import { AiFillReconciliation, AiFillEnvironment, AiFillFileText } from "react-icons/ai";
 import { IoMdClose, IoMdPerson } from "react-icons/io";
@@ -101,7 +102,6 @@ export default function ProjectDetailPage() {
   const [userRole, setUserRole] = useState<string>('Member');
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [createTaskLoading, setCreateTaskLoading] = useState(false);
-  const [membersLoading, setMembersLoading] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [removeMemberLoading, setRemoveMemberLoading] = useState<number | string | null>(null);
@@ -119,212 +119,151 @@ export default function ProjectDetailPage() {
   const [openOptions, setOpenOptions] = useState(false);
 
   const [reload, setReload] = useState(false);
+  const [projectLoading, setProjectLoading] = useState(false);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(false);
 
   const allTasks = [...myTasks, ...otherTasks];
   
   useEffect(() => {
-    const fetchProjectData = async () => {
+    if (!projectId) return;
+
+    const fetchAllData = async () => {
+      setLoading(true);
+      setProjectLoading(true);
+      setTasksLoading(true);
+      setError(null);
+
       try {
-        setLoading(true);
-        setError(null);
+        const [projectRes, userRes] = await Promise.all([
+          axios.get(`/api/projects/${projectId}`),
+          axios.get(`/api/auth/me`).catch(() => null),
+        ]);
 
-        // ดึงข้อมูลโปรเจ็กต์
-        const projectResponse = await axios.get(`/api/projects/${projectId}`);
-        
-        if (projectResponse.data.success && projectResponse.data.project) {
-          setProject(projectResponse.data.project);
-        } else {
-          setError('ไม่พบข้อมูลโปรเจ็กต์');
+        const project = projectRes.data?.project;
+        const currentUser = userRes?.data?.user ?? null;
+
+        if (!project) {
+          setError("ไม่พบข้อมูลโปรเจ็กต์");
+          return;
         }
 
-        // ดึงข้อมูลผู้ใช้
-        let currentUser = null;
-        try {
-          const userResponse = await axios.get('/api/auth/me');
-          if (userResponse.data.user) {
-            setUser(userResponse.data.user);
-            currentUser = userResponse.data.user;
-          }
-        } catch (userError) {
-          console.log('Could not fetch user data:', userError);
-        }
+        setProject(project);
+        setProjectLoading(false);
+        setLoading(false);
+        if (currentUser) setUser(currentUser);
 
-        // ดึงข้อมูล project members จริงจาก API
+        setMembersLoading(true);
+
+        let membersWithUserInfo: any[] = [];
+
         try {
-          setMembersLoading(true);
-          const membersResponse = await axios.get(`/api/project-members?projectDocumentId=${projectId}&projectIdNumber=${projectResponse.data.project?.id}`);
-          if (membersResponse.data.success && membersResponse.data.projectMembers) {
-            console.log('Project members data:', membersResponse.data.projectMembers);
-            
-            // แปลงข้อมูลและดึงข้อมูล user สำหรับแต่ละ member
-            const membersWithUserInfo = await Promise.all(
-              membersResponse.data.projectMembers.map(async (member: any) => {
+          const membersRes = await axios.get(
+            `/api/project-members?projectDocumentId=${projectId}&projectIdNumber=${project.id}`
+          );
+
+          if (membersRes.data?.success) {
+            const members = membersRes.data.projectMembers ?? [];
+
+            // ดึง user info พร้อมกัน (parallel)
+            membersWithUserInfo = await Promise.all(
+              members.map(async (member: any) => {
                 try {
-                  // ดึงข้อมูล user สำหรับแต่ละ member
-                  const userResponse = await axios.get(`/api/users?userId=${member.user_id_in_project}`);
+                  const userRes = await axios.get(
+                    `/api/users?userId=${member.user_id_in_project}`
+                  );
+
                   return {
                     ...member,
-                    userInfo: userResponse.data.user || {
-                      id: member.user_id_in_project,
-                      username: `User ${member.user_id_in_project}`,
-                      email: ''
-                    }
+                    userInfo: userRes.data?.user ?? null,
                   };
-                } catch (userError) {
-                  console.error(`Error fetching user ${member.user_id_in_project}:`, userError);
+                } catch {
                   return {
                     ...member,
-                    userInfo: {
-                      id: member.user_id_in_project,
-                      username: `User ${member.user_id_in_project}`,
-                      email: ''
-                    }
+                    userInfo: null,
                   };
                 }
               })
             );
-            
-            setProjectMembers(membersWithUserInfo);
-            
-            // Debug: log member data structure
-            console.log('Member data structure:', membersWithUserInfo[0]);
-            
-            // ตรวจสอบบทบาทของผู้ใช้หลังจากโหลดข้อมูล project members
-            if (currentUser && projectResponse.data.project) {
-              const currentUserId = currentUser.id;
-              const project = projectResponse.data.project;
-              
-              console.log('Checking user role:', {
-                currentUserId,
-                projectCreatedBy: project.created_by_user_id,
-                projectCreatedBy2: project.created_by_user
-              });
-              
-              // ตรวจสอบว่าผู้ใช้เป็นผู้สร้างโปรเจ็กต์หรือไม่
-              const isProjectCreator = project.created_by_user_id === currentUserId || 
-                                     project.created_by_user === currentUserId;
-              
-              console.log('Is project creator:', isProjectCreator);
-              
-              if (isProjectCreator) {
-                console.log('Setting user role to Leader');
-                setUserRole('Leader');
-              } else {
-                // หาบทบาทจาก project members
-                const userMembership = membersWithUserInfo.find(member => 
-                  (member.userInfo?.id || member.user_id_in_project) === currentUserId
-                );
-                
-                console.log('User membership found:', userMembership);
-                
-                if (userMembership) {
-                  setUserRole(userMembership.role_in_project);
-                } else {
-                  setUserRole('Member'); // default role
-                }
-              }
-            }
-          } else {
-            console.log('No project members found, using empty array');
-            setProjectMembers([]);
-            
-            // ตรวจสอบบทบาทเมื่อไม่มี project members
-            if (currentUser && projectResponse.data.project) {
-              const currentUserId = currentUser.id;
-              const project = projectResponse.data.project;
-              
-              console.log('Checking user role (no members):', {
-                currentUserId,
-                projectCreatedBy: project.created_by_user_id,
-                projectCreatedBy2: project.created_by_user
-              });
-              
-              // ตรวจสอบว่าผู้ใช้เป็นผู้สร้างโปรเจ็กต์หรือไม่
-              const isProjectCreator = project.created_by_user_id === currentUserId || 
-                                     project.created_by_user === currentUserId;
-              
-              console.log('Is project creator (no members):', isProjectCreator);
-              
-              if (isProjectCreator) {
-                console.log('Setting user role to Leader (no members)');
-                setUserRole('Leader');
-              } else {
-                setUserRole('Member'); // default role
-              }
-            }
           }
-        } catch (membersError) {
-          console.error('Could not fetch project members:', membersError);
-          setProjectMembers([]);
+        } catch (err) {
+          console.error("Fetch members failed:", err);
         } finally {
+          setProjectMembers(membersWithUserInfo);
           setMembersLoading(false);
         }
 
-        // ดึงข้อมูล tasks จาก Strapi
-        try {
-          const tasksResponse = await axios.get(`/api/tasks?projectDocumentId=${projectId}`);
-          if (tasksResponse.data.success && tasksResponse.data.tasks) {
-            console.log('Tasks data:', tasksResponse.data.tasks);
-            
-            // แยก tasks ตาม assigned user
-            const allTasks = tasksResponse.data.tasks;
-            const currentUserId = currentUser?.id;
-            
-            if (currentUserId) {
-              const userTasks = allTasks.filter((task: Task) => 
-                task.assigned_to_user_ids_number === currentUserId
-              );
-              const otherUserTasks = allTasks.filter((task: Task) => 
-                task.assigned_to_user_ids_number !== currentUserId
-              );
-              
-              console.log(`Found ${userTasks.length} tasks for current user (${currentUserId})`);
-              console.log(`Found ${otherUserTasks.length} tasks for other users`);
-              
-              setMyTasks(userTasks);
-              setOtherTasks(otherUserTasks);
-            } else {
-              // ถ้าไม่มี user ให้แสดงทั้งหมดในส่วน other tasks
-              setOtherTasks(allTasks);
-              setMyTasks([]);
-            }
+        if (currentUser) {
+          const isLeader =
+            project.created_by_user_id === currentUser.id ||
+            project.created_by_user === currentUser.id;
+
+          if (isLeader) {
+            setUserRole("Leader");
           } else {
-            console.log('No tasks found or API error');
-            setMyTasks([]);
-            setOtherTasks([]);
+            const member = membersWithUserInfo.find(
+              (m) =>
+                (m.userInfo?.id ?? m.user_id_in_project) === currentUser.id
+            );
+
+            setUserRole(member?.role_in_project ?? "Member");
           }
-        } catch (tasksError) {
-          console.error('Could not fetch tasks:', tasksError);
-          // ใช้ mock data ถ้าดึงข้อมูลไม่ได้
-          setMyTasks([]);
-          setOtherTasks([]);
         }
 
-      } catch (error: any) {
-        console.error('Error fetching project:', error);
-        
-        if (error.response?.status === 404) {
-          setError('ไม่พบโปรเจ็กต์ที่ระบุ');
-        } else if (error.response?.status === 403) {
-          setError('คุณไม่มีสิทธิ์เข้าถึงโปรเจ็กต์นี้');
-        } else if (error.response?.status === 401) {
-          setError('กรุณาเข้าสู่ระบบ');
-        } else {
-          setError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+        try {
+          const tasksRes = await axios.get(
+            `/api/tasks?projectDocumentId=${projectId}`
+          );
+
+          const tasks = tasksRes.data?.tasks ?? [];
+          const currentUserId = currentUser?.id;
+
+          if (!currentUserId) {
+            setMyTasks([]);
+            setOtherTasks(tasks);
+          } else {
+            setMyTasks(
+              tasks.filter(
+                (t: Task) =>
+                  t.assigned_to_user_ids_number === currentUserId
+              )
+            );
+            setOtherTasks(
+              tasks.filter(
+                (t: Task) =>
+                  t.assigned_to_user_ids_number !== currentUserId
+              )
+            );
+          }
+          setTasksLoading(false);
+        } catch (err) {
+          console.error("Fetch tasks failed:", err);
+          setMyTasks([]);
+          setOtherTasks([]);
+          setTasksLoading(false);
+        }
+      } catch (err: any) {
+        console.error(err);
+
+        switch (err?.response?.status) {
+          case 401:
+            setError("กรุณาเข้าสู่ระบบ");
+            break;
+          case 403:
+            setError("คุณไม่มีสิทธิ์เข้าถึงโปรเจ็กต์นี้");
+            break;
+          case 404:
+            setError("ไม่พบโปรเจ็กต์ที่ระบุ");
+            break;
+          default:
+            setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
         }
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
-    if (projectId) {
-      fetchProjectData();
-    }
-
-    fetch("/api/auth/me")
-      .then((res) => res.json())
-      .then((data) => setToken(data.token));
-
+    fetchAllData();
   }, [projectId]);
 
   //reload data
@@ -340,7 +279,6 @@ export default function ProjectDetailPage() {
             if (projectResponse.data.success && projectResponse.data.project) {
               setProject(projectResponse.data.project);
               setReload(false);
-              setLoading(false);
             } else {
               setError('ไม่พบข้อมูลโปรเจ็กต์');
               setReload(false);
@@ -1900,35 +1838,46 @@ const progressPercent =
           <div className="bg-white border-b-1 border-gray-300 p-4 mb-6">
             <div className="flex flex-col md:flex-row items-center md:justify-between gap-2 md:gap-0">
               {/* Project Info */}
-              <div className="flex items-center space-x-4">
-                <div className="hidden size-9 bg-[#6E8CFB] rounded-sm md:flex items-center justify-center shadow-sm">
-                  <AiFillReconciliation  className='size-6 text-white'/>
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2 md:space-x-2">
-                    <div className="text-2xl mb-1 font-medium text-gray-900">{project.project_name}</div>
-                    <span className={`flex px-2 py-1 rounded-full text-xs font-medium ${
-                      userRole === 'Leader' 
-                        ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-                        : 'bg-green-100 text-green-700 border border-green-200'
-                    }`}>
-                      {userRole}
-                    </span>
-                    <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
-                      {project.project_status}
-                    </span>
+              { !projectLoading ? (
+                <div className="flex items-center space-x-4">
+                  <div className="hidden size-9 bg-[#6E8CFB] rounded-sm md:flex items-center justify-center shadow-sm">
+                    <AiFillReconciliation  className='size-6 text-white'/>
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2 md:space-x-2">
+                      <div className="text-2xl mb-1 font-medium text-gray-900">{project.project_name}</div>
+                      <span className={`flex px-2 py-1 rounded-full text-xs font-medium ${
+                        userRole === 'Leader' 
+                          ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                          : 'bg-green-100 text-green-700 border border-green-200'
+                      }`}>
+                        {userRole}
+                      </span>
+                      <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
+                        {project.project_status}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Date begin - end */}
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center space-x-1">
+                      <svg className="hidden md:inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
+                    </div>
                   </div>
                 </div>
-                {/* Date begin - end */}
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
-                  <div className="flex items-center space-x-1">
-                    <svg className="hidden md:inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
+              ): (
+              <div className="flex items-center space-x-4 animate-pulse">
+                <div className="h-7 w-full bg-gray-200 rounded mb-2" />
+                  <div className="h-4 w-3/4 bg-gray-200 rounded mb-4" />
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full bg-gray-200" />
+                    <div className="h-4 w-24 bg-gray-200 rounded" />
                   </div>
-                </div>
-              </div>
+              </div>)}
+              
 
               <div className='flex flex-row justify-center space-x-2'>
                 {/* overview button */}        
@@ -1955,7 +1904,7 @@ const progressPercent =
             </div>
           </div>
 
-          {ToggleView === 1 && (
+          {ToggleView === 1 && !tasksLoading && (
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Tasks */}
@@ -2401,7 +2350,7 @@ const progressPercent =
             </div>
           </div>)}
 
-        {ToggleView === 2 && (
+        {ToggleView === 2 && !tasksLoading && (
           <div>
             <FreeDragBoard 
               tasks={[...myTasks, ...otherTasks]} 
@@ -2415,12 +2364,17 @@ const progressPercent =
           </div>
         )}
 
-        {ToggleView === 3 && (
+        {ToggleView === 3 && !tasksLoading && (
           <div className="grid grid-cols-1">
             {/*GanttChart*/}
             <GanttChart tasks={[...myTasks, ...otherTasks]} />
           </div> 
         )} 
+
+        {/* loading task */}
+        {tasksLoading && (
+          <SkeletonTask />
+        )}
 
         </div>
       </div>
@@ -2459,6 +2413,7 @@ const progressPercent =
           isLoading={createTaskLoading}
         />
       )}
+
 
       {/* Add Member Modal - Only for Leaders */}
       {userRole === 'Leader' && <AddMemberModal />}
