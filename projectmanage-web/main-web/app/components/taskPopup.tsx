@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios'
+
+import PreviewFile from './previewFile';
+
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
 
@@ -47,6 +50,8 @@ interface User {
 export default function TaskPopup({task, currentUser, userRole, onClose, onSubmit}: {task: Task | any, currentUser: User | null, userRole: string, onClose?: () => void, onSubmit?: () => void}) {
     const [changePage, setChangePage] = useState(0);
     const [submission, setSubmissions] = useState<Submission[]>([]);
+    const [previewFile, setPreviewFile] = useState<string | null>(null);
+    const [isOpenFile, setOpenFile] = useState(false);
     const fetchedRef = useRef(false);
 
     const formatThaiDate = (date?: string) => {
@@ -67,6 +72,7 @@ export default function TaskPopup({task, currentUser, userRole, onClose, onSubmi
             (u: any) => u.id === currentUser?.id
         );
     };
+
 
     useEffect(() => {
         if (fetchedRef.current) return;
@@ -162,13 +168,14 @@ export default function TaskPopup({task, currentUser, userRole, onClose, onSubmi
                         <span className="border-b pb-2 border-gray-200">งานที่ส่งแล้ว</span>
 
                         <div className='px-6 py-4 h-85 w-250 rounded-lg overflow-y-scroll scrollbar-autoHide space-y-4'>
-                            {/* Placeholder submission list */}
+                            {/* submission list */}
                             {submission.length > 0 ? (
                             <div className="flex flex-col space-y-3">
                                 {submission.map((item, index) => (
-                                <div
+                                <button
                                     key={item.id ?? index}
-                                    className="flex flex-col space-y-2 border border-gray-200 rounded-lg p-4"
+                                    onClick={() => { setPreviewFile(item.file_urls? item.file_urls?.[0] : ''), setOpenFile(true)} }
+                                    className="flex flex-col space-y-2 border border-gray-200 rounded-lg p-4 hover:bg-gray-200"
                                 >
                                     <div className="flex flex-row justify-between items-center">
                                     {item.submission_description && (
@@ -183,7 +190,7 @@ export default function TaskPopup({task, currentUser, userRole, onClose, onSubmi
                                         : '-'}
                                     </span>
                                     </div>                               
-                                </div>
+                                </button>
                                 ))}
                             </div>
                             ) : (
@@ -238,6 +245,14 @@ export default function TaskPopup({task, currentUser, userRole, onClose, onSubmi
                     
                 </div>
             </div>
+
+            <PreviewFile 
+                isOpenFile={isOpenFile} 
+                setOpenFile={setOpenFile} 
+                previewFile={previewFile} 
+                setPreviewFile={setPreviewFile}
+            />
+
         </div>
     );
 }

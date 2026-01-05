@@ -5,6 +5,7 @@ import axios from 'axios';
 import ProjectCard from '../../components/ProjectCard';
 
 import { useSidebarStore } from "@/hooks/sidebar";
+import Link from 'next/link';
 
 // Interface สำหรับ project data
 interface Project {
@@ -102,12 +103,13 @@ export default function OverviewPage() {
             {error || 'กรุณาเข้าสู่ระบบ'}
           </h2>
           <p className="text-gray-600 mb-6">คุณต้องเข้าสู่ระบบเพื่อดูข้อมูลโปรเจ็กต์</p>
-          <a 
+          <Link 
             href="/auth_page/login" 
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            prefetch
           >
             เข้าสู่ระบบ
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -142,15 +144,16 @@ export default function OverviewPage() {
                   </svg>
                 </button>
               </div>
-              <a 
+              <Link 
                 href="/main_pages/create-project"
                 className="bg-blue-500 hover:bg-blue-600 shadow-md shadow-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                prefetch
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 <span>New Project</span>
-              </a>
+              </Link>
             </div>
 
             {/* Project Stats Cards */}
@@ -218,10 +221,11 @@ export default function OverviewPage() {
                     project.created_by_user_id === user?.id || project.created_by_user === user?.id
                   )
                   .map((project: Project) => (
-                    <a 
+                    <Link 
                       key={project.id} 
                       href={`/main_pages/projects/${project.documentId || project.id}`}
                       className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 p-6 cursor-pointer"
+                      prefetch
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-2">
@@ -266,7 +270,7 @@ export default function OverviewPage() {
                           <span>{new Date(project.end_date).toLocaleDateString('th-TH')}</span>
                         </div>
                       </div>
-                    </a>
+                    </Link>
                   ))}
                 
                 {/* Empty state for Leader projects */}
@@ -282,15 +286,16 @@ export default function OverviewPage() {
                       </div>
                       <p className="text-gray-700 text-lg font-semibold mb-2">ยังไม่มีโปรเจกต์ที่เป็น Leader</p>
                       <p className="text-gray-500 text-sm mb-4">สร้างโปรเจกต์ใหม่เพื่อเริ่มเป็นผู้นำทีม</p>
-                      <a 
+                      <Link 
                         href="/main_pages/create-project"
                         className="inline-flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 shadow-md shadow-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                        prefetch
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                         <span>สร้างโปรเจกต์ใหม่</span>
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 )}
@@ -326,10 +331,11 @@ export default function OverviewPage() {
                     project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
                   )
                   .map((project: Project) => (
-                    <a 
+                    <Link 
                       key={project.id} 
                       href={`/main_pages/projects/${project.documentId || project.id}`}
                       className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 p-6 cursor-pointer"
+                      prefetch
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-2">
@@ -374,7 +380,7 @@ export default function OverviewPage() {
                           <span>{new Date(project.end_date).toLocaleDateString('th-TH')}</span>
                         </div>
                       </div>
-                    </a>
+                    </Link>
                   ))}
                 
                 {/* Empty state for Member projects */}
