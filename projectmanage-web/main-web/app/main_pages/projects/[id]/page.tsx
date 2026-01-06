@@ -633,10 +633,10 @@ export default function ProjectDetailPage() {
 
   // Remove member function
   const handleRemoveMember = async (member: ProjectMember, memberName: string) => {
-    console.log('=== REMOVE MEMBER DEBUG ===');
-    console.log('handleRemoveMember called with member:', JSON.stringify(member, null, 2));
-    console.log('Member name:', memberName);
-    console.log('Project ID:', projectId);
+    // console.log('=== REMOVE MEMBER DEBUG ===');
+    // console.log('handleRemoveMember called with member:', JSON.stringify(member, null, 2));
+    // console.log('Member name:', memberName);
+    // console.log('Project ID:', projectId);
     
     if (!confirm(`คุณแน่ใจหรือไม่ที่จะนำ ${memberName} ออกจากโปรเจ็กต์นี้?`)) {
       console.log('User cancelled deletion');

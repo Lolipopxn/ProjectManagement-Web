@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios'
 
 import PreviewFile from './previewFile';
+import TaskStatusIcon from './TaskStatusIcon';
 
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
@@ -73,6 +74,20 @@ export default function TaskPopup({task, currentUser, userRole, onClose, onSubmi
         );
     };
 
+    const { getTaskStatusConfig: getUtilityTaskStatusConfig } = require('../utils/taskStatusColors');
+  
+    const getTaskStatusConfig = (status: string) => {
+        const config = getUtilityTaskStatusConfig(status);
+        return {
+        bgColor: config.lightBgColor,
+        borderColor: config.borderColor,
+        textColor: config.textColor,
+        statusText: config.text,
+        statusBg: `${config.lightBgColor} ${config.textColor}`
+        };
+    };
+
+    const getStatus = getTaskStatusConfig(task.task_status);
 
     useEffect(() => {
         if (fetchedRef.current) return;
@@ -203,43 +218,34 @@ export default function TaskPopup({task, currentUser, userRole, onClose, onSubmi
                     )}
 
                     {changePage === 3 && (
-                    <div className='flex flex-col space-y-4 text-lg'>
-                        <span className="border-b pb-2 border-gray-200">สถานะงาน</span>
-
-                        <div className='px-6 py-4 space-y-4'>
-                        {/* Status */}
-                        <div className='flex flex-row justify-between items-center'>
-                            <span className='text-gray-500'>สถานะปัจจุบัน</span>
-                            <span className='px-4 py-1 rounded-full text-sm bg-gray-100 text-gray-700'>
-                            {task.task_status}
-                            </span>
-                        </div>
-
-                        {/* Dates */}
-                        <div className='grid grid-cols-2 gap-4'>
-                            <div className='flex flex-col space-y-1'>
-                            <span className='text-gray-500 text-sm'>วันที่เริ่มงาน</span>
-                            <span className='font-medium'>
-                                {formatThaiDate(task.begin_date)}
-                            </span>
-                            </div>
-
-                            <div className='flex flex-col space-y-1'>
-                            <span className='text-gray-500 text-sm'>กำหนดส่ง</span>
-                            <span className='font-medium'>
-                                {formatThaiDate(task.due_date)}
-                            </span>
-                            </div>
-                        </div>
-
-                        {/* Created */}
-                        <div className='flex flex-row justify-between items-center'>
-                            <span className='text-gray-500'>สร้างเมื่อ</span>
-                            <span className='text-sm text-gray-600'>
-                            {new Date(task.createdAt).toLocaleDateString()}
-                            </span>
-                        </div>
-                        </div>
+                    <div className='flex flex-col items-center space-y-6 text-lg h-full w-full'>
+                        <div className='flex flex-col items-center gap-4 mt-6'>
+                             <TaskStatusIcon status={task.task_status} className="size-12" />
+                            <div className={`${getStatus.textColor} text-lg`}>{getStatus.statusText}</div>
+                        </div> 
+                        <div className='flex flex-col self-start p-2 w-full h-full gap-4'>
+                            <span className='font-bold text-lg'>ประวัติการดำเนินการ</span>
+                            <div className='flex flex-col border-1 border-gray-300 rounded-lg h-full w-full p-4 overflow-y-scroll scrollbar-autoHide'>
+                                {submission.length > 0 ? (
+                                <div className="flex flex-col space-y-3">
+                                    {submission.map((item, index) => (
+                                    <div
+                                        key={item.id ?? index}                              
+                                        className="flex flex-row items-center justify-between space-y-2 border text-sm border-gray-200 rounded-lg p-4"
+                                    >
+                                        {item.submission_description}
+                                        <div>{item.submission_date}</div>
+          
+                                    </div>
+                                    ))}
+                                </div>
+                                ) : (
+                                <div className="text-center text-gray-400 text-sm">
+                                    ไม่มีประวัติการเคลื่อนไหว
+                                </div>
+                                )}                        
+                            </div>                           
+                        </div>                     
                     </div>
                     )}
                     
