@@ -5,6 +5,7 @@ import axios from 'axios'
 
 import PreviewFile from './previewFile';
 import TaskStatusIcon from './TaskStatusIcon';
+import { TaskStatusTimeline } from './TaskStatusTimeline';
 
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
@@ -220,8 +221,8 @@ export default function TaskPopup({task, currentUser, userRole, onClose, onSubmi
                     {changePage === 3 && (
                     <div className='flex flex-col items-center space-y-6 text-lg h-full w-full'>
                         <div className='flex flex-col items-center gap-4 mt-6'>
-                             <TaskStatusIcon status={task.task_status} className="size-12" />
-                            <div className={`${getStatus.textColor} text-lg`}>{getStatus.statusText}</div>
+                             <TaskStatusTimeline currentStatus={task.task_status} />
+                            
                         </div> 
                         <div className='flex flex-col self-start p-2 w-full h-full gap-4'>
                             <span className='font-bold text-lg'>ประวัติการดำเนินการ</span>

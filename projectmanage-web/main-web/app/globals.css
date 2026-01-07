@@ -37,6 +37,27 @@
   background: #9ca3af;
 }
 
+@keyframes flow {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 64px 0;
+  }
+}
+
+.flow-line {
+  background-image: repeating-linear-gradient(
+    90deg,
+    currentColor 0px,
+    currentColor 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  animation: flow 2s linear infinite;
+}
+
+
 /* Custom utilities for enhanced task cards */
 @layer utilities {
   /* Shimmer animation */
