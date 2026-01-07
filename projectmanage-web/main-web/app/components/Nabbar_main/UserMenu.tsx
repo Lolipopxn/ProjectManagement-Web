@@ -13,24 +13,17 @@ interface User {
   email: string;
 }
 
-export default function UserMenu() {
-  const [user, setUser] = useState<User | null>(null);
+interface UserMenuProps {
+  user: User | null;
+  onUserUpdate: (user: User | null) => void;
+}
+
+export default function UserMenu({ user, onUserUpdate }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-      const fetchUserData = async () => {
-        try {
-            const response = await axios.get('/api/auth/me');
-            if(response.data.user) setUser(response.data.user);
-       
-        } catch (error) {
-          console.error("Failed to fetch user data:", error);
-        }
-      };
-
-      fetchUserData();
-  }, []);
+  // ไม่ต้อง fetch user data เอง เพราะได้รับจาก props แล้ว
+  // useEffect สำหรับ fetch user data ถูกลบออก
 
   // Close on outside click and Esc
   useEffect(() => {
@@ -74,8 +67,8 @@ export default function UserMenu() {
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("user");
 
-      // ล้าง state
-      setUser(null);
+      // ล้าง state - ใช้ onUserUpdate แทน setUser
+      onUserUpdate(null);
 
       console.log("Client-side cleanup completed");
 
@@ -93,7 +86,7 @@ export default function UserMenu() {
       localStorage.removeItem("user");
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("user");
-      setUser(null);
+      onUserUpdate(null);
 
       // แม้เกิดข้อผิดพลาดก็ให้ redirect ไปหน้า login
       window.location.href = "/auth_page/login";

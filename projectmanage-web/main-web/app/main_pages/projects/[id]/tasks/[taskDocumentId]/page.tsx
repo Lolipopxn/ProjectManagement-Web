@@ -349,39 +349,31 @@ export default function TaskDetailPage() {
           throw new Error(`Failed to upload ${file.name}`);
         }
       }
-
-        console.log('Creating submission with files...'); // debug
-
-        // สร้าง submission เดียว โดยเก็บหลายไฟล์ใน array
-        const fileUrls = uploadedFiles.map(f => f.fileUrl);
-        const uploadedFileNames = uploadedFiles.map(f => f.fileName).join(', ');
-        
-        const submissionResponse = await axios.post('/api/submissions', {
-          task_document_id: taskDocumentId,
-          task_id_number: task.id,
-          submitted_by_user_id_number: user.id,
-          submission_description: taskComment.trim() || `ส่งงาน: ${uploadedFileNames}`,
-          file_urls: fileUrls, // เก็บเป็น array
-          is_active: true // ส่งงาน = active
-        });
-
-        if (!submissionResponse.data.success) {
-          throw new Error('Failed to create submission');
-        }
-        console.log('Submission created with', fileUrls.length, 'files'); // debug
-      } else {
-        // ถ้าไม่มีไฟล์ - สร้าง submission แบบไม่มีไฟล์
-        console.log('Creating submission without files...'); // debug
-        
-        await axios.post('/api/submissions', {
-          task_document_id: taskDocumentId,
-          task_id_number: task.id,
-          submitted_by_user_id_number: user.id,
-          submission_description: taskComment.trim() || 'ส่งงานโดยไม่แนบไฟล์',
-          file_urls: [], // ไม่มีไฟล์
-          is_active: true
-        });
       }
+
+      console.log('Creating submission...'); // debug
+
+      // สร้าง submission เดียว โดยไม่สนใจว่ามีไฟล์หรือไม่
+      const fileUrls = uploadedFiles.map(f => f.fileUrl);
+      const uploadedFileNames = uploadedFiles.map(f => f.fileName).join(', ');
+      const defaultDescription = uploadedFiles.length > 0 
+        ? `ส่งงาน: ${uploadedFileNames}` 
+        : 'ส่งงานโดยไม่แนบไฟล์';
+      
+      const submissionResponse = await axios.post('/api/submissions', {
+        task_document_id: taskDocumentId,
+        task_id_number: task.id,
+        submitted_by_user_id_number: user.id,
+        submission_description: taskComment.trim() || defaultDescription,
+        file_urls: fileUrls, // เก็บเป็น array (อาจจะว่างได้)
+        is_active: true // ส่งงาน = active
+      });
+
+      if (!submissionResponse.data.success) {
+        throw new Error('Failed to create submission');
+      }
+      
+      console.log('Submission created with', fileUrls.length, 'files'); // debug
 
       console.log('Updating task status...'); // debug
 

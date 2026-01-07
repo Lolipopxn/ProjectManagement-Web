@@ -15,6 +15,7 @@ export default [
     name: 'strapi::cors',
     config: {
       origin: [process.env.APP_ORIGIN],
+      credentials: true, // เพิ่มบรรทัดนี้เพื่อรองรับ cookies
       headers: ['Content-Type', 'Authorization']
     }
   },

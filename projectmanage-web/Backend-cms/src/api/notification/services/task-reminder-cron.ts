@@ -81,25 +81,34 @@ async function checkAndSendReminders(strapi: any, today: Date, daysAhead: number
     for (const task of tasks) {
       try {
         // ตรวจสอบว่าเคยส่ง reminder สำหรับ task นี้แล้วหรือยัง (สำหรับจำนวนวันนี้)
-        const existingNotification = await strapi.entityService.findMany(
+        const todayStart = new Date(today);
+        todayStart.setHours(0, 0, 0, 0);
+        
+        const allNotifications = await strapi.entityService.findMany(
           'api::notification.notification',
           {
             filters: {
-              user_id_number: task.assigned_to_user_ids_number,
-              project_id_number: task.project_id_number,
-              task_id_number: task.id,
               type: 'task_due_reminder',
-              metadata: {
-                $contains: `"daysLeft":${daysAhead}`,
-              },
               createdAt: {
-                $gte: today.toISOString(), // ส่งครั้งเดียวต่อวัน
+                $gte: todayStart.toISOString(),
               },
             },
           }
         );
         
-        if (existingNotification && existingNotification.length > 0) {
+        // เช็คว่ามี notification ที่ส่งไปแล้วสำหรับ task นี้และจำนวนวันนี้หรือไม่
+        const alreadySent = allNotifications?.some(notif => {
+          try {
+            const meta = typeof notif.metadata === 'string' 
+              ? JSON.parse(notif.metadata) 
+              : notif.metadata || {};
+            return meta.taskId === task.id && meta.daysLeft === daysAhead;
+          } catch {
+            return false;
+          }
+        });
+        
+        if (alreadySent) {
           skippedCount++;
           strapi.log.info(`⏭️ Skipping task ${task.id} - reminder already sent today`);
           continue;
@@ -116,13 +125,17 @@ async function checkAndSendReminders(strapi: any, today: Date, daysAhead: number
           continue;
         }
         
-        // ดึงข้อมูลโปรเจ็กต์
+        // ดึงข้อมูลโปรเจ็กต์โดยใช้ project_document_id (Strapi 5)
         let project = null;
         if (task.project_document_id) {
-          project = await strapi.entityService.findOne(
-            'api::project.project',
-            task.project_document_id
-          );
+          try {
+            // ใช้ documentId สำหรับ Strapi 5
+            project = await strapi.documents('api::project.project').findOne({
+              documentId: task.project_document_id,
+            });
+          } catch (err) {
+            strapi.log.warn(`⚠️ Error fetching project ${task.project_document_id}:`, err);
+          }
         }
         
         if (!project) {
@@ -140,25 +153,42 @@ async function checkAndSendReminders(strapi: any, today: Date, daysAhead: number
         
         if (emailSent) {
           // บันทึก notification record
-          await strapi.entityService.create('api::notification.notification', {
-            data: {
-              type: 'task_due_reminder',
-              message: `Task "${task.task_name}" is due in ${daysAhead} ${daysAhead === 1 ? 'day' : 'days'}`,
-              user_id_number: task.assigned_to_user_ids_number,
-              project_id_number: task.project_id_number,
-              task_id_number: task.id,
-              is_read: false,
-              metadata: JSON.stringify({
-                daysLeft: daysAhead,
-                dueDate: task.due_date,
-                taskName: task.task_name,
-                projectName: project.project_name,
-              }),
-            },
-          });
-          
-          sentCount++;
-          strapi.log.info(`✉️ Reminder sent for task "${task.task_name}" (${daysAhead} days left)`);
+          try {
+            // กำหนด urgency title ตามจำนวนวัน
+            const urgencyTitle = daysAhead === 1 ? '🔴 URGENT' : daysAhead === 3 ? '🟠 HIGH PRIORITY' : '🟡 REMINDER';
+            
+            await strapi.documents('api::notification.notification').create({
+              data: {
+                type: 'task_due_reminder',
+                title: `${urgencyTitle}: Task due in ${daysAhead} ${daysAhead === 1 ? 'day' : 'days'}`,
+                message: `Task "${task.task_name}" is due in ${daysAhead} ${daysAhead === 1 ? 'day' : 'days'}`,
+                recipient: task.assigned_to_user_ids_number, // User ID
+                related_project: task.project_id_number, // Project ID
+                is_read: false,
+                email_sent: true,
+                email_sent_at: new Date().toISOString(),
+                metadata: {
+                  taskId: task.id,
+                  taskDocumentId: task.documentId,
+                  daysLeft: daysAhead,
+                  dueDate: task.due_date,
+                  taskName: task.task_name,
+                  projectName: project.project_name,
+                  projectDocumentId: project.documentId,
+                  assignedUserId: task.assigned_to_user_ids_number,
+                  projectId: task.project_id_number,
+                },
+              },
+            });
+            
+            sentCount++;
+            strapi.log.info(`✉️ Reminder sent for task "${task.task_name}" (${daysAhead} days left)`);
+          } catch (notifError) {
+            strapi.log.error(`❌ Error creating notification for task ${task.id}:`, notifError);
+            // Email ส่งสำเร็จแล้ว แต่ไม่สามารถบันทึก notification ได้
+            sentCount++;
+            strapi.log.info(`✉️ Email sent for task "${task.task_name}" but notification record failed`);
+          }
         }
       } catch (taskError) {
         strapi.log.error(`❌ Error processing task ${task.id}:`, taskError);

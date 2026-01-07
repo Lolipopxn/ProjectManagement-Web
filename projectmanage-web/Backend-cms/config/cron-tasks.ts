@@ -131,6 +131,7 @@ async function checkAndSendReminders(strapi: any, today: Date, daysAhead: number
         if (task.project_document_id) {
           try {
             // ใช้ documentId สำหรับ Strapi 5
+            // ไม่ต้อง populate created_by_user เพราะเรามี created_by_user_id อยู่แล้ว
             project = await strapi.documents('api::project.project').findOne({
               documentId: task.project_document_id,
             });
@@ -142,6 +143,33 @@ async function checkAndSendReminders(strapi: any, today: Date, daysAhead: number
         if (!project) {
           strapi.log.warn(`⚠️ Project not found for task ${task.id}`);
           continue;
+        }
+
+        // ค้นหา Project Leader (owner หรือ admin) เพื่อใช้เป็น sender
+        let projectLeaderId = null;
+        try {
+          const projectMembers = await strapi.entityService.findMany(
+            'api::project-member.project-member',
+            {
+              filters: {
+                project_document_id: task.project_document_id,
+                role: {
+                  $in: ['owner', 'admin'], // ค้นหา owner หรือ admin
+                },
+              },
+              sort: { role: 'asc' }, // owner จะมาก่อน admin
+              pagination: { limit: 1 },
+            }
+          );
+
+          if (projectMembers && projectMembers.length > 0) {
+            projectLeaderId = projectMembers[0].user_id_in_project;
+            strapi.log.info(`👤 Found project leader: user ${projectLeaderId} with role ${projectMembers[0].role}`);
+          } else {
+            strapi.log.warn(`⚠️ No project leader found for project ${task.project_document_id}`);
+          }
+        } catch (err) {
+          strapi.log.warn(`⚠️ Error fetching project leader:`, err);
         }
         
         // ส่งอีเมลแจ้งเตือน
@@ -158,31 +186,55 @@ async function checkAndSendReminders(strapi: any, today: Date, daysAhead: number
             // กำหนด urgency title ตามจำนวนวัน
             const urgencyTitle = daysAhead === 1 ? '🔴 URGENT' : daysAhead === 3 ? '🟠 HIGH PRIORITY' : '🟡 REMINDER';
             
-            await strapi.documents('api::notification.notification').create({
-              data: {
-                type: 'task_due_reminder',
-                title: `${urgencyTitle}: Task due in ${daysAhead} ${daysAhead === 1 ? 'day' : 'days'}`,
-                message: `Task "${task.task_name}" is due in ${daysAhead} ${daysAhead === 1 ? 'day' : 'days'}`,
-                is_read: false,
-                metadata: {
-                  taskId: task.id,
-                  daysLeft: daysAhead,
-                  dueDate: task.due_date,
-                  taskName: task.task_name,
-                  taskDocumentId: task.documentId,
-                  projectName: project.project_name,
-                  projectDocumentId: project.documentId,
-                  assignedUserId: task.assigned_to_user_ids_number,
-                  projectId: task.project_id_number,
-                },
+            const notificationData: any = {
+              type: 'task_due_reminder',
+              title: `${urgencyTitle}: Task due in ${daysAhead} ${daysAhead === 1 ? 'day' : 'days'}`,
+              message: `Task "${task.task_name}" is due in ${daysAhead} ${daysAhead === 1 ? 'day' : 'days'}`,
+              is_read: false,
+              email_sent: true,
+              email_sent_at: new Date().toISOString(),
+              metadata: {
+                taskId: task.id,
+                daysLeft: daysAhead,
+                dueDate: task.due_date,
+                taskName: task.task_name,
+                taskDocumentId: task.documentId,
+                projectName: project.project_name,
+                projectDocumentId: project.documentId,
+                assignedUserId: task.assigned_to_user_ids_number,
+                projectId: task.project_id_number,
               },
+            };
+
+            // ใช้ connect สำหรับ relations ใน Strapi 5
+            if (task.assigned_to_user_ids_number) {
+              notificationData.recipient = {
+                connect: [task.assigned_to_user_ids_number]
+              };
+            }
+
+            // ใช้ project leader (owner/admin) เป็น sender
+            if (projectLeaderId) {
+              notificationData.sender = {
+                connect: [projectLeaderId]
+              };
+            }
+
+            if (task.project_id_number) {
+              notificationData.related_project = {
+                connect: [task.project_id_number]
+              };
+            }
+            
+            await strapi.documents('api::notification.notification').create({
+              data: notificationData,
             });
             
             sentCount++;
             strapi.log.info(`✉️ Reminder sent for task "${task.task_name}" (${daysAhead} days left)`);
           } catch (notifError) {
             // แสดง error แบบละเอียด
-            strapi.log.error(`❌ Error creating notification for task ${task.id}:`, JSON.stringify(notifError, null, 2));
+            strapi.log.error(`❌ Error creating notification for task ${task.id}:`, notifError);
             // อีเมลส่งสำเร็จแล้ว แต่ไม่สามารถบันทึก notification ได้
             sentCount++; // นับว่าส่งสำเร็จแล้ว
             strapi.log.info(`✉️ Email sent for task "${task.task_name}" but notification record failed`);
