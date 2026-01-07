@@ -495,6 +495,7 @@ export interface ApiNotificationNotification
     > &
       Schema.Attribute.Private;
     message: Schema.Attribute.Text & Schema.Attribute.Required;
+    metadata: Schema.Attribute.JSON;
     publishedAt: Schema.Attribute.DateTime;
     recipient: Schema.Attribute.Relation<
       'manyToOne',
@@ -516,6 +517,7 @@ export interface ApiNotificationNotification
         'task_assigned',
         'task_status_changed',
         'task_due_soon',
+        'task_due_reminder',
       ]
     > &
       Schema.Attribute.Required;

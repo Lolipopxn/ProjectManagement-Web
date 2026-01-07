@@ -166,6 +166,37 @@ export default ({ strapi }) => ({
   },
 
   /**
+   * Send task due date reminder email to assigned user
+   * @param recipient - User assigned to the task
+   * @param task - Task object
+   * @param project - Project object
+   * @param daysLeft - Number of days left until due date (1, 3, or 7)
+   */
+  async sendTaskDueDateReminderEmail(recipient: any, task: any, project: any, daysLeft: number) {
+    try {
+      if (!recipient.email) {
+        strapi.log.warn(`User ${recipient.id} has no email address`);
+        return false;
+      }
+
+      const emailTemplate = this.getTaskDueDateReminderTemplate(recipient, task, project, daysLeft);
+
+      await strapi.plugins['email'].services.email.send({
+        to: recipient.email,
+        from: process.env.SMTP_USERNAME || 'project.management.std@gmail.com',
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+      });
+
+      strapi.log.info(`✅ Task due date reminder (${daysLeft} days) email sent to ${recipient.email}`);
+      return true;
+    } catch (error) {
+      strapi.log.error('❌ Error sending task due date reminder email:', error);
+      return false;
+    }
+  },
+
+  /**
    * Get project invitation email template - Minimal Modern Design
    */
   getProjectInvitationTemplate(recipient: any, project: any, sender: any) {
@@ -1058,6 +1089,13 @@ export default ({ strapi }) => ({
               color: #1a1a1a;
               margin-bottom: 10px;
               letter-spacing: -0.2px;
+            }
+            
+            .task-desc {
+              font-size: 14px;
+              color: #555555;
+              line-height: 1.6;
+              margin-bottom: 18px;
             }
             
             .meta-table {
@@ -2476,6 +2514,463 @@ export default ({ strapi }) => ({
             <div class="footer">
               <div class="footer-text">
                 You received this email because you created a new project in Project Management System.
+              </div>
+                            
+              <div class="footer-nav">
+                <a href="${frontendUrl}">Dashboard</a>
+                <a href="${frontendUrl}/settings">Settings</a>
+                <a href="${frontendUrl}/help">Help</a>
+              </div>
+              
+              <div class="footer-copy">
+                &copy; ${new Date().getFullYear()} Project Management System. All rights reserved.
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+  },
+
+  /**
+   * Get task due date reminder email template - Orange/Yellow Theme
+   */
+  getTaskDueDateReminderTemplate(recipient: any, task: any, project: any, daysLeft: number) {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const taskName = task.task_name || 'a task';
+    const projectName = project.project_name || project.name || 'a project';
+    const projectDocId = project.documentId;
+    const taskDocumentId = task.documentId;
+    const recipientName = recipient.username || 'there';
+    const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : null;
+    
+    // กำหนดสีและข้อความตามจำนวนวันที่เหลือ
+    const getUrgencyConfig = (days: number) => {
+      if (days === 1) {
+        return {
+          bg: '#ffebee',
+          border: '#c62828',
+          buttonBg: '#ffebee',
+          buttonColor: '#c62828',
+          urgencyText: 'URGENT',
+          urgencyBg: '#c62828',
+          urgencyColor: '#ffffff',
+          messageText: `The task <strong>${taskName}</strong> is due <strong>tomorrow</strong>! Please make sure to complete it on time.`
+        };
+      } else if (days === 3) {
+        return {
+          bg: '#fff3e0',
+          border: '#f57c00',
+          buttonBg: '#fff3e0',
+          buttonColor: '#f57c00',
+          urgencyText: 'HIGH PRIORITY',
+          urgencyBg: '#f57c00',
+          urgencyColor: '#ffffff',
+          messageText: `The task <strong>${taskName}</strong> is due in <strong>3 days</strong>. Please plan your time accordingly.`
+        };
+      } else { // 7 days
+        return {
+          bg: '#fff9c4',
+          border: '#f9a825',
+          buttonBg: '#fff9c4',
+          buttonColor: '#f57f17',
+          urgencyText: 'REMINDER',
+          urgencyBg: '#f9a825',
+          urgencyColor: '#ffffff',
+          messageText: `The task <strong>${taskName}</strong> is due in <strong>7 days</strong>. Start planning your work to meet the deadline.`
+        };
+      }
+    };
+    
+    const urgency = getUrgencyConfig(daysLeft);
+    
+    return {
+      subject: `Reminder: "${taskName}" is due in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Task Due Date Reminder</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Helvetica Neue', sans-serif;
+              line-height: 1.6;
+              color: #1a1a1a;
+              background-color: #f5f5f5;
+              padding: 40px 20px;
+            }
+            
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              background: #ffffff;
+              border-radius: 4px;
+              overflow: hidden;
+              border: 1px solid #e0e0e0;
+            }
+            
+            .header {
+              background: #ffffff;
+              padding: 40px 40px 30px;
+              border-bottom: 1px solid #eeeeee;
+            }
+            
+            .header h1 {
+              font-size: 22px;
+              font-weight: 600;
+              color: #1a1a1a;
+              margin: 0 0 6px 0;
+              letter-spacing: -0.3px;
+            }
+            
+            .header p {
+              font-size: 14px;
+              color: #666666;
+              margin: 0;
+            }
+            
+            .content {
+              padding: 35px 40px;
+            }
+            
+            .greeting {
+              font-size: 14px;
+              color: #333333;
+              margin-bottom: 25px;
+            }
+            
+            .reminder-message {
+              background: ${urgency.bg};
+              border-left: 3px solid ${urgency.border};
+              padding: 20px;
+              margin: 25px 0;
+              position: relative;
+            }
+            
+            .reminder-message p {
+              font-size: 14px;
+              color: #1a1a1a;
+              line-height: 1.6;
+              margin: 0;
+            }
+            
+            .reminder-message strong {
+              font-weight: 600;
+            }
+            
+            .urgency-badge {
+              display: inline-block;
+              background: ${urgency.urgencyBg};
+              color: ${urgency.urgencyColor};
+              font-size: 10px;
+              font-weight: 600;
+              padding: 4px 10px;
+              border-radius: 3px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-bottom: 12px;
+            }
+            
+            .task-details {
+              margin: 30px 0;
+            }
+            
+            .label {
+              font-size: 11px;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.8px;
+              color: #999999;
+              margin-bottom: 10px;
+            }
+            
+            .task-title {
+              font-size: 18px;
+              font-weight: 600;
+              color: #1a1a1a;
+              margin-bottom: 10px;
+              letter-spacing: -0.2px;
+            }
+            
+            .task-desc {
+              font-size: 14px;
+              color: #555555;
+              line-height: 1.6;
+              margin-bottom: 18px;
+            }
+            
+            .meta-table {
+              border-top: 1px solid #eeeeee;
+              padding-top: 15px;
+            }
+            
+            .meta-row {
+              display: flex;
+              padding: 5px 0;
+            }
+            
+            .meta-key {
+              font-size: 13px;
+              color: #666666;
+              width: 110px;
+              flex-shrink: 0;
+            }
+            
+            .meta-val {
+              font-size: 13px;
+              color: #1a1a1a;
+              font-weight: 500;
+            }
+            
+            .due-date-highlight {
+              color: ${urgency.border};
+              font-weight: 600;
+            }
+            
+            .countdown-box {
+              background: #fafafa;
+              border: 2px solid ${urgency.border};
+              border-radius: 4px;
+              padding: 20px;
+              margin: 25px 0;
+              text-align: center;
+            }
+            
+            .countdown-box h3 {
+              font-size: 14px;
+              color: #666666;
+              margin-bottom: 8px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            
+            .countdown-number {
+              font-size: 48px;
+              font-weight: 700;
+              color: ${urgency.border};
+              line-height: 1;
+              margin: 8px 0;
+            }
+            
+            .countdown-label {
+              font-size: 16px;
+              color: #666666;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            
+            .separator {
+              height: 1px;
+              background: #eeeeee;
+              margin: 30px 0;
+            }
+            
+            .action-area {
+              text-align: center;
+              margin: 35px 0 30px;
+            }
+            
+            .btn {
+              display: inline-block;
+              padding: 12px 30px;
+              background: ${urgency.buttonBg};
+              color: ${urgency.buttonColor};
+              text-decoration: none;
+              border-radius: 3px;
+              font-size: 13px;
+              font-weight: 500;
+              letter-spacing: 0.3px;
+            }
+            
+            .btn:hover {
+              opacity: 0.9;
+            }
+            
+            .link-box {
+              margin-top: 18px;
+              padding: 14px;
+              background: #fafafa;
+              border-radius: 3px;
+            }
+            
+            .link-box p {
+              font-size: 11px;
+              color: #666666;
+              margin: 0 0 6px 0;
+            }
+            
+            .link-box a {
+              font-size: 11px;
+              color: #333333;
+              word-break: break-all;
+              text-decoration: none;
+            }
+            
+            .footer {
+              background: #fafafa;
+              padding: 30px 40px;
+              border-top: 1px solid #eeeeee;
+            }
+            
+            .footer-text {
+              font-size: 12px;
+              color: #666666;
+              line-height: 1.5;
+            }
+            
+            .footer-nav {
+              margin-top: 14px;
+            }
+            
+            .footer-nav a {
+              color: #333333;
+              text-decoration: none;
+              font-size: 12px;
+              margin-right: 14px;
+            }
+            
+            .footer-copy {
+              margin-top: 18px;
+              font-size: 11px;
+              color: #999999;
+            }
+            
+            @media only screen and (max-width: 600px) {
+              body {
+                padding: 20px 10px;
+              }
+              
+              .header {
+                padding: 30px 24px 24px;
+              }
+              
+              .content {
+                padding: 28px 24px;
+              }
+              
+              .footer {
+                padding: 24px;
+              }
+              
+              .reminder-message {
+                padding: 16px;
+              }
+              
+              .countdown-box {
+                padding: 16px;
+              }
+              
+              .countdown-number {
+                font-size: 36px;
+              }
+              
+              .btn {
+                display: block;
+                padding: 12px 20px;
+              }
+              
+              .meta-row {
+                flex-direction: column;
+              }
+              
+              .meta-key {
+                width: 100%;
+                font-size: 12px;
+                margin-bottom: 2px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <!-- Header -->
+            <div class="header">
+              <h1>Task Due Date Reminder</h1>
+              <p>Your task deadline is approaching</p>
+            </div>
+            
+            <!-- Content -->
+            <div class="content">
+              <div class="greeting">
+                Hi <strong>${recipientName}</strong>,
+              </div>
+              
+              <!-- Reminder Message -->
+              <div class="reminder-message">
+                <div class="urgency-badge">${urgency.urgencyText}</div>
+                <p>${urgency.messageText}</p>
+              </div>
+              
+              <!-- Countdown -->
+              <div class="countdown-box">
+                <h3>Time Remaining</h3>
+                <div class="countdown-number">${daysLeft}</div>
+                <div class="countdown-label">${daysLeft === 1 ? 'DAY' : 'DAYS'} LEFT</div>
+              </div>
+              
+              <!-- Task Info -->
+              <div class="task-details">
+                <div class="label">Task Details</div>
+                <div class="task-title">${taskName}</div>
+                ${task.description ? `
+                  <div class="task-desc">${task.description}</div>
+                ` : ''}
+                
+                <div class="meta-table">
+                  <div class="meta-row">
+                    <div class="meta-key">Project</div>
+                    <div class="meta-val">${projectName}</div>
+                  </div>
+                  ${dueDate ? `
+                    <div class="meta-row">
+                      <div class="meta-key">Due Date</div>
+                      <div class="meta-val due-date-highlight">${dueDate}</div>
+                    </div>
+                  ` : ''}
+                  <div class="meta-row">
+                    <div class="meta-key">Status</div>
+                    <div class="meta-val">${task.task_status || 'In Progress'}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="separator"></div>
+              
+              <!-- Action -->
+              <div class="action-area">
+                <a href="${frontendUrl}/main_pages/projects/${projectDocId}/tasks/${taskDocumentId}" class="btn">
+                  VIEW TASK
+                </a>
+                
+                <div class="link-box">
+                  <p>Or copy this link:</p>
+                  <a href="${frontendUrl}/main_pages/projects/${projectDocId}/tasks/${taskDocumentId}">
+                    ${frontendUrl}/main_pages/projects/${projectDocId}/tasks/${taskDocumentId}
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+              <div class="footer-text">
+                You received this email as a reminder that your task deadline is approaching. 
+                Make sure to complete your work before the due date.
               </div>
               
               <div class="footer-nav">

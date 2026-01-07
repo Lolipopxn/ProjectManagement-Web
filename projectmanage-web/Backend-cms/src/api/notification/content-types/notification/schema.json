@@ -14,7 +14,7 @@
   "attributes": {
     "type": {
       "type": "enumeration",
-      "enum": ["project_invitation", "project_created", "task_assigned", "task_status_changed", "task_due_soon"],
+      "enum": ["project_invitation", "project_created", "task_assigned", "task_status_changed", "task_due_soon", "task_due_reminder"],
       "required": true
     },
     "title": {
@@ -50,6 +50,10 @@
     },
     "email_sent_at": {
       "type": "datetime"
+    },
+    "metadata": {
+      "type": "json",
+      "required": false
     }
   }
 }
