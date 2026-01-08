@@ -665,6 +665,12 @@ export interface ApiSubmissionSubmission extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    reviewed_at: Schema.Attribute.DateTime;
+    reviewed_by_user_id: Schema.Attribute.Integer;
+    review_status: Schema.Attribute.Enumeration<
+      ['pending', 'approved', 'rejected']
+    > &
+      Schema.Attribute.DefaultTo<'pending'>;
     submission_date: Schema.Attribute.DateTime;
     submission_description: Schema.Attribute.Text;
     submitted_by_user_id: Schema.Attribute.Relation<

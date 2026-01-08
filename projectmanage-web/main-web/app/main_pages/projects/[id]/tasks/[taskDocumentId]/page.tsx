@@ -19,6 +19,9 @@ interface Submission {
   file_urls?: string[]; // เปลี่ยนเป็น array ของ URLs
   is_active: boolean; // true = ส่งงาน, false = ยกเลิกการส่ง
   cancelled_at?: string; // เวลาที่ยกเลิกการส่งงาน
+  review_status?: 'pending' | 'approved' | 'rejected'; // สถานะการตรวจสอบ
+  reviewed_at?: string; // เวลาที่ตรวจสอบ
+  reviewed_by_user_id?: number; // ID ของผู้ตรวจสอบ
   submittedByUser?: {
     id: number;
     username: string;
@@ -131,6 +134,7 @@ export default function TaskDetailPage() {
   // Task management states
   const [showTaskMenu, setShowTaskMenu] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
 
   // Handle file selection (verify file then open modal)
   const handleFileSelect = (file: File) => {
@@ -475,6 +479,41 @@ export default function TaskDetailPage() {
     return fileNames[index] || originalName;
   };
 
+  // Helper function to get full file URL
+  const getFileUrl = (fileUrl: string) => {
+    // ถ้า URL เป็น absolute URL แล้ว (ขึ้นต้นด้วย http:// หรือ https://) ให้ใช้เลย
+    if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+      return fileUrl;
+    }
+    
+    // ถ้า URL ขึ้นต้นด้วย /uploads แล้ว ให้เชื่อมกับ backend URL
+    if (fileUrl.startsWith('/uploads')) {
+      return `${process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'}${fileUrl}`;
+    }
+    
+    // ถ้าไม่มี /uploads ให้เพิ่มเข้าไป
+    const cleanUrl = fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`;
+    return `${process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'}/uploads${cleanUrl}`;
+  };
+
+  // Helper function to extract filename from URL
+  const getFileNameFromUrl = (fileUrl: string) => {
+    try {
+      // ถ้า URL เป็น string ว่าง ให้ return ค่าเริ่มต้น
+      if (!fileUrl) return 'unknown-file';
+      
+      // แยก URL และดึงชื่อไฟล์
+      const urlParts = fileUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      
+      // Decode URI component เพื่อแสดงชื่อภาษาไทยได้ถูกต้อง
+      return decodeURIComponent(fileName);
+    } catch (error) {
+      console.error('Error extracting filename:', error);
+      return fileUrl.split('/').pop() || 'unknown-file';
+    }
+  };
+
   // Handle cancel submission (ยกเลิกการเลือกไฟล์ทั้งหมด)
   const handleCancelSubmission = () => {
     setSelectedFiles([]);
@@ -633,7 +672,7 @@ export default function TaskDetailPage() {
 
   // Handle review task (for Leaders)
   const handleReviewTask = async () => {
-    if (!task?.documentId || !reviewAction) return;
+    if (!task?.documentId || !reviewAction || !user) return;
 
     try {
       setReviewLoading(true);
@@ -641,42 +680,44 @@ export default function TaskDetailPage() {
       const newStatus = reviewAction === 'approve' ? 'completed' : 'rejected';
       
       // ⚠️ สำคัญ: อัปเดต comment ใน submission ก่อน เพื่อให้ backend อ่านได้
-      if (reviewComment.trim()) {
-        try {
-          // หา submission ที่ active อยู่ของ task นี้
-          const activeSubmissions = submissions.filter(s => s.is_active && s.task_document_id === taskDocumentId);
-          
-          if (activeSubmissions.length > 0) {
-            // อัปเดต comment ใน submission ที่ active (ใส่เฉพาะข้อความที่พิมพ์เข้ามา)
-            for (const submission of activeSubmissions) {
-              if (submission.documentId) {
-                await axios.put(`/api/submissions/${submission.documentId}`, {
-                  comments: reviewComment
-                });
-                console.log('Updated review comment in submission BEFORE status change:', submission.documentId);
-              }
+      try {
+        // หา submission ที่ active อยู่ของ task นี้
+        const activeSubmissions = submissions.filter(s => s.is_active && s.task_document_id === taskDocumentId);
+        
+        if (activeSubmissions.length > 0) {
+          // อัปเดต comment และ review status ใน submission ที่ active
+          for (const submission of activeSubmissions) {
+            if (submission.documentId) {
+              await axios.put(`/api/submissions/${submission.documentId}`, {
+                comments: reviewComment.trim() || null,
+                review_status: reviewAction === 'approve' ? 'approved' : 'rejected',
+                reviewed_at: new Date().toISOString(),
+                reviewed_by_user_id: user.id
+              });
             }
-            
-            // รอให้ข้อมูลถูกบันทึกก่อนเปลี่ยน status
-            await new Promise(resolve => setTimeout(resolve, 300));
-          } else {
-            // ถ้าไม่มี active submission ให้สร้างใหม่ (กรณี edge case)
-            console.log('No active submission found, creating new one for review comment');
-            await axios.post('/api/submissions', {
-              task_document_id: taskDocumentId,
-              task_id_number: task.id,
-              comments: reviewComment,
-              submission_description: '',
-              file_urls: [],
-              submitted_by_user_id_number: task.assigned_to_user_ids_number,
-              is_active: true
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, 300));
           }
-        } catch (submissionError) {
-          console.error('Error updating review comment in submission:', submissionError);
+          
+          // รอให้ข้อมูลถูกบันทึกก่อนเปลี่ยน status
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } else {
+          // ถ้าไม่มี active submission ให้สร้างใหม่ (กรณี edge case)
+          await axios.post('/api/submissions', {
+            task_document_id: taskDocumentId,
+            task_id_number: task.id,
+            comments: reviewComment.trim() || null,
+            submission_description: '',
+            file_urls: [],
+            submitted_by_user_id_number: task.assigned_to_user_ids_number,
+            is_active: true,
+            review_status: reviewAction === 'approve' ? 'approved' : 'rejected',
+            reviewed_at: new Date().toISOString(),
+            reviewed_by_user_id: user.id
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
+      } catch (submissionError) {
+        console.error('Error updating review comment in submission:', submissionError);
       }
       
       // จากนั้นค่อยเปลี่ยน task status (จะ trigger lifecycle hook ที่อ่าน comment)
@@ -685,16 +726,46 @@ export default function TaskDetailPage() {
       });
 
       if (response.data.success) {
+        // 🔔 ส่ง notification ไปยังผู้ที่ส่งงาน
+        try {
+          if (task.assigned_to_user_ids_number && project?.id) {
+            const notificationTitle = reviewAction === 'approve' 
+              ? `✅ งาน "${task.task_name}" ได้รับการอนุมัติ`
+              : `❌ งาน "${task.task_name}" ไม่ได้รับการอนุมัติ`;
+            
+            const notificationMessage = reviewAction === 'approve'
+              ? `งานของคุณได้รับการอนุมัติจาก Leader แล้ว${reviewComment.trim() ? `\n\nความคิดเห็น: ${reviewComment.trim()}` : ''}`
+              : `งานของคุณไม่ได้รับการอนุมัติ กรุณาแก้ไขและส่งใหม่${reviewComment.trim() ? `\n\nเหตุผล: ${reviewComment.trim()}` : ''}`;
+
+            await axios.post('/api/notifications', {
+              type: 'task_status_changed',
+              title: notificationTitle,
+              message: notificationMessage,
+              recipient: task.assigned_to_user_ids_number,
+              sender: user.id,
+              related_project: project.id,
+              related_task: task.id,
+              link: `/main_pages/projects/${projectId}/tasks/${taskDocumentId}`
+            });
+          }
+        } catch (notifError) {
+          console.error('Error sending notification:', notifError);
+          // ไม่ต้อง block การทำงาน ถ้า notification ส่งไม่สำเร็จ
+        }
         
-        // Refresh submissions to show updated review comment
-        await refreshSubmissions();
-        
-        // Close modal and reset
+        // Close modal first
         setShowReviewModal(false);
         setReviewAction(null);
         setReviewComment('');
         
+        // Show success message
         alert(reviewAction === 'approve' ? 'อนุมัติงานเรียบร้อยแล้ว' : 'ไม่อนุมัติงาน กรุณาแจ้งให้ผู้ส่งงานแก้ไข');
+        
+        // Refresh all data - รอให้ alert ถูกปิดก่อน
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Reload page to show updated data
+        window.location.reload();
       } else {
         alert('เกิดข้อผิดพลาดในการตรวจสอบงาน');
       }
@@ -726,22 +797,34 @@ export default function TaskDetailPage() {
         setLoading(true);
         setError(null);
 
-        // ดึงข้อมูลผู้ใช้ปัจจุบัน
+        // 🚀 เรียก API แบบ parallel เพื่อเพิ่มความเร็ว
+        const [userResponse, taskResponse, projectResponse, membersResponse] = await Promise.all([
+          // ดึงข้อมูลผู้ใช้ปัจจุบัน
+          axios.get('/api/auth/me').catch(() => ({ data: { user: null } })),
+          // ดึงข้อมูล Task
+          axios.get(`/api/tasks?projectDocumentId=${projectId}`),
+          // ดึงข้อมูลโปรเจ็กต์
+          axios.get(`/api/projects/${projectId}`),
+          // ดึงข้อมูล project members
+          axios.get(`/api/project-members?projectDocumentId=${projectId}`).catch(() => ({ data: { success: false } }))
+        ]);
+
+        // ตั้งค่า current user
         let currentUser = null;
-        try {
-          const userResponse = await axios.get('/api/auth/me');
-          if (userResponse.data.user) {
-            setUser(userResponse.data.user);
-            currentUser = userResponse.data.user;
-          }
-        } catch (userError) {
-          console.log('Could not fetch user data:', userError);
+        if (userResponse.data.user) {
+          setUser(userResponse.data.user);
+          currentUser = userResponse.data.user;
         }
 
-        // ดึงข้อมูล Task
-        const taskResponse = await axios.get(`/api/tasks?projectDocumentId=${projectId}`);
+        // ตั้งค่า project
+        if (projectResponse.data.success && projectResponse.data.project) {
+          setProject(projectResponse.data.project);
+        } else {
+          setError('ไม่พบข้อมูลโปรเจ็กต์');
+        }
+
+        // ประมวลผล Task
         let foundTask = null;
-        
         if (taskResponse.data.success && taskResponse.data.tasks) {
           foundTask = taskResponse.data.tasks.find((t: Task) => t.documentId === taskDocumentId);
           
@@ -756,7 +839,7 @@ export default function TaskDetailPage() {
                   setAssignedUser(assignedUserResponse.data.user);
                 }
               } catch (assignedUserError) {
-                console.log('Could not fetch assigned user data:', assignedUserError);
+                // Silent error - assigned user data is optional
               }
             }
           } else {
@@ -766,71 +849,78 @@ export default function TaskDetailPage() {
           setError('ไม่สามารถดึงข้อมูล Tasks ได้');
         }
 
-        // ดึงข้อมูลโปรเจ็กต์
-        const projectResponse = await axios.get(`/api/projects/${projectId}`);
-        if (projectResponse.data.success && projectResponse.data.project) {
-          setProject(projectResponse.data.project);
-        } else {
-          setError('ไม่พบข้อมูลโปรเจ็กต์');
-        }
-
-        // ดึงข้อมูล project members
-        try {
-          const membersResponse = await axios.get(`/api/project-members?projectDocumentId=${projectId}`);
-          if (membersResponse.data.success && membersResponse.data.projectMembers) {
-            const membersWithUserInfo = await Promise.all(
-              membersResponse.data.projectMembers.map(async (member: any) => {
-                try {
-                  const userResponse = await axios.get(`/api/users?userId=${member.user_id_in_project}`);
-                  return {
-                    ...member,
-                    userInfo: userResponse.data.user || {
-                      id: member.user_id_in_project,
-                      username: `User ${member.user_id_in_project}`,
-                      email: ''
-                    }
-                  };
-                } catch (userError) {
-                  return {
-                    ...member,
-                    userInfo: {
-                      id: member.user_id_in_project,
-                      username: `User ${member.user_id_in_project}`,
-                      email: ''
-                    }
-                  };
-                }
-              })
-            );
-            setProjectMembers(membersWithUserInfo);
-            
-            // ตรวจสอบบทบาทของผู้ใช้
-            if (currentUser && projectResponse.data.project) {
-              const currentUserId = currentUser.id;
-              const project = projectResponse.data.project;
-              
-              // ตรวจสอบว่าผู้ใช้เป็นผู้สร้างโปรเจ็กต์หรือไม่
-              const isProjectCreator = project.created_by_user_id === currentUserId || 
-                                     project.created_by_user === currentUserId;
-              
-              if (isProjectCreator) {
-                setUserRole('Leader');
-              } else {
-                // หาบทบาทจาก project members
-                const userMembership = membersWithUserInfo.find(member => 
-                  (member.userInfo?.id || member.user_id_in_project) === currentUserId
-                );
-                
-                if (userMembership) {
-                  setUserRole(userMembership.role_in_project);
+        // ประมวลผล project members
+        if (membersResponse.data.success && membersResponse.data.projectMembers) {
+          const members = membersResponse.data.projectMembers;
+          
+          // 🚀 ปรับปรุง: ดึง unique user IDs เพื่อลดการเรียก API ซ้ำ
+          const uniqueMemberUserIds = [...new Set(
+            members.map((m: any) => m.user_id_in_project).filter(Boolean)
+          )] as number[];
+          
+          // สร้าง user cache
+          const memberUserCache: { [key: number]: any } = {};
+          
+          await Promise.all(
+            uniqueMemberUserIds.map(async (userId) => {
+              try {
+                const userResponse = await axios.get(`/api/users?userId=${userId}`);
+                if (userResponse.data.user) {
+                  memberUserCache[userId] = userResponse.data.user;
                 } else {
-                  setUserRole('Member'); // default role
+                  memberUserCache[userId] = {
+                    id: userId,
+                    username: `User ${userId}`,
+                    email: ''
+                  };
                 }
+              } catch (userError) {
+                console.error(`Error fetching member user ${userId}:`, userError);
+                memberUserCache[userId] = {
+                  id: userId,
+                  username: `User ${userId}`,
+                  email: ''
+                };
+              }
+            })
+          );
+          
+          // ใช้ cache เพื่อ map user info
+          const membersWithUserInfo = members.map((member: any) => ({
+            ...member,
+            userInfo: memberUserCache[member.user_id_in_project] || {
+              id: member.user_id_in_project,
+              username: `User ${member.user_id_in_project}`,
+              email: ''
+            }
+          }));
+          
+          setProjectMembers(membersWithUserInfo);
+          
+          // ตรวจสอบบทบาทของผู้ใช้
+          if (currentUser && projectResponse.data.project) {
+            const currentUserId = currentUser.id;
+            const project = projectResponse.data.project;
+            
+            // ตรวจสอบว่าผู้ใช้เป็นผู้สร้างโปรเจ็กต์หรือไม่
+            const isProjectCreator = project.created_by_user_id === currentUserId || 
+                                   project.created_by_user === currentUserId;
+            
+            if (isProjectCreator) {
+              setUserRole('Leader');
+            } else {
+              // หาบทบาทจาก project members
+              const userMembership = membersWithUserInfo.find((member: any) => 
+                (member.userInfo?.id || member.user_id_in_project) === currentUserId
+              );
+              
+              if (userMembership) {
+                setUserRole(userMembership.role_in_project);
+              } else {
+                setUserRole('Member'); // default role
               }
             }
           }
-        } catch (membersError) {
-          console.error('Could not fetch project members:', membersError);
         }
 
         // ดึงข้อมูล submissions
@@ -838,31 +928,50 @@ export default function TaskDetailPage() {
           try {
             const submissionsResponse = await axios.get(`/api/submissions?taskDocumentId=${taskDocumentId}`);
             if (submissionsResponse.data.success && submissionsResponse.data.submissions) {
-              // ใช้วิธีเดิมในการดึงข้อมูล user ก่อน เพื่อแก้ปัญหา
-              const submissionsWithUserInfo = await Promise.all(
-                submissionsResponse.data.submissions.map(async (submission: any) => {
+              const submissions = submissionsResponse.data.submissions;
+              
+              // 🚀 ปรับปรุง: ดึง unique user IDs เพื่อลดการเรียก API ซ้ำ
+              const uniqueSubmitterIds = [...new Set(
+                submissions.map((s: any) => s.submitted_by_user_id_number).filter(Boolean)
+              )] as number[];
+              
+              // สร้าง user cache
+              const submitterUserCache: { [key: number]: any } = {};
+              
+              await Promise.all(
+                uniqueSubmitterIds.map(async (userId) => {
                   try {
-                    const userResponse = await axios.get(`/api/users?userId=${submission.submitted_by_user_id_number}`);
-                    return {
-                      ...submission,
-                      submittedByUser: userResponse.data.user || {
-                        id: submission.submitted_by_user_id_number,
-                        username: `User ${submission.submitted_by_user_id_number}`,
+                    const userResponse = await axios.get(`/api/users?userId=${userId}`);
+                    if (userResponse.data.user) {
+                      submitterUserCache[userId] = userResponse.data.user;
+                    } else {
+                      submitterUserCache[userId] = {
+                        id: userId,
+                        username: `User ${userId}`,
                         email: ''
-                      }
-                    };
+                      };
+                    }
                   } catch (userError) {
-                    return {
-                      ...submission,
-                      submittedByUser: {
-                        id: submission.submitted_by_user_id_number,
-                        username: `User ${submission.submitted_by_user_id_number}`,
-                        email: ''
-                      }
+                    console.error(`Error fetching submitter user ${userId}:`, userError);
+                    submitterUserCache[userId] = {
+                      id: userId,
+                      username: `User ${userId}`,
+                      email: ''
                     };
                   }
                 })
               );
+              
+              // ใช้ cache เพื่อ map user info
+              const submissionsWithUserInfo = submissions.map((submission: any) => ({
+                ...submission,
+                submittedByUser: submitterUserCache[submission.submitted_by_user_id_number] || {
+                  id: submission.submitted_by_user_id_number,
+                  username: `User ${submission.submitted_by_user_id_number}`,
+                  email: ''
+                }
+              }));
+              
               setSubmissions(submissionsWithUserInfo);
             }
           } catch (submissionsError) {
@@ -918,38 +1027,54 @@ export default function TaskDetailPage() {
       // เพิ่ม timestamp เพื่อหลีกเลี่ยง cache
       const timestamp = new Date().getTime();
       const submissionsResponse = await axios.get(`/api/submissions?taskDocumentId=${taskDocumentId}&t=${timestamp}`);
-      console.log('Refreshed submissions:', submissionsResponse.data); // debug
       
       if (submissionsResponse.data.success && submissionsResponse.data.submissions) {
-        // ใช้วิธีเดิมในการดึงข้อมูล user ก่อน เพื่อแก้ปัญหา
-        const submissionsWithUserInfo = await Promise.all(
-          submissionsResponse.data.submissions.map(async (submission: any) => {
+        const submissions = submissionsResponse.data.submissions;
+        
+        // 🚀 ปรับปรุง: ดึง unique user IDs เพื่อลดการเรียก API ซ้ำ
+        const uniqueUserIds = [...new Set(
+          submissions.map((s: any) => s.submitted_by_user_id_number).filter(Boolean)
+        )] as number[];
+        
+        // สร้าง user cache โดยดึงข้อมูลแต่ละ user เพียงครั้งเดียว
+        const userCache: { [key: number]: any } = {};
+        
+        await Promise.all(
+          uniqueUserIds.map(async (userId) => {
             try {
-              const userResponse = await axios.get(`/api/users?userId=${submission.submitted_by_user_id_number}`);
-              return {
-                ...submission,
-                submittedByUser: userResponse.data.user || {
-                  id: submission.submitted_by_user_id_number,
-                  username: `User ${submission.submitted_by_user_id_number}`,
+              const userResponse = await axios.get(`/api/users?userId=${userId}`);
+              if (userResponse.data.user) {
+                userCache[userId] = userResponse.data.user;
+              } else {
+                userCache[userId] = {
+                  id: userId,
+                  username: `User ${userId}`,
                   email: ''
-                }
-              };
+                };
+              }
             } catch (userError) {
-              return {
-                ...submission,
-                submittedByUser: {
-                  id: submission.submitted_by_user_id_number,
-                  username: `User ${submission.submitted_by_user_id_number}`,
-                  email: ''
-                }
+              console.error(`Error fetching user ${userId}:`, userError);
+              userCache[userId] = {
+                id: userId,
+                username: `User ${userId}`,
+                email: ''
               };
             }
           })
         );
-        console.log('Submissions with user info:', submissionsWithUserInfo); // debug
+        
+        // ใช้ cache เพื่อ map user info เข้ากับ submissions
+        const submissionsWithUserInfo = submissions.map((submission: any) => ({
+          ...submission,
+          submittedByUser: userCache[submission.submitted_by_user_id_number] || {
+            id: submission.submitted_by_user_id_number,
+            username: `User ${submission.submitted_by_user_id_number}`,
+            email: ''
+          }
+        }));
+        
         setSubmissions(submissionsWithUserInfo);
       } else {
-        console.log('No submissions found or error:', submissionsResponse.data); // debug
         setSubmissions([]);
       }
     } catch (error) {
@@ -1210,26 +1335,33 @@ export default function TaskDetailPage() {
             <span className="text-gray-900 font-medium">{task.task_name}</span>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className={`grid grid-cols-1 gap-6 transition-all duration-300 ${isRightPanelOpen ? 'lg:grid-cols-3' : 'lg:grid-cols-1'}`}>
             {/* Left Column - Task Details */}
-            <div className="lg:col-span-2">
+            <div className={`transition-all duration-300 ${isRightPanelOpen ? 'lg:col-span-2' : 'lg:col-span-1'}`}>
               {/* Task Header */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                {!isEditing ? (
-                  // Display Mode
-                  <div className="mb-4">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                      {task.task_name}
-                    </h1>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>สร้างเมื่อ {formatDate(task.createdAt)}</span>
-                      {task.updatedAt !== task.createdAt && (
-                        <span>• แก้ไขล่าสุด {formatDate(task.updatedAt)}</span>
-                      )}
-                    </div>
+              {!isEditing ? (
+                // Display Mode - Title with description (no box)
+                <div className="mb-8">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                    {task.task_name}
+                  </h1>
+                  <div className="flex items-center space-x-4 text-sm text-gray-500 mb-6">
+                    <span>สร้างเมื่อ {formatDate(task.createdAt)}</span>
+                    {task.updatedAt !== task.createdAt && (
+                      <span>• แก้ไขล่าสุด {formatDate(task.updatedAt)}</span>
+                    )}
                   </div>
-                ) : (
-                  // Edit Mode
+                  {task.description && (
+                    <div className="prose max-w-none">
+                      <p className="text-gray-700 text-base leading-relaxed whitespace-pre-wrap">
+                        {task.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Edit Mode
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-semibold text-gray-900">แก้ไข Task</h2>
@@ -1359,18 +1491,6 @@ export default function TaskDetailPage() {
                         </button>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Task Description */}
-              {task.description && (
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-3">รายละเอียด</h2>
-                  <div className="prose max-w-none">
-                    <p className="text-gray-700 leading-relaxed">
-                      {task.description}
-                    </p>
                   </div>
                 </div>
               )}
@@ -1818,26 +1938,55 @@ export default function TaskDetailPage() {
                         
                         {/* File List */}
                         <div className="space-y-2 mt-2">
-                          {submission.file_urls?.map((fileUrl, index) => (
-                            <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
-                              <div className="flex items-center space-x-2 flex-1 min-w-0">
-                                <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                </svg>
-                                <span className="text-sm text-gray-700 truncate">
-                                  {fileUrl.split('/').pop()}
-                                </span>
+                          {submission.file_urls?.map((fileUrl, index) => {
+                            const fullFileUrl = getFileUrl(fileUrl);
+                            const fileName = getFileNameFromUrl(fileUrl);
+                            
+                            return (
+                              <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors group">
+                                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 truncate" title={fileName}>
+                                      {fileName}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      ไฟล์ที่ {index + 1}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
+                                  <a 
+                                    href={fullFileUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
+                                    title="ดาวน์โหลดไฟล์"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    <span>ดาวน์โหลด</span>
+                                  </a>
+                                  <button
+                                    onClick={() => window.open(fullFileUrl, '_blank')}
+                                    className="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
+                                    title="ดูไฟล์"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    <span>ดู</span>
+                                  </button>
+                                </div>
                               </div>
-                              <a 
-                                href={fileUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors flex-shrink-0"
-                              >
-                                ดาวน์โหลด
-                              </a>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))
@@ -1962,6 +2111,31 @@ export default function TaskDetailPage() {
                           
                           {/* Status badge & number combined */}
                           <div className="flex items-center space-x-1.5 flex-shrink-0 ml-2">
+                            {/* Review Status Badge */}
+                            {submission.review_status && submission.review_status !== 'pending' && (
+                              <span className={`inline-flex items-center space-x-1 text-xs px-1.5 py-0.5 rounded font-medium ${
+                                submission.review_status === 'approved' 
+                                  ? 'bg-green-100 text-green-700 border border-green-300' 
+                                  : 'bg-red-100 text-red-700 border border-red-300'
+                              }`}>
+                                {submission.review_status === 'approved' ? (
+                                  <>
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>อนุมัติ</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>ปฏิเสธ</span>
+                                  </>
+                                )}
+                              </span>
+                            )}
+                            
                             {submission.is_active ? (
                               <span className="inline-flex items-center space-x-1 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium">
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -1987,37 +2161,66 @@ export default function TaskDetailPage() {
                         {submission.file_urls && submission.file_urls.length > 0 && (
                           <div className="mb-1.5">
                             <div className="flex items-center space-x-1 overflow-x-auto pb-1">
-                              {submission.file_urls.map((fileUrl, idx) => (
-                                <div 
-                                  key={idx} 
-                                  className={`flex items-center space-x-1.5 px-2 py-1 rounded flex-shrink-0 ${
-                                    submission.is_active 
-                                      ? 'bg-green-50 border border-green-100' 
-                                      : 'bg-gray-100 border border-gray-200'
-                                  }`}
-                                >
-                                  <svg className={`w-3.5 h-3.5 ${
-                                    submission.is_active ? 'text-green-600' : 'text-gray-500'
-                                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                  </svg>
-                                  <span className={`text-xs font-medium max-w-[120px] truncate ${
-                                    submission.is_active ? 'text-green-700' : 'text-gray-600'
-                                  }`}>
-                                    {fileUrl.split('/').pop()}
-                                  </span>
-                                  {submission.is_active && (
-                                    <a 
-                                      href={fileUrl} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-green-600 hover:text-green-700 font-medium hover:underline"
+                              {submission.file_urls.map((fileUrl, idx) => {
+                                const fullFileUrl = getFileUrl(fileUrl);
+                                const fileName = getFileNameFromUrl(fileUrl);
+                                
+                                return (
+                                  <div 
+                                    key={idx} 
+                                    className={`flex items-center space-x-1.5 px-2 py-1.5 rounded flex-shrink-0 ${
+                                      submission.is_active 
+                                        ? 'bg-blue-50 border border-blue-200 hover:bg-blue-100' 
+                                        : 'bg-gray-100 border border-gray-200'
+                                    } transition-colors group`}
+                                  >
+                                    <svg className={`w-3.5 h-3.5 flex-shrink-0 ${
+                                      submission.is_active ? 'text-blue-600' : 'text-gray-500'
+                                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                    <span 
+                                      className={`text-xs font-medium max-w-[150px] truncate ${
+                                        submission.is_active ? 'text-blue-700' : 'text-gray-600'
+                                      }`}
+                                      title={fileName}
                                     >
-                                      Download
-                                    </a>
-                                  )}
-                                </div>
-                              ))}
+                                      {fileName}
+                                    </span>
+                                    {submission.is_active && (
+                                      <div className="flex items-center space-x-1">
+                                        <a 
+                                          href={fullFileUrl} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="text-xs text-blue-600 hover:text-blue-800 font-semibold hover:underline flex items-center space-x-0.5 transition-colors"
+                                          title="ดาวน์โหลดไฟล์"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                          </svg>
+                                          <span>ดาวน์โหลด</span>
+                                        </a>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(fullFileUrl, '_blank');
+                                          }}
+                                          className="text-xs text-gray-600 hover:text-gray-800 font-semibold hover:underline flex items-center space-x-0.5 transition-colors"
+                                          title="ดูไฟล์ในแท็บใหม่"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                          </svg>
+                                          <span>ดู</span>
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         )}
@@ -2069,15 +2272,15 @@ export default function TaskDetailPage() {
                           );
                         })()}
 
-                        {/* Compact Review Comments */}
-                        {submission.comments && (submission.comments.includes('✅ อนุมัติ') || submission.comments.includes('❌ ไม่อนุมัติ')) && (
+                        {/* Compact Review Comments - ใช้ review_status แทน */}
+                        {submission.review_status && submission.review_status !== 'pending' && (
                           <div className={`rounded px-2 py-1.5 border mb-1.5 ${
-                            submission.comments.includes('✅ อนุมัติ') 
+                            submission.review_status === 'approved' 
                               ? 'bg-green-50 border-green-200' 
                               : 'bg-red-50 border-red-200'
                           }`}>
                             <div className="flex items-start space-x-1.5">
-                              {submission.comments.includes('✅ อนุมัติ') ? (
+                              {submission.review_status === 'approved' ? (
                                 <svg className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -2087,20 +2290,37 @@ export default function TaskDetailPage() {
                                 </svg>
                               )}
                               <div className="flex-1 min-w-0">
-                                <p className={`text-xs font-semibold ${
-                                  submission.comments.includes('✅ อนุมัติ') 
-                                    ? 'text-green-800' 
-                                    : 'text-red-800'
-                                }`}>
-                                  {submission.comments.includes('✅ อนุมัติ') ? '✅ อนุมัติ' : '❌ ไม่อนุมัติ'}
-                                </p>
-                                <p className={`text-xs leading-snug whitespace-pre-wrap break-words mt-0.5 ${
-                                  submission.comments.includes('✅ อนุมัติ') 
-                                    ? 'text-green-700' 
-                                    : 'text-red-700'
-                                }`}>
-                                  {submission.comments.split(':').slice(1).join(':').trim() || 'ไม่มีความคิดเห็น'}
-                                </p>
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <p className={`text-xs font-semibold ${
+                                    submission.review_status === 'approved' 
+                                      ? 'text-green-800' 
+                                      : 'text-red-800'
+                                  }`}>
+                                    {submission.review_status === 'approved' ? '✅ อนุมัติ' : '❌ ไม่อนุมัติ'}
+                                  </p>
+                                  {submission.reviewed_at && (
+                                    <span className={`text-[10px] ${
+                                      submission.review_status === 'approved' ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                      {new Date(submission.reviewed_at).toLocaleString('th-TH', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  )}
+                                </div>
+                                {submission.comments && (
+                                  <p className={`text-xs leading-snug whitespace-pre-wrap break-words ${
+                                    submission.review_status === 'approved' 
+                                      ? 'text-green-700' 
+                                      : 'text-red-700'
+                                  }`}>
+                                    {submission.comments}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -2129,8 +2349,29 @@ export default function TaskDetailPage() {
               </div>
             </div>
 
+            {/* Toggle Button for Right Panel - Minimalist FAB */}
+            <button
+              onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+              className={`fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl rounded-full transition-all duration-200 hidden lg:flex items-center justify-center ${
+                isRightPanelOpen ? 'w-12 h-12' : 'w-12 h-12'
+              }`}
+              title={isRightPanelOpen ? 'ซ่อนแผงด้านข้าง' : 'แสดงแผงด้านข้าง'}
+            >
+              {isRightPanelOpen ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              )}
+            </button>
+
             {/* Right Column - Task Info & Actions */}
-            <div className="space-y-6">
+            <div className={`space-y-6 transition-all duration-500 ease-in-out ${
+              isRightPanelOpen ? 'lg:block opacity-100 translate-x-0' : 'lg:hidden opacity-0 translate-x-full'
+            }`}>
               {/* Project Leader Section - Only for Leaders */}
               {userRole === 'Leader' && (
                 <div className="bg-white rounded-lg shadow-sm p-6">

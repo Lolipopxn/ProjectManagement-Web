@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+
+const STRAPI_URL = process.env.STRAPI_URL || 'http://localhost:1337';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,92 +29,96 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!taskDocumentId) {
+    if (!taskDocumentId || !projectDocumentId || !userId) {
       return NextResponse.json(
-        { success: false, message: 'ไม่ระบุ taskDocumentId' },
+        { success: false, message: 'ข้อมูลไม่ครบถ้วน' },
         { status: 400 }
       );
     }
 
-    if (!projectDocumentId) {
-      return NextResponse.json(
-        { success: false, message: 'ไม่ระบุ projectDocumentId' },
-        { status: 400 }
-      );
-    }
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, message: 'ไม่ระบุ userId' },
-        { status: 400 }
-      );
-    }
-
-    // ตรวจสอบขนาดไฟล์ (จำกัดที่ 100MB)
-    const maxSize = 100 * 1024 * 1024; // 100MB
+    // ตรวจสอบขนาดไฟล์ (จำกัดที่ 50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { success: false, message: 'ไฟล์มีขนาดใหญ่เกินไป จำกัดสูงสุด 100MB' },
+        { success: false, message: 'ไฟล์มีขนาดใหญ่เกินไป จำกัดสูงสุด 50MB' },
         { status: 400 }
       );
     }
 
-    // ตรวจสอบประเภทไฟล์
-    const allowedTypes = [
-      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-      'application/pdf',
-      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      'text/plain',
-      'application/zip', 'application/x-rar-compressed',
-      'video/mp4', 'video/quicktime', 'video/x-msvideo'
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { success: false, message: 'ประเภทไฟล์ไม่ถูกต้อง' },
-        { status: 400 }
-      );
-    }
-
-    // สร้างชื่อไฟล์ที่ไม่ซ้ำ
-    const timestamp = Date.now();
-    const fileExtension = path.extname(file.name);
-    // ใช้ชื่อไฟล์ที่กำหนดเองถ้ามี หรือใช้ชื่อไฟล์เดิม
-    const fileName = customFileName ? `${customFileName}${fileExtension}` : file.name;
+    // สร้างโครงสร้าง path แบบเดิม (ไม่มี timestamp)
+    // รูปแบบ: submissions/{projectId}/{taskId}/{userId}/{filename}
+    const fileExtension = file.name.split('.').pop();
     
-    // สร้างโฟลเดอร์ตามโครงสร้าง: uploads/submissions/[projectDocumentId]/[taskDocumentId]/[userId]/[timestamp]/
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'submissions', projectDocumentId, taskDocumentId, userId, timestamp.toString());
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch (error) {
-      // โฟลเดอร์อาจมีอยู่แล้ว
-    }
-
-    // บันทึกไฟล์
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const filePath = path.join(uploadsDir, fileName);
+    // ฟังก์ชันทำความสะอาดชื่อไฟล์ - รองรับภาษาไทยและอักษรต่างๆ
+    const sanitizeFileName = (name: string): string => {
+      // ลบเฉพาะตัวอักษรที่ไม่อนุญาตใน file system (< > : " / \ | ? * และ control characters)
+      // แต่ยังคงภาษาไทย, ภาษาอื่นๆ, ตัวเลข, และอักษรพิเศษที่ปลอดภัย
+      return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim();
+    };
     
-    await writeFile(filePath, buffer);
+    const cleanFileName = customFileName 
+      ? `${sanitizeFileName(customFileName)}.${fileExtension}`
+      : sanitizeFileName(file.name);
+    
+    // สร้าง path ตามโครงสร้างเดิม (ไม่มี timestamp)
+    const customPath = `submissions/${projectDocumentId}/${taskDocumentId}/${userId}/${cleanFileName}`;
+    
+    // สร้าง FormData สำหรับส่งไปยัง Strapi
+    const strapiFormData = new FormData();
+    strapiFormData.append('files', file);
+    
+    // สร้าง fileInfo object พร้อม path
+    const fileInfo = {
+      name: cleanFileName,
+      path: customPath, // ส่ง path ที่กำหนดเอง
+      caption: `Task: ${taskDocumentId}`,
+      alternativeText: `Submission file for task ${taskDocumentId}`,
+    };
+    strapiFormData.append('fileInfo', JSON.stringify(fileInfo));
 
-    // สร้าง URL สำหรับเข้าถึงไฟล์
-    const fileUrl = `/uploads/submissions/${projectDocumentId}/${taskDocumentId}/${userId}/${timestamp}/${fileName}`;
-
-    return NextResponse.json({
-      success: true,
-      fileUrl: fileUrl,
-      fileName: customFileName ? `${customFileName}${fileExtension}` : file.name,
-      fileSize: file.size,
-      fileType: file.type,
-      message: 'อัปโหลดไฟล์สำเร็จ'
+    // อัปโหลดไฟล์ไปยัง Strapi Media Library
+    const uploadResponse = await fetch(`${STRAPI_URL}/api/upload`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: strapiFormData,
     });
 
-  } catch (error: any) {
-    console.error('Error uploading file:', error);
+    if (!uploadResponse.ok) {
+      const errorData = await uploadResponse.json();
+      console.error('Strapi upload error:', errorData);
+      return NextResponse.json(
+        { success: false, message: 'ไม่สามารถอัปโหลดไฟล์ได้' },
+        { status: uploadResponse.status }
+      );
+    }
+
+    const uploadedFiles = await uploadResponse.json();
+    
+    if (!uploadedFiles || uploadedFiles.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'ไม่พบไฟล์ที่อัปโหลด' },
+        { status: 500 }
+      );
+    }
+
+    const uploadedFile = uploadedFiles[0];
+
+    // ส่งกลับข้อมูลไฟล์
+    return NextResponse.json({
+      success: true,
+      message: 'อัปโหลดไฟล์สำเร็จ',
+      fileName: uploadedFile.name,
+      fileUrl: uploadedFile.url, // URL สำหรับดาวน์โหลด (เริ่มต้นด้วย /uploads/)
+      fileId: uploadedFile.id, // ID ของไฟล์ใน Media Library
+      mimeType: uploadedFile.mime,
+      size: uploadedFile.size,
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
     return NextResponse.json(
-      { success: false, message: 'ล้มเหลวในการอัปโหลดไฟล์' },
+      { success: false, message: 'เกิดข้อผิดพลาดในการอัปโหลด' },
       { status: 500 }
     );
   }

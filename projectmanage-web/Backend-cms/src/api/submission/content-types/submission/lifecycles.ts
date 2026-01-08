@@ -102,6 +102,29 @@ export default {
 
       strapi.log.info(`👤 Submitter found: ${submitter.username}`);
 
+      // ตรวจสอบว่าเคยส่ง notification สำหรับ submission นี้ไปแล้วหรือยัง
+      // โดยการดูว่ามี notification ที่เกี่ยวข้องกับ task นี้และผู้ส่งคนนี้หรือไม่
+      const recentNotifications = await strapi.db.query('api::notification.notification').findMany({
+        where: {
+          type: 'task_status_changed',
+          recipient: leader.id,
+          sender: submitter.id,
+          related_project: project.id,
+          title: {
+            $contains: task.task_name,
+          },
+          createdAt: {
+            $gte: new Date(Date.now() - 5 * 60 * 1000), // ใน 5 นาทีที่ผ่านมา
+          },
+        },
+        limit: 1,
+      });
+
+      if (recentNotifications && recentNotifications.length > 0) {
+        strapi.log.info('📬 Submission notification already sent recently, skipping duplicate');
+        return;
+      }
+
       // 5. สร้าง Notification record สำหรับ Leader
       const notification = await strapi.entityService.create(
         'api::notification.notification',

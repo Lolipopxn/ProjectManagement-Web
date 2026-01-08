@@ -29,4 +29,5 @@ export default [
   'strapi::session',
   'strapi::favicon',
   'strapi::public',
+  'global::custom-upload', // เพิ่ม custom middleware
 ];

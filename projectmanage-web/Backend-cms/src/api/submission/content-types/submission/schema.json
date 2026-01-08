@@ -46,6 +46,22 @@
     "comments": {
       "type": "text"
     },
+    "review_status": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "required": false
+    },
+    "reviewed_at": {
+      "type": "datetime"
+    },
+    "reviewed_by_user_id": {
+      "type": "integer"
+    },
     "is_active": {
       "type": "boolean",
       "default": true,

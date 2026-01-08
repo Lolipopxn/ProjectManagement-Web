@@ -109,18 +109,35 @@ export default function NotificationDropdown({
       onMarkAsRead(notification.id);
     }
 
-    // Navigate based on notification type
+    // Navigate based on notification link or related entities
     try {
-      const metadata = notification.metadata || {};
+      // 1. ใช้ link ที่ส่งมาจาก notification ก่อน (highest priority)
+      if (notification.link) {
+        router.push(notification.link);
+        onClose();
+        return;
+      }
 
+      // 2. ถ้ามี related_task ให้ไปที่หน้า task โดยตรง
+      if (notification.related_task?.documentId && notification.related_project?.documentId) {
+        router.push(`/main_pages/projects/${notification.related_project.documentId}/tasks/${notification.related_task.documentId}`);
+        onClose();
+        return;
+      }
+
+      // 3. ถ้ามี metadata ของ task reminder
+      const metadata = notification.metadata || {};
       if (notification.type === "task_due_reminder" && metadata?.taskDocumentId && metadata?.projectDocumentId) {
-        // ไปที่หน้า task ในโปรเจ็กต์
-        router.push(`/main_pages/projects/${metadata.projectDocumentId}/tasks?highlight=${metadata.taskDocumentId}`);
-      } else if (metadata?.projectDocumentId) {
-        // ไปที่หน้าโปรเจ็กต์
-        router.push(`/main_pages/project-overview/${metadata.projectDocumentId}`);
+        router.push(`/main_pages/projects/${metadata.projectDocumentId}/tasks/${metadata.taskDocumentId}`);
+        onClose();
+        return;
+      }
+
+      // 4. Fallback: ไปที่หน้าโปรเจ็กต์
+      if (metadata?.projectDocumentId) {
+        router.push(`/main_pages/projects/${metadata.projectDocumentId}`);
       } else if (notification.related_project?.documentId) {
-        router.push(`/main_pages/project-overview/${notification.related_project.documentId}`);
+        router.push(`/main_pages/projects/${notification.related_project.documentId}`);
       }
     } catch (e) {
       console.error("Error handling notification click:", e);
