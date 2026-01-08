@@ -165,7 +165,7 @@ export default function ProjectDetailPage() {
           if (membersRes.data?.success) {
             const members = membersRes.data.projectMembers ?? [];
 
-            // ดึง user info พร้อมกัน (parallel)
+            // user info parallel
             membersWithUserInfo = await Promise.all(
               members.map(async (member: any) => {
                 try {
@@ -217,22 +217,23 @@ export default function ProjectDetailPage() {
 
           const tasks = tasksRes.data?.tasks ?? [];
           const currentUserId = currentUser?.id;
+          const isMyTask = (task: Task, currentUserId: number) => {
+            return Array.isArray(task.assigned_to_user_ids)
+              && task.assigned_to_user_ids.some(
+                (user: any) => user?.id === currentUserId
+              );
+          };
 
           if (!currentUserId) {
             setMyTasks([]);
             setOtherTasks(tasks);
           } else {
             setMyTasks(
-              tasks.filter(
-                (t: Task) =>
-                  t.assigned_to_user_ids_number === currentUserId
-              )
+              tasks.filter((t: Task) => isMyTask(t, currentUserId))
             );
+
             setOtherTasks(
-              tasks.filter(
-                (t: Task) =>
-                  t.assigned_to_user_ids_number !== currentUserId
-              )
+              tasks.filter((t: Task) => !isMyTask(t, currentUserId))
             );
           }
           setTasksLoading(false);

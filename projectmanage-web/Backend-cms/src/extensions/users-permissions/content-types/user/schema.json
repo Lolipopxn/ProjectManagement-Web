@@ -68,13 +68,13 @@
     },
     "project_member": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "manyToMany",
       "target": "api::project-member.project-member",
       "inversedBy": "user_ids"
     },
     "task_id": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "manyToMany",
       "target": "api::task.task",
       "inversedBy": "assigned_to_user_ids"
     },

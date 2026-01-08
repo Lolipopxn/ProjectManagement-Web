@@ -571,11 +571,10 @@ export interface ApiProjectMemberProjectMember
     user: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
-    > &
-      Schema.Attribute.Required;
+    >;
     user_id_in_project: Schema.Attribute.Integer & Schema.Attribute.Required;
     user_ids: Schema.Attribute.Relation<
-      'oneToMany',
+      'manyToMany',
       'plugin::users-permissions.user'
     >;
   };
@@ -699,7 +698,7 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
   };
   attributes: {
     assigned_to_user_ids: Schema.Attribute.Relation<
-      'oneToMany',
+      'manyToMany',
       'plugin::users-permissions.user'
     >;
     assigned_to_user_ids_number: Schema.Attribute.Integer;
@@ -1282,7 +1281,7 @@ export interface PluginUsersPermissionsUser
       }>;
     position: Schema.Attribute.Text;
     project_member: Schema.Attribute.Relation<
-      'manyToOne',
+      'manyToMany',
       'api::project-member.project-member'
     >;
     provider: Schema.Attribute.String;
@@ -1292,7 +1291,7 @@ export interface PluginUsersPermissionsUser
       'manyToOne',
       'plugin::users-permissions.role'
     >;
-    task_id: Schema.Attribute.Relation<'manyToOne', 'api::task.task'>;
+    task_id: Schema.Attribute.Relation<'manyToMany', 'api::task.task'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
