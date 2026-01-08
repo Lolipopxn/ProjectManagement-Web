@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, ReactNode } from 'react';
 import axios from 'axios'
 
 import PreviewFile from './previewFile';
@@ -9,6 +9,7 @@ import { TaskStatusTimeline } from './TaskStatusTimeline';
 
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
+import { FaRegEdit, FaPlus  } from "react-icons/fa";
 
 
 interface Task {
@@ -42,6 +43,23 @@ interface Submission {
   cancelled_at?: string;
 }
 
+interface ProjectMember {
+  id: number;
+  documentId?: string;
+  role_in_project: string;
+  join_date: string;
+  project_id_number: number;
+  user_id_in_project: number;
+  project_document_id: string;
+  user_ids?: any;
+  userInfo?: {
+    id: number;
+    documentId?: string;
+    username: string;
+    email?: string;
+  };
+}
+
 interface User {
   id: number;
   documentId?: string;
@@ -49,7 +67,7 @@ interface User {
   email: string;
 }
 
-export default function TaskPopup({task, currentUser, userRole, onClose, onSubmit}: {task: Task | any, currentUser: User | null, userRole: string, onClose?: () => void, onSubmit?: () => void}) {
+export default function TaskPopup({task, projectMembers, currentUser, userRole, onClose, onSubmit}: {task: Task | any, projectMembers: ProjectMember[], currentUser: User | null, userRole: string, onClose?: () => void, onSubmit?: () => void}) {
     const [changePage, setChangePage] = useState(0);
     const [submission, setSubmissions] = useState<Submission[]>([]);
     const [previewFile, setPreviewFile] = useState<string | null>(null);
@@ -63,6 +81,27 @@ export default function TaskPopup({task, currentUser, userRole, onClose, onSubmi
         month: 'long',
         day: 'numeric',
     });
+    };
+
+    const getUserRoleInProject = (userId: number) => {
+        const member = projectMembers.find(
+            (m) => m.user_id_in_project === userId
+        );
+
+        return ROLE_LABELS[member?.role_in_project as string] ?? '-';
+    };
+
+    const ROLE_LABELS: Record<string, ReactNode> = {
+        Leader: (
+            <span className="px-2 py-1 text-sm rounded-full border border-purple-700 bg-purple-200 text-purple-700">
+            หัวหน้า
+            </span>
+        ),
+        Member: (
+            <span className="px-2 py-1 text-sm rounded-full border border-green-500 bg-green-100 text-green-500">
+            สมาชิก
+            </span>
+        ),
     };
 
     const isTaskOwner = () => {
@@ -168,15 +207,46 @@ export default function TaskPopup({task, currentUser, userRole, onClose, onSubmi
                     )}
 
                     {changePage === 1 && (
-                        <div className='flex flex-col space-y-2 text-lg'>
-                            <span className="border-b pb-2 border-gray-200"></span>
-                            <div className='px-6 py-2 h-85 w-200  rounded-lg whitespace-pre-wrap overflow-y-scroll scrollbar-autoHide'>
-                                <div className='flex flex-row items-center gap-4'>
-                                    <CgProfile className='size-6'/>
-                                    <span>{task.assigned_to_user_ids?.length ? `${task.assigned_to_user_ids.map((u: any ) => u.username).join(", ")}` : "ไม่มอบหมายงาน"}</span>
+                        <div className='flex flex-col space-y-2 text-lg'> 
+                            <div className="flex flex-row items-center px-4 justify-between border-b pb-2 border-gray-200">
+                                <span>รายชื่อผู้ได้รับหมอบหมายงาน</span>
+                                <div className='flex flex-row items-center gap-2'>
+                                    <button className='py-2 px-4 bg-[#696FC7] text-sm rounded-md text-white hover:bg-[#50589C]/90'>
+                                        <FaRegEdit className='size-4' />
+                                    </button>
+                                    <button className='py-2 px-4 bg-[#696FC7] text-sm rounded-md text-white hover:bg-[#50589C]/90'>
+                                        <FaPlus className='size-4' />
+                                    </button>
                                 </div>
-                                          
-                            </div>                    
+                                
+                            </div>
+                            <div className='mt-4 px-2 w-full h-85  whitespace-pre-wrap overflow-y-scroll scrollbar-autoHide border-b border-gray-300'>                       
+                                <div className='w-full border border-[#50589C] shadow-md'>
+                                    <table className='table-auto w-full h-auto'>
+                                        <thead className='bg-[#50589C] text-white sticky top-0 z-10'>
+                                            <tr className='h-12 [&>th]:text-start [&>th]:pl-6'>
+                                                <th>ชื่อผู้ใช้</th>
+                                                <th>อีเมล</th>
+                                                <th>สิทธ์</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {task.assigned_to_user_ids?.map((user: any) => (
+                                                <tr key={user.id} className='border-b border-gray-200 h-12 text-md [&>td]:text-start [&>td]:pl-6'>
+                                                    <td>
+                                                        <div className='flex flex-row items-center gap-2'>
+                                                            <CgProfile className='size-6'/> 
+                                                            {user.username} 
+                                                        </div>
+                                                    </td>
+                                                    <td>{user.email}</td>
+                                                    <td>{getUserRoleInProject(user.id)}</td>
+                                                </tr>
+                                            ))}                                  
+                                        </tbody>
+                                    </table>                                         
+                                </div>   
+                            </div>                   
                         </div>                    
                     )}
                     {changePage === 2 && (

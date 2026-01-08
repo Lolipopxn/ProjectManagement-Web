@@ -1924,7 +1924,7 @@ const progressPercent =
                       </div>
                       <div className='flex flex-row items-center space-x-2'>
                         <h3 className="font-semibold text-gray-900">งานของโปรเจค</h3>
-                        <p className="text-sm text-gray-500">( {myTasks.length} งาน )</p>
+                        <p className="text-sm text-gray-500">( {[...myTasks, ...otherTasks].length} งาน )</p>
                       </div>
                       <div className="relative inline-block">
                         {/* Trigger */}
@@ -2384,6 +2384,7 @@ const progressPercent =
       {popupTask && (
         <TaskPopup 
           task={selectedTask} 
+          projectMembers={projectMembers}
           currentUser={user}
           userRole={userRole}
           onClose={() => {setSelectedTask(null); setPopupTask(false)}} 
