@@ -168,7 +168,20 @@ export async function GET(
     // ดึงข้อมูล Task จาก Strapi โดยใช้ documentId
     const response = await axios.get(
       `${process.env.STRAPI_BASE_URL}/api/tasks/${taskDocumentId}`,
-      { headers }
+      { params: {
+          filters: {
+            documentId: taskDocumentId,
+          },
+          populate: {
+            assigned_to_user_ids: {
+              fields: ['id', 'username', 'email'],
+            },
+          },
+        },
+        headers
+      },
+        
+      
     );
 
     if (response.data) {

@@ -6,11 +6,11 @@ import axios from 'axios'
 import PreviewFile from './previewFile';
 import TaskStatusIcon from './TaskStatusIcon';
 import { TaskStatusTimeline } from './TaskStatusTimeline';
+import AssignUserModal from './AssignUserModal';
 
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
 import { FaRegEdit, FaPlus  } from "react-icons/fa";
-
 
 interface Task {
   id: number;
@@ -67,12 +67,26 @@ interface User {
   email: string;
 }
 
-export default function TaskPopup({task, projectMembers, currentUser, userRole, onClose, onSubmit}: {task: Task | any, projectMembers: ProjectMember[], currentUser: User | null, userRole: string, onClose?: () => void, onSubmit?: () => void}) {
+export default function TaskPopup({projectId, task, setSelectedTask, projectMembers, currentUser, userRole, onClose, onSubmit, onRefresh, refreshTaskMembers}
+    : {
+        projectId: number, 
+        task: Task | any, 
+        setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>,
+        projectMembers: ProjectMember[], 
+        currentUser: User | null, 
+        userRole: string, 
+        onClose?: () => void, 
+        onSubmit?: () => void, 
+        onRefresh?: () => void,
+        refreshTaskMembers: boolean,
+    }) {
     const [changePage, setChangePage] = useState(0);
     const [submission, setSubmissions] = useState<Submission[]>([]);
     const [previewFile, setPreviewFile] = useState<string | null>(null);
     const [isOpenFile, setOpenFile] = useState(false);
     const fetchedRef = useRef(false);
+    const [isAssignModalOpen, setAssignModalOpen] = useState(false);
+    const [loadingUserId, setLoadingUserId] = useState<number | null>(null);
 
     const formatThaiDate = (date?: string) => {
     if (!date) return '-';
@@ -97,8 +111,8 @@ export default function TaskPopup({task, projectMembers, currentUser, userRole, 
             หัวหน้า
             </span>
         ),
-        Member: (
-            <span className="px-2 py-1 text-sm rounded-full border border-green-500 bg-green-100 text-green-500">
+        member: (
+            <span className="px-2 py-1 text-sm rounded-full border border-green-700 bg-green-100 text-green-700">
             สมาชิก
             </span>
         ),
@@ -128,6 +142,17 @@ export default function TaskPopup({task, projectMembers, currentUser, userRole, 
     };
 
     const getStatus = getTaskStatusConfig(task.task_status);
+
+    const refreshTask = async () => {
+        const res = await axios.get(
+            `/api/tasks/${task.documentId}`
+        );
+
+        if (res.data?.task) {
+            setSelectedTask(res.data.task);
+            onRefresh?.();
+        }
+     };
 
     useEffect(() => {
         if (fetchedRef.current) return;
@@ -214,7 +239,7 @@ export default function TaskPopup({task, projectMembers, currentUser, userRole, 
                                     <button className='py-2 px-4 bg-[#696FC7] text-sm rounded-md text-white hover:bg-[#50589C]/90'>
                                         <FaRegEdit className='size-4' />
                                     </button>
-                                    <button className='py-2 px-4 bg-[#696FC7] text-sm rounded-md text-white hover:bg-[#50589C]/90'>
+                                    <button onClick={() => setAssignModalOpen(true)} className='py-2 px-4 bg-[#696FC7] text-sm rounded-md text-white hover:bg-[#50589C]/90'>
                                         <FaPlus className='size-4' />
                                     </button>
                                 </div>
@@ -328,6 +353,29 @@ export default function TaskPopup({task, projectMembers, currentUser, userRole, 
                 setOpenFile={setOpenFile} 
                 previewFile={previewFile} 
                 setPreviewFile={setPreviewFile}
+            />
+
+            <AssignUserModal
+                isOpen={isAssignModalOpen}
+                onClose={() => setAssignModalOpen(false)}
+                projectMembers={projectMembers}
+                assignedUserIds={
+                    task.assigned_to_user_ids?.map((u: any) => u.id) ?? []
+                }
+                onAssign={async (userId) => {
+                    setLoadingUserId(userId);
+                    await axios.post('/api/tasks/assign-user', {
+                    taskId: task.documentId,
+                    projectId: projectId,
+                    userId,
+                    });
+                                     
+                   await refreshTask();    
+                   setLoadingUserId(null); 
+                }}
+                
+                loadingUserId={loadingUserId}
+                refreshTaskMembers={refreshTaskMembers}
             />
 
         </div>

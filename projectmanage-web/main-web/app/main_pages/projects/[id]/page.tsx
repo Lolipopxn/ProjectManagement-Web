@@ -117,6 +117,7 @@ export default function ProjectDetailPage() {
   const [ToggleView, setToggleView] = useState(1);
   const [toggleMember, setToggleMember] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
+  const [reloadTaskMembers, setReloadTaskMembers] = useState(false);
 
   const [reload, setReload] = useState(false);
   const [projectLoading, setProjectLoading] = useState(false);
@@ -270,6 +271,7 @@ export default function ProjectDetailPage() {
   //reload data
   useEffect(() => {
     //reload project
+    if (reload) {
         const ReloadData = async () => {
           try {
             // setLoading(true);
@@ -290,8 +292,127 @@ export default function ProjectDetailPage() {
           }
       }
       ReloadData()
+    }
     
-  },[reload]);
+    if (reloadTaskMembers) {
+        // Refresh Task members
+      const refreshProjectMembers = async () => {
+      setError(null);
+      setReloadTaskMembers(true);
+
+      try {
+        const [projectRes, userRes] = await Promise.all([
+          axios.get(`/api/projects/${projectId}`),
+          axios.get(`/api/auth/me`).catch(() => null),
+        ]);
+
+        const project = projectRes.data?.project;
+        const currentUser = userRes?.data?.user ?? null;
+
+        if (!project) {
+          setError("ไม่พบข้อมูลโปรเจ็กต์");
+          return;
+        }
+
+        if (currentUser) setUser(currentUser);
+
+        let membersWithUserInfo: any[] = [];
+
+        try {
+          const membersRes = await axios.get(
+            `/api/project-members?projectDocumentId=${projectId}&projectIdNumber=${project.id}`
+          );
+
+          if (membersRes.data?.success) {
+            const members = membersRes.data.projectMembers ?? [];
+
+            // user info parallel
+            membersWithUserInfo = await Promise.all(
+              members.map(async (member: any) => {
+                try {
+                  const userRes = await axios.get(
+                    `/api/users?userId=${member.user_id_in_project}`
+                  );
+
+                  return {
+                    ...member,
+                    userInfo: userRes.data?.user ?? null,
+                  };
+                } catch {
+                  return {
+                    ...member,
+                    userInfo: null,
+                  };
+                }
+              })
+            );
+          }
+        } catch (err) {
+          console.error("Fetch members failed:", err);
+        } finally {
+          setProjectMembers(membersWithUserInfo);
+          setMembersLoading(false);
+        }
+
+        if (currentUser) {
+          const isLeader =
+            project.created_by_user_id === currentUser.id ||
+            project.created_by_user === currentUser.id;
+
+          if (isLeader) {
+            setUserRole("Leader");
+          } else {
+            const member = membersWithUserInfo.find(
+              (m) =>
+                (m.userInfo?.id ?? m.user_id_in_project) === currentUser.id
+            );
+
+            setUserRole(member?.role_in_project ?? "Member");
+          }
+        }
+
+        try {
+          const tasksRes = await axios.get(
+            `/api/tasks?projectDocumentId=${projectId}`
+          );
+
+          const tasks = tasksRes.data?.tasks ?? [];
+          const currentUserId = currentUser?.id;
+          const isMyTask = (task: Task, currentUserId: number) => {
+            return Array.isArray(task.assigned_to_user_ids)
+              && task.assigned_to_user_ids.some(
+                (user: any) => user?.id === currentUserId
+              );
+          };
+
+          if (!currentUserId) {
+            setMyTasks([]);
+            setOtherTasks(tasks);
+          } else {
+            setMyTasks(
+              tasks.filter((t: Task) => isMyTask(t, currentUserId))
+            );
+
+            setOtherTasks(
+              tasks.filter((t: Task) => !isMyTask(t, currentUserId))
+            );
+          }
+          setTasksLoading(false);
+        } catch (err) {
+          console.error("Fetch tasks failed:", err);
+          setMyTasks([]);
+          setOtherTasks([]);
+          setTasksLoading(false);
+        }
+      } catch (err: any) {
+        console.error(err);
+      } finally {
+        setReloadTaskMembers(false);
+      }
+    };
+      refreshProjectMembers();
+    }
+  },[reload, reloadTaskMembers]);
 
   // Create task function
   const handleCreateTask = async (taskData: any) => {
@@ -2383,12 +2504,16 @@ const progressPercent =
       {/* task popup */}
       {popupTask && (
         <TaskPopup 
+          projectId={project.id}
           task={selectedTask} 
+          setSelectedTask={setSelectedTask}
           projectMembers={projectMembers}
           currentUser={user}
           userRole={userRole}
           onClose={() => {setSelectedTask(null); setPopupTask(false)}} 
           onSubmit={() => {router.push(`/main_pages/projects/${projectId}/tasks/${selectedTask?.documentId}`);}}
+          onRefresh={() => setReloadTaskMembers(true)}
+          refreshTaskMembers={reloadTaskMembers}
         />
       )}
       
