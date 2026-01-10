@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import axios from 'axios'
+import dayjs from "dayjs";
+import "dayjs/locale/th";
 
 import PreviewFile from './previewFile';
-import TaskStatusIcon from './TaskStatusIcon';
 import { TaskStatusTimeline } from './TaskStatusTimeline';
 import AssignUserModal from './AssignUserModal';
 
@@ -12,6 +13,7 @@ import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
 import { FaRegEdit, FaPlus  } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
+import { rejects } from 'assert';
 
 interface Task {
   id: number;
@@ -99,6 +101,41 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
     });
     };
 
+    const getTimeLeft = (dueDate: string, beginDate: string) => {
+        const now = dayjs();
+        const due = dayjs(dueDate);
+        const begin = dayjs(beginDate);
+    
+        const daysBegin = dayjs.duration(begin.diff(now)).asDays();
+    
+        if(now.isBefore(begin)) {
+          return <div>เริ่มในอีก {Math.floor(daysBegin)} วัน</div>
+        }
+    
+        if(begin.isBefore(now)){
+          if (due.isBefore(now)) {
+            return <div className="text-red-700 bg-red-300 rounded-full px-2 py-1 flex items-center justify-center">
+                เลยกำหนด
+            </div>;
+          }
+    
+          const diff = dayjs.duration(due.diff(now));
+          const days = diff.asDays();
+    
+          if (days >= 1) {
+            return <div>เหลือ {Math.floor(days)} วัน</div>;
+          }
+          
+          const hours = diff.asHours();
+          if (hours >= 1) {
+            return <div>เหลือ {Math.floor(hours)} ชั่วโมง</div>;
+          }
+          
+          const minutes = diff.asMinutes();
+          return <div>เหลือ {Math.floor(minutes)} นาที</div>;
+        }
+      };
+
     const getUserRoleInProject = (userId: number) => {
         const member = projectMembers.find(
             (m) => m.user_id_in_project === userId
@@ -143,7 +180,38 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
         };
     };
 
-    const getStatus = getTaskStatusConfig(task.task_status);
+    const STATUS_BUTTON: Record<string, {
+        label: string;
+        onClick?: () => void;
+        className: string;
+        disabled?: boolean;
+        }> = {
+        'not turn in': {
+            label: 'เริ่มงาน',
+            onClick: () => updatedTaskStatus('continue'),
+            className: 'bg-[#50589C] hover:bg-[#50589C]/80 shadow-md text-white',
+        },
+        continue: {
+            label: 'หยุดงาน',
+            onClick: () => updatedTaskStatus('not turn in'),
+            className: 'bg-red-400 hover:bg-red-600 shadow-md text-white',
+        },
+        pending_review: {
+            label: 'รออนุมัติ',
+            className: 'bg-gray-100 text-gray-700 border border-gray-700',
+            disabled: true,
+        },
+        completed: {
+            label: 'เสร็จสมบูรณ์',
+            className: 'bg-green-100 text-green-700 border border-green-700',
+            disabled: true,
+        },
+        rejected: {
+            label: 'ส่งแก้ไขงาน',
+            onClick: () => updatedTaskStatus('continue'),
+            className: 'bg-blue-400 hover:bg-blue-600 shadow-md text-white',
+        },
+    };
 
     const refreshTask = async () => {
         const res = await axios.get(
@@ -154,6 +222,15 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
             setSelectedTask(res.data.task);
             onRefresh?.();
         }
+     };
+
+     const updatedTaskStatus = async (newStatus: string) => {
+        await axios.put('/api/tasks/updateStatus', {
+            documentId: task.documentId,
+            task_status: newStatus,
+        });
+
+        refreshTask();
      };
 
     useEffect(() => {
@@ -215,9 +292,10 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                         </div>
                         
                         <button 
-                        onClick={onSubmit}
-                        disabled={!isTaskOwner()}
-                        className={`py-2  px-6 rounded-lg scale-90 ${isTaskOwner() ? 'bg-[#50589C] text-white hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}`}>
+                            onClick={onSubmit}
+                            disabled={!isTaskOwner()}
+                            className={`py-2  px-6 rounded-lg scale-90 ${isTaskOwner() ? 'bg-[#50589C] text-white hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}`}
+                        >
                             ส่งงาน
                         </button>
                         
@@ -225,16 +303,98 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                 </div>
                 <div className='h-100 flex flex-col bg-white space-y-3 px-6'>
                     {changePage === 0 && (
-                        <div className='flex flex-col space-y-2 text-lg'>
-                            <span className="border-b pb-2 border-gray-200">คำอธิบาย</span>
-                            <div className='px-6 py-2 h-85 w-250  rounded-lg whitespace-pre-wrap overflow-y-scroll scrollbar-autoHide'>
-                                <p>{task.description}</p>
-                            </div>                    
-                        </div>                    
-                    )}
+                        <div className="flex flex-row gap-6 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+
+                            {/* LEFT : Description */}
+                            <div className="flex flex-col flex-[2] bg-white rounded-xl ">
+                                <div className="flex flex-row items-center justify-between py-4 border-b border-gray-300">
+                                    <h3 className="text-lg font-semibold">คำอธิบาย</h3>
+                                    {STATUS_BUTTON[task.task_status] && (
+                                        <button
+                                            key={task.task_status}
+                                            onClick={STATUS_BUTTON[task.task_status].onClick}
+                                            disabled={STATUS_BUTTON[task.task_status].disabled}
+                                            className={`
+                                                py-1 px-3 rounded-md
+                                                transition duration-300
+                                                animate-in fade-in slide-in-from-bottom-2
+                                                ${STATUS_BUTTON[task.task_status].className}
+                                                ${STATUS_BUTTON[task.task_status].disabled ? 'cursor-not-allowed' : ''}
+                                            `}
+                                        >
+                                            {STATUS_BUTTON[task.task_status].label}
+                                        </button>
+                                    )}
+                                    
+                                </div>
+
+                                <div className="px-2 py-4 h-85 overflow-y-scroll scrollbar-autoHide whitespace-pre-wrap text-gray-700 leading-relaxed">
+                                    {task.description}
+                                </div>
+                            </div>
+
+                            {/* RIGHT : Task Schedule */}
+                            <div className="flex flex-col flex-1 px-6 bg-white rounded-xl shadow-md border border-gray-200
+                                            transition hover:shadow-lg hover:-translate-y-1 duration-300">
+                                <div className="px-6 py-4 border-b border-gray-300 text-center">
+                                    <h3 className="text-lg font-semibold">กำหนดงาน</h3>
+                                </div>
+
+                                <div className="py-5 space-y-4 text-md text-gray-700">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-500">เริ่มงาน:</span>
+                                        <span className="font-medium text-sm">
+                                            {formatThaiDate(task.begin_date)}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-500">จบงาน:</span>
+                                        <span className="font-medium text-sm">
+                                            {formatThaiDate(task.due_date)}
+                                        </span>
+                                    </div>
+
+                                    <div className="pt-3 border-t border-gray-300 flex justify-between items-center">
+                                        <span className="text-gray-500">เวลาที่เหลือ:</span>
+                                        {task.task_status === "completed" && (
+                                            <span className="py-1 px-2 rounded-full text-sm font-medium bg-green-200 text-green-800 animate-pulse ">
+                                                เสร็จสมบูรณ์
+                                            </span>
+                                        )}
+                                        {task.task_status === "pending_review" && (
+                                            <span className="py-1 px-2 rounded-full text-sm font-medium bg-blue-200 text-blue-800 animate-pulse ">
+                                                รอการตรวจสอบ
+                                            </span>
+                                        )}
+                                        <span className={`py-1 rounded-full text-sm font-medium animate-pulse
+                                            ${task.task_status === "completed" || task.task_status === "pending_review" ? 'hidden' : 'flex'}`}>
+                                            {getTimeLeft(task.due_date, task.begin_date)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-500">สถานะงาน:</span>
+                                        <span
+                                            key={task.task_status}
+                                            className="font-medium text-sm inline-block
+                                                        animate-in fade-in slide-in-from-left-2 duration-300"
+                                        >
+                                            {task.task_status === "not turn in" && "ยังไม่ส่ง"}
+                                            {task.task_status === "completed" && "ส่งเเล้ว"}
+                                            {task.task_status === "pending_review" && "รอหัวหน้าอนุมัติ"}
+                                            {task.task_status === "continue" && "กำลังทำอยู่"}
+                                            {task.task_status === "rejected" && "ถูกปฏิเสธ"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        )}
+
 
                     {changePage === 1 && (
-                        <div className='flex flex-col space-y-2 text-lg'> 
+                        <div className='flex flex-col space-y-2 text-lg animate-in fade-in slide-in-from-bottom-2 duration-300'> 
                             <div className="flex flex-row items-center px-4 justify-between border-b pb-2 border-gray-200">
                                 <span>รายชื่อผู้ได้รับหมอบหมายงาน</span>
                                 <div className='flex flex-row items-center gap-2'>
@@ -307,7 +467,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                         </div>                    
                     )}
                     {changePage === 2 && (
-                    <div className='flex flex-col space-y-3 text-lg'>
+                    <div className='flex flex-col space-y-3 text-lg animate-in fade-in slide-in-from-bottom-2 duration-300'>
                         <span className="border-b pb-2 border-gray-200">งานที่ส่งแล้ว</span>
 
                         <div className='px-6 py-4 h-85 w-250 rounded-lg overflow-y-scroll scrollbar-autoHide space-y-4'>
@@ -346,7 +506,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                     )}
 
                     {changePage === 3 && (
-                    <div className='flex flex-col items-center space-y-6 text-lg h-full w-full'>
+                    <div className='flex flex-col items-center space-y-6 text-lg h-full w-full animate-in fade-in slide-in-from-bottom-2 duration-300'>
                         <div className='flex flex-col items-center gap-4 mt-6'>
                              <TaskStatusTimeline currentStatus={task.task_status} />
                             

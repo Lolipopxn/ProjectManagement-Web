@@ -93,6 +93,21 @@ export const getTaskStatusConfig = (status: string): TaskStatusConfig => {
         descriptionColor: 'text-red-600',
         iconBg: 'bg-red-200'
       };
+
+      case 'continue':
+      return {
+        text: 'กำลังดำเนินการ',
+        bgColor: 'bg-blue-50',
+        textColor: 'text-blue-800',
+        borderColor: 'border-blue-300',
+        badgeColor: 'bg-blue-500',
+        indicatorColor: 'bg-blue-500',
+        lightBgColor: 'bg-blue-100',
+        statusText: 'กำลังดำเนินการ',
+        description: 'งานอยู่ระหว่างการดำเนินการ',
+        descriptionColor: 'text-blue-600',
+        iconBg: 'bg-blue-200'
+      };
     
     default:
       return {

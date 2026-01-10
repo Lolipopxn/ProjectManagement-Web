@@ -18,7 +18,7 @@ import { AiFillReconciliation, AiFillEnvironment, AiFillFileText } from "react-i
 import { IoMdClose, IoMdPerson } from "react-icons/io";
 import { FaTimes } from "react-icons/fa";
 import { CgSandClock } from "react-icons/cg";
-import { FcSurvey, FcOk, FcHighPriority, FcSearch  } from "react-icons/fc";
+import { FcSurvey, FcOk, FcHighPriority, FcSearch, FcProcess } from "react-icons/fc";
 
 // Interface สำหรับ project data
 interface Project {
@@ -871,6 +871,7 @@ const progressPercent =
     "All": "ทั้งหมด",
     "myTask": "งานของฉัน",
     "not turn in": "ยังไม่ส่ง",
+    "continue": "กำลังดำเนินการ",
     "pending_review": "รอตรวจสอบ",
     "rejected": "ไม่ผ่าน",
     "completed": "เสร็จแล้ว",
@@ -2114,7 +2115,7 @@ const progressPercent =
                           {/* Section: สถานะงาน */}
                           <div className="px-3 py-2">
                             <p className="text-xs font-semibold text-gray-400 mb-1">สถานะงาน</p>
-                            {["not turn in", "pending_review", "rejected"].map((key) => (
+                            {["not turn in", "continue", "pending_review", "rejected"].map((key) => (
                               <button
                                 key={key}
                                 onClick={() => {
@@ -2133,6 +2134,7 @@ const progressPercent =
                               >
                                 <span className="text-base">
                                   {key === "not turn in" && <CgSandClock  className="size-5 text-yellow-600"/>}
+                                  {key === "continue" && <FcProcess className="size-5"/>}
                                   {key === "pending_review" && <FcSearch className="size-5"/>}
                                   {key === "rejected" && <FaTimes  className="size-5 text-red-600"/>}
                                 </span>
