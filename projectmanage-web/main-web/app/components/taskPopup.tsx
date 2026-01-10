@@ -11,6 +11,7 @@ import AssignUserModal from './AssignUserModal';
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
 import { FaRegEdit, FaPlus  } from "react-icons/fa";
+import { MdDelete } from "react-icons/md";
 
 interface Task {
   id: number;
@@ -87,6 +88,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
     const fetchedRef = useRef(false);
     const [isAssignModalOpen, setAssignModalOpen] = useState(false);
     const [loadingUserId, setLoadingUserId] = useState<number | null>(null);
+    const [isOpenEdit, setOpenEdit] = useState(false);
 
     const formatThaiDate = (date?: string) => {
     if (!date) return '-';
@@ -236,7 +238,11 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                             <div className="flex flex-row items-center px-4 justify-between border-b pb-2 border-gray-200">
                                 <span>รายชื่อผู้ได้รับหมอบหมายงาน</span>
                                 <div className='flex flex-row items-center gap-2'>
-                                    <button className='py-2 px-4 bg-[#696FC7] text-sm rounded-md text-white hover:bg-[#50589C]/90'>
+                                    <button onClick={() => {setOpenEdit((prev) => !prev)}} className={`py-2 px-4 text-sm rounded-md text-white transition ${
+                                        isOpenEdit
+                                        ? 'bg-[#50589C]'
+                                        : 'bg-gray-400 hover:bg-gray-700'
+                                    }`}>
                                         <FaRegEdit className='size-4' />
                                     </button>
                                     <button onClick={() => setAssignModalOpen(true)} className='py-2 px-4 bg-[#696FC7] text-sm rounded-md text-white hover:bg-[#50589C]/90'>
@@ -265,7 +271,33 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                                         </div>
                                                     </td>
                                                     <td>{user.email}</td>
-                                                    <td>{getUserRoleInProject(user.id)}</td>
+                                                    <td className='w-32 px-2'>
+                                                        <div className='flex flex-row items-center justify-between '>
+                                                           {getUserRoleInProject(user.id)}
+                                                           {/* button delete */}
+                                                           {isOpenEdit && (
+                                                            <button 
+                                                                disabled={loadingUserId === user.id}
+                                                                onClick={async () => {
+                                                                    setLoadingUserId(user.id);
+                                                                    await axios.post('/api/tasks/remove-user', {
+                                                                        taskId: task.documentId,
+                                                                        userId: user.id,
+                                                                    });
+
+                                                                    await refreshTask();
+                                                                }}
+                                                                className='p-1 hover:bg-red-200 rounded-md'
+                                                            >
+                                                                {loadingUserId === user.id ? (
+                                                                    <span className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin block" />
+                                                                ) : (
+                                                                    <MdDelete className="size-6 text-red-500" />
+                                                                )}
+                                                            </button>
+                                                           )}
+                                                        </div>                                              
+                                                    </td>
                                                 </tr>
                                             ))}                                  
                                         </tbody>
