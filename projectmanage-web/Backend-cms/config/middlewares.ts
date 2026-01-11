@@ -6,7 +6,11 @@ export default [
       contentSecurityPolicy: {
         useDefaults: true,
         directives: {
-          'connect-src': ["'self'", process.env.APP_ORIGIN]
+          'connect-src': ["'self'", process.env.APP_ORIGIN],
+          "frame-ancestors": [
+            "'self'",
+            "http://localhost:3000",
+          ],
         }
       }
     }
@@ -21,8 +25,6 @@ export default [
   },
   'strapi::logger',
   'strapi::errors',
-  'strapi::security',
-  'strapi::cors',
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',
