@@ -13,6 +13,8 @@ import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
 import { FaRegEdit, FaPlus  } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
+import { BsArrowReturnRight } from "react-icons/bs";
+import { RiArrowRightSLine } from "react-icons/ri";
 import { rejects } from 'assert';
 
 interface Task {
@@ -30,6 +32,7 @@ interface Task {
   assigned_to_user_ids?: any;
   project_id?: any;
   attributes?: any;
+  task_status_histories?: any[];
 }
 
 interface Submission {
@@ -196,12 +199,12 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
         }> = {
         'not turn in': {
             label: 'เริ่มงาน',
-            onClick: () => updatedTaskStatus('continue'),
+            onClick: () => updatedTaskStatus('continue', 'เริ่มต้นการทำงาน'),
             className: 'bg-[#50589C] hover:bg-[#50589C]/80 shadow-md text-white',
         },
         continue: {
             label: 'หยุดงาน',
-            onClick: () => updatedTaskStatus('not turn in'),
+            onClick: () => updatedTaskStatus('not turn in', 'หยุดการทำงาน'),
             className: 'bg-red-400 hover:bg-red-600 shadow-md text-white',
         },
         pending_review: {
@@ -215,8 +218,8 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
             disabled: true,
         },
         rejected: {
-            label: 'ส่งแก้ไขงาน',
-            onClick: () => updatedTaskStatus('continue'),
+            label: 'แก้ไขงาน',
+            onClick: () => updatedTaskStatus('continue', 'กำลังแก้ไขงานหลังจากถูกปฏิเสธ'),
             className: 'bg-blue-400 hover:bg-blue-600 shadow-md text-white',
         },
     };
@@ -260,10 +263,11 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
         }
      };
 
-     const updatedTaskStatus = async (newStatus: string) => {
+     const updatedTaskStatus = async (newStatus: string, note: string) => {
         await axios.put('/api/tasks/updateStatus', {
             documentId: task.documentId,
             task_status: newStatus,
+            note: note || '',
         });
 
         refreshTask();
@@ -510,7 +514,9 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                             {/* submission list */}
                             {submission.filter(s => s.file_urls && s.file_urls.length > 0 && s.is_active).length > 0 ? (
                             <div className="flex flex-col space-y-3 w-full h-full">
-                                {submission.map((item, index) => (
+                                {submission
+                                    .filter(s => s.file_urls && s.file_urls.length > 0 && s.is_active)
+                                    .map((item, index) => (
                                 <div
                                     key={item.id ?? index}
                                     className="flex flex-col space-y-2 border border-gray-200 rounded-lg p-4"
@@ -585,22 +591,48 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                     {changePage === 3 && (
                     <div className='flex flex-col items-center space-y-6 text-lg h-full w-full animate-in fade-in slide-in-from-bottom-2 duration-300'>
                         <div className='flex flex-col items-center gap-4 mt-6'>
-                             <TaskStatusTimeline currentStatus={task.task_status} />
-                            
+                             <TaskStatusTimeline currentStatus={task.task_status} />                         
                         </div> 
                         <div className='flex flex-col self-start p-2 w-full h-full gap-4'>
                             <span className='font-bold text-lg'>ประวัติการดำเนินการ</span>
-                            <div className='flex flex-col border-1 border-gray-300 rounded-lg h-full w-full p-4 overflow-y-scroll scrollbar-autoHide'>
-                                {submission.length > 0 ? (
+                            <div className='flex flex-col border-1 border-gray-300 rounded-lg h-53 w-full p-4 overflow-y-scroll scrollbar-autoHide animate-in fade-in slide-in-from-bottom-2 duration-500'>
+                                {task.task_status_histories?.length > 0 ? (
                                 <div className="flex flex-col space-y-3">
-                                    {submission.map((item, index) => (
+                                    {[...task.task_status_histories]
+                                        .sort(
+                                            (a, b) =>
+                                            new Date(b.changed_at).getTime() -
+                                            new Date(a.changed_at).getTime()
+                                        )
+                                        .map((item: any, index: number) => (
                                     <div
                                         key={item.id ?? index}                              
-                                        className="flex flex-row items-center justify-between space-y-2 border text-sm border-gray-200 rounded-lg p-4"
+                                        className="flex flex-col items-start justify-start space-y-2 border text-sm border-gray-200 rounded-lg p-4"
                                     >
-                                        {item.submission_description}
-                                        <div>{item.submission_date}</div>
-          
+                                        <div className='flex flex-row justify-between w-full'>
+                                            <div className='flex flex-row items-center gap-2'>
+                                                <div className="text-sm">
+                                                    สถานะ: {getTaskStatusConfig(item.from_status ? item.from_status : '').statusText}
+                                                </div>
+                                                <RiArrowRightSLine className='size-4'/>
+                                                <div className="text-sm">
+                                                    {getTaskStatusConfig(item.to_status? item.to_status : '').statusText}
+                                                </div>
+                                            </div>
+                                        
+                                            <div className='text-gray-500'>{item.changed_at ? new Date(item.changed_at).toLocaleDateString('th-TH') : '-'}</div>
+                                        </div>
+                                        
+                                        <div>
+                                            {item.note && (
+                                                <div className='flex flex-row items-center justify-center gap-2 mt-2'>
+                                                    <BsArrowReturnRight className='size-4' />
+                                                    <div className={`${getTaskStatusConfig(item.to_status ? item.to_status : '').textColor}`}>{item.note}</div>
+                                                </div>
+                                                
+                                            )}
+                                        </div>
+                                        
                                     </div>
                                     ))}
                                 </div>

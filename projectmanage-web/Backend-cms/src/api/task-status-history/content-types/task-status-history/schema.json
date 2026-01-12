@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "task_status_histories",
+  "info": {
+    "singularName": "task-status-history",
+    "pluralName": "task-status-histories",
+    "displayName": "TaskStatusHistory"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "task": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::task.task",
+      "inversedBy": "task_status_histories"
+    },
+    "from_status": {
+      "type": "string"
+    },
+    "to_status": {
+      "type": "string"
+    },
+    "changed_at": {
+      "type": "datetime"
+    },
+    "note": {
+      "type": "string"
+    }
+  }
+}

@@ -101,6 +101,27 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    const createdTaskId = strapiResponse.data.data.id;
+
+    const statusHistory = await axios.post(
+      `${process.env.STRAPI_BASE_URL}/api/task-status-histories`,
+      {
+        data: {
+          task: createdTaskId,
+          from_status: 'begin',
+          to_status: task_status,
+          changed_at: new Date().toISOString(),
+          note: 'สร้างงานใหม่',
+        },
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
     if (strapiResponse.status === 200 || strapiResponse.status === 201) {
       return NextResponse.json({
         success: true,
@@ -113,6 +134,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    
 
   } catch (error: any) {
     console.error('Error creating task:', error);

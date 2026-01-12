@@ -72,6 +72,12 @@
     },
     "task_color": {
       "type": "string"
+    },
+    "task_status_histories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::task-status-history.task-status-history",
+      "mappedBy": "task"
     }
   }
 }

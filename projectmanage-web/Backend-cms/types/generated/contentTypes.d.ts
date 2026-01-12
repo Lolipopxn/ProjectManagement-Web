@@ -692,6 +692,39 @@ export interface ApiSubmissionSubmission extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiTaskStatusHistoryTaskStatusHistory
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'task_status_histories';
+  info: {
+    displayName: 'TaskStatusHistory';
+    pluralName: 'task-status-histories';
+    singularName: 'task-status-history';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    changed_at: Schema.Attribute.DateTime;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    from_status: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::task-status-history.task-status-history'
+    > &
+      Schema.Attribute.Private;
+    note: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    task: Schema.Attribute.Relation<'manyToOne', 'api::task.task'>;
+    to_status: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiTaskTask extends Struct.CollectionTypeSchema {
   collectionName: 'tasks';
   info: {
@@ -740,6 +773,10 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 50;
       }>;
+    task_status_histories: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::task-status-history.task-status-history'
+    >;
     task_type: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1331,6 +1368,7 @@ declare module '@strapi/strapi' {
       'api::project-member.project-member': ApiProjectMemberProjectMember;
       'api::project.project': ApiProjectProject;
       'api::submission.submission': ApiSubmissionSubmission;
+      'api::task-status-history.task-status-history': ApiTaskStatusHistoryTaskStatusHistory;
       'api::task.task': ApiTaskTask;
       'api::voice-session.voice-session': ApiVoiceSessionVoiceSession;
       'plugin::content-releases.release': PluginContentReleasesRelease;

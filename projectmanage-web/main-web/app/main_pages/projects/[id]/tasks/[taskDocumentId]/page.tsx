@@ -382,7 +382,7 @@ export default function TaskDetailPage() {
       console.log('Updating task status...'); // debug
 
       // อัปเดตสถานะ task เป็น "pending_review" (รอการตรวจสอบ)
-      await handleStatusUpdate('pending_review');
+      await handleStatusUpdate('pending_review','รอหัวหน้าตรวจสอบงาน');
       
       // รอเล็กน้อยเพื่อให้ส่วนแบ็กเอนด์บันทึกข้อมูล
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -721,8 +721,10 @@ export default function TaskDetailPage() {
       }
       
       // จากนั้นค่อยเปลี่ยน task status (จะ trigger lifecycle hook ที่อ่าน comment)
-      const response = await axios.put(`/api/tasks/${task.documentId}`, {
-        task_status: newStatus
+      const response = await axios.put(`/api/tasks/updateStatus`, {
+        documentId: task.documentId,
+        task_status: newStatus,
+        note: reviewAction === 'approve' ? 'อนุมัติงาน' : 'ไม่อนุมัติงาน',
       });
 
       if (response.data.success) {
@@ -1083,14 +1085,16 @@ export default function TaskDetailPage() {
   };
 
   // Handle status update
-  const handleStatusUpdate = async (newStatus: string) => {
+  const handleStatusUpdate = async (newStatus: string, note: string) => {
     if (!task?.documentId) return;
     
     try {
       setUpdating(true);
       
-      const response = await axios.put(`/api/tasks/${task.documentId}`, {
-        task_status: newStatus
+      const response = await axios.put(`/api/tasks/updateStatus`, {
+        documentId: task.documentId,
+        task_status: newStatus,
+        note: note || '',
       });
 
       if (response.data.success) {
@@ -1146,8 +1150,10 @@ export default function TaskDetailPage() {
       console.log('All active submissions set to inactive');
 
       // เปลี่ยนสถานะ task เป็น "not turn in"
-      const response = await axios.put(`/api/tasks/${task.documentId}`, {
-        task_status: 'not turn in'
+      const response = await axios.put(`/api/tasks/updateStatus`, {
+        documentId: task.documentId,
+        task_status: 'not turn in',
+        note: 'ยกเลิกการส่งงาน' ,
       });
 
       if (response.data.success) {

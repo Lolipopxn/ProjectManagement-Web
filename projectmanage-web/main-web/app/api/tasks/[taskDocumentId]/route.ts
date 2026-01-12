@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { fi } from 'date-fns/locale';
 
 // helper: ดึง documentId ของ user จาก numeric id (users-permissions)
 async function getUserDocumentIdById(userId: number, token: string) {
@@ -176,7 +177,10 @@ export async function GET(
             assigned_to_user_ids: {
               fields: ['id', 'username', 'email'],
             },
-          },
+            task_status_histories: {
+                fields: ['id', 'from_status', 'to_status', 'changed_at', 'note'],
+              },
+            },
         },
         headers
       },
