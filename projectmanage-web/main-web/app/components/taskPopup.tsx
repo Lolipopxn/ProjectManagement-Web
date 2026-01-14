@@ -9,6 +9,7 @@ import PreviewFile from './previewFile';
 import { TaskStatusTimeline } from './TaskStatusTimeline';
 import AssignUserModal from './AssignUserModal';
 import ViewLocationMap from './map/ViewLocationMap';
+import GoogleMapsProvider from './map/GoogleMapsProvider'
 
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
@@ -518,8 +519,10 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                <div>สถานที่นัดหมาย: </div> 
                                <div>{task.address? task.address : 'ไม่ได้เลือกสถานที่'}</div>
                             </div>  
-                            {task.task_type === 'location_task' && task.latitude && task.longitude && (                 
-                                <ViewLocationMap position={{ lat: task.latitude, lng: task.longitude }}/>  
+                            {task.task_type === 'location_task' && task.latitude && task.longitude && (   
+                                 <GoogleMapsProvider>
+                                    <ViewLocationMap position={{ lat: task.latitude, lng: task.longitude }}/>  
+                                 </GoogleMapsProvider>                                             
                             )}                    
                         </div>                                       
                     )}                  

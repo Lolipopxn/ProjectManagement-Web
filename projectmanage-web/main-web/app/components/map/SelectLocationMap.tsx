@@ -96,6 +96,10 @@ const handleSubmit = async (e: React.FormEvent) => {
     } catch (err) {
         console.error("submit failed", err);
     }
+    finally{
+      resetForm();
+
+    }
   };
 
   const resetForm = () => {

@@ -44,6 +44,7 @@ interface Task {
   description: string;
   task_status: string;
   due_date: string;
+  begin_date: string;
   createdAt: string;
   project_document_id: string;
   assigned_to_user_ids_number: number;
@@ -78,7 +79,7 @@ function mapTaskToFeature(task: Task) {
     id: task.id.toString(),
     docId: task.documentId,
     name: task.task_name ?? "Untitled",
-    startAt: new Date(task.createdAt),
+    startAt: new Date(task.begin_date),
     endAt: new Date(task.due_date),
     group: { name: task.project_id?.project_name ?? "ไม่มี", projectId: task.project_id?.documentId},
     description: task.description ?? "",

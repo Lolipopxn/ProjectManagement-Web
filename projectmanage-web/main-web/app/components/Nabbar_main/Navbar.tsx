@@ -56,15 +56,15 @@ export default function Navbar() {
       // ใช้ Next.js API route แทนการเรียก Strapi โดยตรง
       const response = await axios.get('/api/notifications');
       
-      console.log("=== NOTIFICATION DEBUG ===");
-      console.log("Response status:", response.status);
-      console.log("Response data:", response.data);
+      // console.log("=== NOTIFICATION DEBUG ===");
+      // console.log("Response status:", response.status);
+      // console.log("Response data:", response.data);
       
       // API route จะส่ง { notifications: [...] }
       const allNotifications = response.data.notifications || [];
       
-      console.log("Parsed notifications:", allNotifications);
-      console.log("Number of notifications:", allNotifications.length);
+      // console.log("Parsed notifications:", allNotifications);
+      // console.log("Number of notifications:", allNotifications.length);
       
       if (allNotifications.length > 0) {
         console.log("First notification sample:", allNotifications[0]);
@@ -104,16 +104,16 @@ export default function Navbar() {
   };
   
   return (
-    <nav className="bg-[#50589C] text-white px-6 md:px-4 py-2 fixed top-0 left-0 w-full z-50">
+    <nav className="bg-[#50589C] text-white px-6 md:px-6 py-2 fixed top-0 left-0 w-full z-50">
       <div className="container reactive mx-auto h-auto max-w-full flex items-center justify-between">
         {/* Left side - App name and navigation */}
         <div className="flex items-center space-x-5 md:space-x-20 text-lg md:text-md">
           <a href="/main_pages/overview" className="font-semibold">
-            MyDaily
+            <img src="/TAMA2.png" alt="Logo" className="h-8 w-full"/>
           </a>
 
           {/* Navigation Links */}
-          <ul className="hidden gap-8 md:flex md:flex-row">
+          {/* <ul className="hidden gap-8 md:flex md:flex-row">
             <li className="flex items-center">
               <a
                 href="/main_pages/dashboard"
@@ -132,7 +132,7 @@ export default function Navbar() {
                 <div>overview</div>
               </a>
             </li>
-          </ul>
+          </ul> */}
         </div>
 
         {/* Center - Search bar */}
@@ -143,16 +143,16 @@ export default function Navbar() {
         {/* Right side - Actions */}
         <div className="flex flex-row justify-end items-center md:space-x-6">
           {/* Create project button */}
-          <a href="/main_pages/create-project" className="hidden md:flex flex-row justify-center items-center gap-2 p-1 px-2 hover:bg-[#F2AEBB] rounded-lg transition-colors relative">
+          {/* <a href="/main_pages/create-project" className="hidden md:flex flex-row justify-center items-center gap-2 p-1 px-2 hover:bg-[#F2AEBB] rounded-lg transition-colors relative">
             <FaPlus size={20} />
             <div className="hidden md:flex">New</div>
-          </a>
+          </a> */}
 
           {/* Notification button with dropdown */}
           <div className="relative">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="hidden md:flex p-1 hover:bg-[#F2AEBB] rounded-lg transition-colors relative"
+              className="hidden md:flex p-1 hover:bg-[#6972c3] rounded-lg transition-colors relative"
             >
               <MdNotifications size={25} />
               {/* Notification badge - แสดงจำนวน unread */}
