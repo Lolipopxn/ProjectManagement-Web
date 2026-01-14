@@ -16,15 +16,15 @@ export default [
     }
   },
   {
-    name: 'strapi::cors',
+    name: "strapi::cors",
     config: {
-      origin: [process.env.APP_ORIGIN],
-      credentials: true, // เพิ่มบรรทัดนี้เพื่อรองรับ cookies
-      headers: ['Content-Type', 'Authorization']
-    }
+      origin: ["http://localhost:3000"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      headers: ["Content-Type", "Authorization"],
+      credentials: true,
+    },
   },
   'strapi::logger',
-  'strapi::errors',
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',

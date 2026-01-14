@@ -149,6 +149,8 @@ export default function ProjectDetailPage() {
 
         const project = projectRes.data?.project;
         const currentUser = userRes?.data?.user ?? null;
+        const jwt = userRes?.data?.token ?? null;
+        setToken(jwt);
 
         if (!project) {
           setError("ไม่พบข้อมูลโปรเจ็กต์");
