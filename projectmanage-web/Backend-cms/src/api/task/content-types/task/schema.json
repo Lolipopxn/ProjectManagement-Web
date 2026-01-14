@@ -78,6 +78,15 @@
       "relation": "oneToMany",
       "target": "api::task-status-history.task-status-history",
       "mappedBy": "task"
+    },
+    "latitude": {
+      "type": "float"
+    },
+    "longitude": {
+      "type": "float"
+    },
+    "address": {
+      "type": "string"
     }
   }
 }

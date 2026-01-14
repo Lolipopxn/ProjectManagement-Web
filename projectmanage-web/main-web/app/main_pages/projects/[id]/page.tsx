@@ -13,12 +13,16 @@ import GanttChart from '@/app/components/GanttChart';
 import FreeDragBoard from '@/app/components/task_board/freeDragBoard';
 import TaskPopup from '@/app/components/taskPopup';
 import SkeletonTask from '@/app/components/loading/TaskLoading/skeletonTask';
+import SelectLocationMap from '@/app/components/map/SelectLocationMap';
+import GoogleMapsProvider from '@/app/components/map/GoogleMapsProvider';
 
 import { AiFillReconciliation, AiFillEnvironment, AiFillFileText } from "react-icons/ai";
 import { IoMdClose, IoMdPerson } from "react-icons/io";
 import { FaTimes } from "react-icons/fa";
 import { CgSandClock } from "react-icons/cg";
 import { FcSurvey, FcOk, FcHighPriority, FcSearch, FcProcess } from "react-icons/fc";
+import { GrAnnounce } from "react-icons/gr";
+
 
 // Interface สำหรับ project data
 interface Project {
@@ -48,6 +52,7 @@ interface Task {
   begin_date: string;
   createdAt: string;
   task_color: string;
+  task_type: string;
   project_document_id: string;
   assigned_to_user_ids_number: number;
   assigned_to_user_ids?: any;
@@ -101,6 +106,7 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('Member');
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [showCreateLocationModal, setShowCreateLocationModal] = useState(false);
   const [createTaskLoading, setCreateTaskLoading] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
@@ -114,7 +120,7 @@ export default function ProjectDetailPage() {
   const [taskManageLoading, setTaskManageLoading] = useState(false);
   const [showProjectManageModal, setShowProjectManageModal] = useState(false);
   const [projectManageLoading, setProjectManageLoading] = useState(false);
-  const [ToggleView, setToggleView] = useState(1);
+  const [ToggleView, setToggleView] = useState(0);
   const [toggleMember, setToggleMember] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
   const [reloadTaskMembers, setReloadTaskMembers] = useState(false);
@@ -472,6 +478,66 @@ export default function ProjectDetailPage() {
       // alert('Error creating task: ' + (error.response?.data?.message || error.message));
     } finally {
       setCreateTaskLoading(false);
+    }
+  };
+
+  // Create task Location
+  const handleCreateLocation = async (taskData: any) => {
+    try {
+      setCreateTaskLoading(true);
+      
+      let combinedDueDate = taskData.dueDate;
+      let combineBeginDate = taskData.beginDate;
+      if (taskData.dueTime) {
+        combinedDueDate = `${taskData.dueDate}T${taskData.dueTime}:00.000Z`;
+      }
+
+      if (taskData.beginTime) {
+        combineBeginDate = `${taskData.beginDate}T${taskData.beginTime}:00.000Z`;
+      }
+      
+      const response = await axios.post('/api/tasks/createLocation', {
+        task_name: taskData.taskName,
+        description: taskData.description,
+        due_date: combinedDueDate,
+        begin_date: combineBeginDate,
+        project_document_id: projectId,
+        project_id_number: project?.id,
+        assigned_to_user_ids_number: taskData.assignedUserId,
+        task_status: 'not turn in',
+        latitude: taskData.latitude,
+        longitude: taskData.longitude,
+        address: taskData.address,
+      });
+
+      if (response.data.success) {
+        // Refresh tasks data
+        const tasksResponse = await axios.get(`/api/tasks?projectDocumentId=${projectId}`);
+        if (tasksResponse.data.success && tasksResponse.data.tasks) {
+          const allTasks = tasksResponse.data.tasks;
+          const currentUserId = user?.id;
+          
+          if (currentUserId) {
+            const userTasks = allTasks.filter((task: Task) => 
+              task.assigned_to_user_ids_number === currentUserId
+            );
+            const otherUserTasks = allTasks.filter((task: Task) => 
+              task.assigned_to_user_ids_number !== currentUserId
+            );
+            
+            setMyTasks(userTasks);
+            setOtherTasks(otherUserTasks);
+          }
+        }
+        
+        setShowCreateTaskModal(false);
+      } else {
+      }
+    } catch (error: any) {
+      console.error('Error creating task:', error);
+    } finally {  
+      setCreateTaskLoading(false);
+      setShowCreateLocationModal(false);
     }
   };
 
@@ -2003,6 +2069,12 @@ const progressPercent =
               
 
               <div className='flex flex-row justify-center space-x-2'>
+                {/* Announcement button */}        
+                <div className={`flex justify-center items-center ${ToggleView === 0 ? 'text-black border-b-2' : 'text-gray-500'}`}>
+                  <button onClick={() => setToggleView(0)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500`}>
+                    Announcement
+                  </button>
+                </div>
                 {/* overview button */}        
                 <div className={`flex justify-center items-center ${ToggleView === 1 ? 'text-black border-b-2' : 'text-gray-500'}`}>
                   <button onClick={() => setToggleView(1)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500`}>
@@ -2026,6 +2098,120 @@ const progressPercent =
               </div>
             </div>
           </div>
+
+        {ToggleView === 0 && !tasksLoading && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Tasks */}
+            <div className="lg:col-span-3">
+
+              {/* Tasks Overview */}
+              <div className="space-y-4">
+                {/* My Tasks */}
+                <div className="bg-white border-b-2 border-gray-200 px-3">
+                  <div className="flex items-center justify-between mb-6 space-x-20">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <GrAnnounce className='size-4'/>
+                      </div>
+                      <div className='flex flex-row items-center space-x-2'>
+                        <h3 className="font-semibold text-gray-900">ประกาศในโปรเจคนี้</h3>
+                        <p className="text-sm text-gray-500">( {[...myTasks, ...otherTasks].filter(task => task.task_type === 'location_task').length})</p>
+                      </div>
+
+                    </div>
+
+                    {userRole === 'Leader' && (
+                      <div className='relative'>
+                        <button 
+                          onClick={() => {setOpenOptions(prev => !prev) }}
+                          className="flex items-center space-x-2 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          <span>เพิ่มงานใหม่</span>
+                        </button>
+
+                        {/* Options */}
+                      <div
+                        className={`
+                          absolute right-0 mt-2 w-40 bg-white shadow-md border border-gray-200 z-50
+                          transform transition-all duration-500 divide-y divide-gray-200
+                          ${openOptions
+                            ? "opacity-100 scale-100 translate-y-0"
+                            : "opacity-0 scale-95 -translate-y-3 pointer-events-none"}
+                        `}
+                      >
+                        <div className={`
+                          transform transition-all duration-200 truncate
+                          ${openOptions
+                            ? "opacity-100 scale-100 translate-y-0"
+                            : "opacity-0 scale-95 -translate-y-4"}
+                        `}>
+                          <button
+                            onClick={() => {
+                              setShowCreateTaskModal(true);
+                              setOpenOptions(false);
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 hover:text-[#50589C]"
+                          >
+                            <div className='flex flex-row items-center gap-2'>
+                              <AiFillFileText className='size-4'/>
+                              <span className='text-md flex-1'>งานทั่วไป</span>
+                            </div>
+                             
+                          </button>
+                        </div>
+
+                        <div className={`
+                          transform transition-all duration-200 delay-200
+                          ${openOptions
+                            ? "opacity-100 scale-100 translate-y-0"
+                            : "opacity-0 scale-95 -translate-y-4"}
+                        `}>
+                          <button
+                            onClick={() => {
+                              setShowCreateLocationModal(true);
+                              setOpenOptions(false);
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 hover:text-[#50589C]"
+                          >
+                            <div className='flex flex-row items-center gap-2'>
+                              <AiFillEnvironment className='size-4'/>
+                              <span className='text-md flex-1'>นัดหมาย</span>
+                            </div>
+                          </button>
+                        </div>
+                                          
+                        </div>    
+                      </div>               
+                    )}                    
+                  </div>
+                  
+                  <div className="grid grid-cols-1 max-h-[calc(90vh-240px)] px-2 py-2 mb-6 overflow-y-auto gap-2 ">
+                    {filteredTasks.filter(task => task.task_type === 'location_task').length > 0 ? (
+                      filteredTasks
+                        .filter((task) => {
+                            if(task.task_type === 'normal_task') {
+                              return false
+                            }
+
+                            return true;
+                        })
+                        .map(task => renderTaskCard(task, true))
+                    ) : (
+                      <div className="col-span-full text-center py-8 text-gray-500">
+                        <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <p className="text-sm">ยังไม่มีประกาศในโปรเจคนี้</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>)}
 
           {ToggleView === 1 && !tasksLoading && (
 
@@ -2248,6 +2434,7 @@ const progressPercent =
                         `}>
                           <button
                             onClick={() => {
+                              setShowCreateLocationModal(true);
                               setOpenOptions(false);
                             }}
                             className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 hover:text-[#50589C]"
@@ -2266,7 +2453,15 @@ const progressPercent =
                   
                   <div className="grid grid-cols-1 max-h-[calc(90vh-240px)] px-2 py-2 mb-6 overflow-y-auto lg:grid-cols-2 gap-2 ">
                     {filteredTasks.length > 0 ? (
-                      filteredTasks.map(task => renderTaskCard(task, true))
+                      filteredTasks
+                        .filter((task) => {
+                            if(task.task_type === 'location_task') {
+                              return false
+                            }
+
+                            return true;
+                        })
+                        .map(task => renderTaskCard(task, true))
                     ) : (
                       <div className="col-span-full text-center py-8 text-gray-500">
                         <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2541,6 +2736,18 @@ const progressPercent =
           projectMembers={projectMembers}
           isLoading={createTaskLoading}
         />
+      )}
+
+      {userRole === 'Leader' && (
+        <GoogleMapsProvider>
+          <SelectLocationMap 
+            isOpen={showCreateLocationModal}
+            onClose={() => setShowCreateLocationModal(false)}
+            onSubmit={handleCreateLocation}
+            isLoading={createTaskLoading}
+          />      
+        </GoogleMapsProvider>
+         
       )}
 
 

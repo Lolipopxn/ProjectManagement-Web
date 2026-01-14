@@ -8,10 +8,11 @@ import "dayjs/locale/th";
 import PreviewFile from './previewFile';
 import { TaskStatusTimeline } from './TaskStatusTimeline';
 import AssignUserModal from './AssignUserModal';
+import ViewLocationMap from './map/ViewLocationMap';
 
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
-import { FaRegEdit, FaPlus  } from "react-icons/fa";
+import { FaRegEdit, FaPlus, FaTag } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { BsArrowReturnRight } from "react-icons/bs";
 import { RiArrowRightSLine } from "react-icons/ri";
@@ -27,6 +28,7 @@ interface Task {
   begin_date: string;
   createdAt: string;
   task_color: string;
+  task_type: string;
   project_document_id: string;
   assigned_to_user_ids_number: number;
   assigned_to_user_ids?: any;
@@ -104,13 +106,25 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
     const [isOpenEdit, setOpenEdit] = useState(false);
 
     const formatThaiDate = (date?: string) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+        if (!date) return "-";
+        const d = new Date(date);
+
+        const datePart = d.toLocaleDateString("th-TH", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+
+        const timePart = d.toLocaleTimeString("th-TH", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+        });
+
+        return `${datePart} • ${timePart}`;
     };
+
+
 
     const getTimeLeft = (dueDate: string, beginDate: string) => {
         const now = dayjs();
@@ -224,6 +238,40 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
         },
     };
 
+    const ANNOUNCEMENT_BUTTON: Record<string, {
+        label: string;
+        onClick?: () => void;
+        className: string;
+        disabled?: boolean;
+        }> = {
+        'not turn in': {
+            label: 'จบกิจกรรม',
+            onClick: () => updatedTaskStatus('completed', 'สิ้นสุดกิจกรรม'),
+            className: 'bg-[#50589C] hover:bg-[#50589C]/80 shadow-md text-white',
+        },
+        continue: {
+            label: 'จบกิจกรรม',
+            onClick: () => updatedTaskStatus('completed', 'สิ้นสุดกิจกรรม'),
+            className: 'bg-[#50589C] hover:bg-[#50589C]/80 shadow-md text-white',
+        },
+        pending_review: {
+            label: 'จบกิจกรรม',
+            onClick: () => updatedTaskStatus('completed', 'สิ้นสุดกิจกรรม'),
+            className: 'bg-[#50589C] hover:bg-[#50589C]/80 shadow-md text-white',
+        },
+        completed: {
+            label: 'กิจกรรมสิ้นสุดเเล้ว',
+            className: 'bg-green-100 text-green-700 border border-green-700',
+            disabled: true,
+        },
+        rejected: {
+            label: 'แก้ไข',
+            onClick: () => updatedTaskStatus('continue', 'กำลังแก้ไขงานหลังจากถูกปฏิเสธ'),
+            className: 'bg-blue-400 hover:bg-blue-600 shadow-md text-white',
+        },
+    };
+
+
     const getFileUrl = (fileUrl: string) => {
         if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
             return fileUrl;
@@ -308,7 +356,16 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
             <div className="w-full max-w-6xl mx-auto px-10 py-10 space-y-6 bg-white shadow-2xl rounded-xl scale-80 md:scale-105 transition-all duration animate-in slide-in-from-bottom-4">
                 <div className="flex flex-col border-b border-gray-300 space-y-6">
                     <div className="flex flex-row justify-between px-4">
-                        <div className="flex-1 text-3xl truncate">{task.task_name}</div>
+                        <div className='flex flex-row flex-1 gap-4 items-center'>
+                            <span className=' text-3xl truncate'>{task.task_name}</span>
+                            <div className={`flex flex-row items-center gap-2 bg-gray-200 rounded-full py-1 px-2 mt-2 border border-gray-400
+                                ${task.task_type === 'location_task' && 'bg-purple-200 border-purple-400'}
+                            `}>
+                                <FaTag className='size-3'/>
+                                <span className='text-sm'>{task.task_type === 'normal_task' ? 'งานทั่วไป' : 'ประกาศ' }</span>
+                            </div>
+                        </div>
+                        
                         <button onClick={onClose}>
                             <IoMdClose className="size-6"/>
                         </button>                    
@@ -319,16 +376,22 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                 onClick={() => setChangePage(0)}
                                 className={`p-2 bg-white rounded-md  ${changePage === 0 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>รายละเอียด</button>
                         
+                            {task.task_type === 'location_task' && (
+                                <button 
+                                onClick={() => setChangePage(4)}
+                                className={`p-2 bg-white rounded-md  ${changePage === 4 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>สถานที่</button>
+                            )}                        
+
                             <button 
                                 onClick={() => setChangePage(1)}
                                 className={`p-2 bg-white rounded-md  ${changePage === 1 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>ผู้ได้รับหมอบหมาย</button>
                             
                             <button 
                                 onClick={() => setChangePage(2)}
-                                className={`p-2 bg-white rounded-md  ${changePage === 2 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>งานที่ส่งเเล้ว</button>
+                                className={`p-2 bg-white rounded-md  ${changePage === 2 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>`{task.task_type === 'normal_task'? "งานที่ส่งเเล้ว" :"ไฟล์ที่เกี่ยวข้อง"}</button>
                             <button 
                                 onClick={() => setChangePage(3)}
-                                className={`p-2 bg-white rounded-md  ${changePage === 3 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>สถานะงาน</button>   
+                                className={`p-2 bg-white rounded-md  ${changePage === 3 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>{task.task_type === 'normal_task'? "สถานะงาน" :"สถานะ"}</button>   
                         </div>
                         
                         <button 
@@ -336,7 +399,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                             disabled={!isTaskOwner()}
                             className={`py-2  px-6 rounded-lg scale-90 ${isTaskOwner() ? 'bg-[#50589C] text-white hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}`}
                         >
-                            ส่งงาน
+                            {task.task_type === 'normaltask' ? 'ส่งงาน' : 'เเนบไฟล์'}
                         </button>
                         
                     </div>
@@ -349,7 +412,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                             <div className="flex flex-col flex-[2] bg-white rounded-xl ">
                                 <div className="flex flex-row items-center justify-between py-4 border-b border-gray-300">
                                     <h3 className="text-lg font-semibold">คำอธิบาย</h3>
-                                    {STATUS_BUTTON[task.task_status] && (
+                                    {STATUS_BUTTON[task.task_status] && task.task_type === 'normal_task' && (
                                         <button
                                             key={task.task_status}
                                             onClick={STATUS_BUTTON[task.task_status].onClick}
@@ -363,6 +426,23 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                             `}
                                         >
                                             {STATUS_BUTTON[task.task_status].label}
+                                        </button>
+                                    )}
+
+                                    {ANNOUNCEMENT_BUTTON[task.task_status] && task.task_type === 'location_task' && (
+                                        <button
+                                            key={task.task_status}
+                                            onClick={ANNOUNCEMENT_BUTTON[task.task_status].onClick}
+                                            disabled={ANNOUNCEMENT_BUTTON[task.task_status].disabled}
+                                            className={`
+                                                py-1 px-3 rounded-md
+                                                transition duration-300
+                                                animate-in fade-in slide-in-from-bottom-2
+                                                ${ANNOUNCEMENT_BUTTON[task.task_status].className}
+                                                ${ANNOUNCEMENT_BUTTON[task.task_status].disabled ? 'cursor-not-allowed' : ''}
+                                            `}
+                                        >
+                                            {ANNOUNCEMENT_BUTTON[task.task_status].label}
                                         </button>
                                     )}
                                     
@@ -384,7 +464,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-500">เริ่มงาน:</span>
                                         <span className="font-medium text-sm">
-                                            {formatThaiDate(task.begin_date)}
+                                            {formatThaiDate(task.begin_date)}                                        
                                         </span>
                                     </div>
 
@@ -432,6 +512,17 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                         </div>
                         )}
 
+                    {changePage === 4 && (
+                        <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-2 duration-300 overflow-y-scroll scrollbar-autoHide">
+                            <div className='flex flex-row items-center gap-2'>
+                               <div>สถานที่นัดหมาย: </div> 
+                               <div>{task.address? task.address : 'ไม่ได้เลือกสถานที่'}</div>
+                            </div>  
+                            {task.task_type === 'location_task' && task.latitude && task.longitude && (                 
+                                <ViewLocationMap position={{ lat: task.latitude, lng: task.longitude }}/>  
+                            )}                    
+                        </div>                                       
+                    )}                  
 
                     {changePage === 1 && (
                         <div className='flex flex-col space-y-2 text-lg animate-in fade-in slide-in-from-bottom-2 duration-300'> 

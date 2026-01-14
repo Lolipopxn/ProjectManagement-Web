@@ -736,6 +736,7 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    address: Schema.Attribute.String;
     assigned_to_user_ids: Schema.Attribute.Relation<
       'manyToMany',
       'plugin::users-permissions.user'
@@ -749,9 +750,11 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
     description: Schema.Attribute.Text;
     due_date: Schema.Attribute.DateTime;
     is_left: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    latitude: Schema.Attribute.Float;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::task.task'> &
       Schema.Attribute.Private;
+    longitude: Schema.Attribute.Float;
     pos_x: Schema.Attribute.Decimal;
     pos_y: Schema.Attribute.Decimal;
     project_document_id: Schema.Attribute.String &
