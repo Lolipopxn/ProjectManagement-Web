@@ -355,6 +355,11 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 truncate">
             <div className="w-full max-w-6xl mx-auto px-10 py-10 space-y-6 bg-white shadow-2xl rounded-xl scale-80 md:scale-105 transition-all duration animate-in slide-in-from-bottom-4">
+                {task.task_status === 'continue' && (
+                    <svg className='running-border-svg' aria-hidden='true'>
+                        <rect className='running-border-rect'></rect>
+                    </svg>
+                )}
                 <div className="flex flex-col border-b border-gray-300 space-y-6">
                     <div className="flex flex-row justify-between px-4">
                         <div className='flex flex-row flex-1 gap-4 items-center'>

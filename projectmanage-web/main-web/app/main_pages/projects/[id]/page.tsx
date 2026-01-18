@@ -16,6 +16,7 @@ import SkeletonTask from '@/app/components/loading/TaskLoading/skeletonTask';
 import SelectLocationMap from '@/app/components/map/SelectLocationMap';
 import GoogleMapsProvider from '@/app/components/map/GoogleMapsProvider';
 import MemberPopup from '@/app/components/MemberPopup';
+import RenderTaskCard from '@/app/components/RenderTaskCard';
 
 import { AiFillReconciliation, AiFillEnvironment, AiFillFileText } from "react-icons/ai";
 import { IoMdClose, IoMdPerson } from "react-icons/io";
@@ -1007,7 +1008,7 @@ const progressPercent =
   };
 
   // Render Task Card
-  const renderTaskCard = (task: Task, isMyTask: boolean = false) => {
+  const renderTaskCard = (task: Task) => {
     const statusConfig = getTaskStatusConfig(task.task_status);
 
     // หาข้อมูลผู้รับผิดชอบ
@@ -1037,70 +1038,18 @@ const progressPercent =
     };
 
     const assigneeInfo = getAssigneeInfo();
-    
-    // Use utility status configuration for card colors
-    const taskStatusConfig = getTaskStatusConfig(task.task_status);
 
     return (
-      <div 
-        key={task.id} 
-        className={`bg-white border border-gray-200 rounded-lg p-5 mb-4 hover:shadow-md hover:border-gray-300 hover:bg-gray-100 hover:-translate-y-2 hover:-translate-x-1 transition-all duration-200 relative group`}
-        onClick={() => {
-          setSelectedTask(task);
-          setPopupTask(true);
-          // if (task.documentId) {
-          //   router.push(`/main_pages/projects/${projectId}/tasks/${task.documentId}`);
-          // } else {
-          //   console.warn('Task documentId not found:', task);
-          //   // alert('ไม่พบ documentId ของ Task นี้');
-          // }
-        }}
-      >
-        {/* Task Name with Actions */}
-        <div className="flex items-start justify-between mb-10">
-          <div className="flex-1 truncate">
-            <h5 
-              className="font-semibold  text-lg cursor-pointer transition-colors leading-tight"
-              
-            >
-              {task.task_name}
-            </h5>
-          </div>
-          
-          {/* Task Management Button - Only for Leaders */}
-          {userRole === 'Leader' && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTask(task);
-                setShowTaskManageModal(true);
-              }}
-              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700 transition-colors"
-              title="จัดการงาน"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-              </svg>
-            </button>
-          )}
-        </div>
-
-        {/* Task Details - Compact Layout */}
-        <div className="flex flex-wrap items-center justify-between text-sm text-gray-600 gap-4 px-2">
-          {/* Status */}
-          <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium ${taskStatusConfig.bgColor} ${taskStatusConfig.textColor}`}>
-            <TaskStatusIcon status={task.task_status} className="w-4 h-4" />
-            <span>{taskStatusConfig.statusText}</span>
-          </div>
-          
-          {/* Due Date */}
-          <div className={`flex flex-row items-center space-x-2 
-            ${task.task_status === "completed" || task.task_status === "pending_review" ? 'hidden' : 'flex'} `}
-          >
-            <span className="text-gray-700 text-sm">{getTimeLeft(task.due_date, task.begin_date)}</span>
-          </div>        
-        </div>
-      </div>
+      <RenderTaskCard 
+        key={task.id}
+        task={task}
+        setSelectedTask={setSelectedTask}
+        setPopupTask={setPopupTask}
+        userRole={userRole}
+        setShowTaskManageModal={setShowTaskManageModal}
+        getTaskStatusConfig={getTaskStatusConfig}
+        getTimeLeft={getTimeLeft}
+      />
     );
   };
 
@@ -2201,7 +2150,7 @@ const progressPercent =
 
                             return true;
                         })
-                        .map(task => renderTaskCard(task, true))
+                        .map(task => renderTaskCard(task))
                     ) : (
                       <div className="col-span-full text-center py-8 text-gray-500">
                         <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2464,7 +2413,7 @@ const progressPercent =
 
                             return true;
                         })
-                        .map(task => renderTaskCard(task, true))
+                        .map(task => renderTaskCard(task))
                     ) : (
                       <div className="col-span-full text-center py-8 text-gray-500">
                         <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
