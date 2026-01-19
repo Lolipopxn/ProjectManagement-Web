@@ -83,7 +83,7 @@ function mapTaskToFeature(task: Task) {
     endAt: new Date(task.due_date),
     group: { name: task.project_id?.project_name ?? "ไม่มี", projectId: task.project_id?.documentId},
     description: task.description ?? "",
-    color: getTaskColor(), 
+    color: getStatusColor(task.task_status),
     member_name: { name: task.assigned_to_user_ids?.length ? task.assigned_to_user_ids.map(u => u.username).join(',') : "ไม่มี" },
     status: {
       name: task.task_status,
@@ -95,10 +95,16 @@ function mapTaskToFeature(task: Task) {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case "turn in":
-      return "#10B981"; // green
+    case "completed":
+      return "#ecfcca"; // green
     case "not turn in":
-      return "#EF4444"; // red
+      return "#fef9c2"; // yellow
+    case "rejected":
+      return "#ffe2e2"; //red
+    case "continue":
+      return "#dbeafe"; //blue
+    case "pending_review":
+      return "#ede9fe"; //purple
     default:
       return "#6B7280"; // gray
   }
@@ -106,27 +112,20 @@ function getStatusColor(status: string) {
 
 function getTextStatus(status: string) {
   switch (status) {
-    case "turn in":
+    case "completed":
       return "ส่งเเล้ว";
     case "not turn in":
       return "ยังไม่ส่ง";
+    case "rejected":
+      return "ไม่ผ่าน";
+    case "continue":
+      return "กำลังดำเนินการ";
+    case "pending_review":
+      return "รออนุมัติ";
     default:
       return "ไม่ระบุ";
   }
 }
-
-function getTaskColor() {
-  const randomIndex = Math.floor(Math.random() * pastelColors.length);
-  return pastelColors[randomIndex];
-}
-
-const pastelColors = [
-  "#F9A8D4", // Pink
-  "#A5F3FC", // Sky
-  "#FDE68A", // Yellow
-  "#C7D2FE", // Indigo
-  "#BBF7D0", // Green
-];
 
 export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
   const [features, setFeatures] = useState<any[]>([]);
@@ -199,7 +198,7 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                   <ContextMenu>
                     <ContextMenuTrigger asChild>
                       <button
-                        onClick={() => handleViewFeature(feature)}
+                        // onClick={() => handleViewFeature(feature)}
                         type="button" 
                         className='group'
                       >
@@ -217,11 +216,12 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                                 {feature.owner.name?.slice(0, 2)}
                               </AvatarFallback>
                             </Avatar>
-                          ): <p>{feature.status.nameThai}</p>}
+                          ): <p className="truncate text-xs">{feature.status.nameThai}</p>}
                         </GanttFeatureItem>
                         
                       </button>
                     </ContextMenuTrigger>
+                    
                     <div className='fixed group-hover:fixed group-hover:h-full group-hover:w-100 right-0 top-0 bg-[white] h-0 w-0 z-30 shadow-md'>
                       <div className='flex group-hover:flex flex-col mt-25 py-1 px-6 space-y-5 divide-gray-500'>
                         <hr></hr>               
@@ -252,8 +252,8 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                                 <p>คำอธิบาย</p>
                               </div>
                             </div>
-                            <div className='col-span-2 font-normal bg-gray-50 py-2 px-2 border rounded-lg overflow-auto h-25'>
-                              <p className=''>{feature.description}</p>
+                            <div className='col-span-2 font-normal bg-white py-2 px-4 border-2 border-gray-300 rounded-md overflow-auto h-35'>
+                              <span className=''>{feature.description}</span>
                             </div>    
 
                             <div className='col-span-1 font-bold'>
@@ -273,8 +273,8 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                               </div>
                             </div>
                             <div className='col-span-1 font-normal'>
-                              <div className='flex py-1 w-1/2 justify-center items-center rounded-[25px]' style={{ backgroundColor: feature.status.color }}>
-                                <p style={{ color: 'white' }}>{feature.status.nameThai}</p>
+                              <div className='flex py-1 px-2 w-full justify-center items-center rounded-[25px]' style={{ backgroundColor: feature.status.color }}>
+                                <p style={{ color: 'black' }}>{feature.status.nameThai}</p>
                               </div>                             
                             </div>   
                             <div className='col-span-1 font-bold'>
@@ -296,6 +296,7 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                           </div>
                       </div> 
                     </div>
+
                     <ContextMenuContent>
                       <ContextMenuItem
                         className="flex items-center gap-2"

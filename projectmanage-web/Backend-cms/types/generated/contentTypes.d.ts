@@ -755,8 +755,8 @@ export interface ApiTaskTask extends Struct.CollectionTypeSchema {
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::task.task'> &
       Schema.Attribute.Private;
     longitude: Schema.Attribute.Float;
-    pos_x: Schema.Attribute.Decimal;
-    pos_y: Schema.Attribute.Decimal;
+    pos_x: Schema.Attribute.Float;
+    pos_y: Schema.Attribute.Float;
     project_document_id: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{

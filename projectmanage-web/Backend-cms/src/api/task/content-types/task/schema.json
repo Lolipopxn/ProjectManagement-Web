@@ -55,10 +55,10 @@
       "type": "string"
     },
     "pos_x": {
-      "type": "decimal"
+      "type": "float"
     },
     "pos_y": {
-      "type": "decimal"
+      "type": "float"
     },
     "is_left": {
       "type": "boolean",

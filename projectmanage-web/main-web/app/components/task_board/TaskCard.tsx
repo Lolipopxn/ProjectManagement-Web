@@ -54,7 +54,7 @@ export default function TaskCard({ task, overlay = false }: any) {
 
   return (
     <div
-      className={`flex flex-col space-y-3 p-4 m-3 border-gray-200 bg-white min-w-[150px] max-w-[250px] select-none
+      className={`flex flex-col space-y-3 p-4 m-3 border-gray-200 bg-white min-w-[150px] max-w-[250px] select-none truncate
         ${overlay ? "shadow-xl scale-110" : ""}`}
     >
       
@@ -71,7 +71,7 @@ export default function TaskCard({ task, overlay = false }: any) {
       </span>
 
       {/*Task Description*/}
-      <div className="px-2">
+      <div className="px-2 truncate">
         <span className="text-sm text-gray-600">{task.description}</span>
       </div>
 

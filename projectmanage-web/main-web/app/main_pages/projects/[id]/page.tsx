@@ -2438,6 +2438,13 @@ const progressPercent =
               onOpenPopup={() => setPopupTask(true)}
               onReload={setReload}
               isReload={reload}
+              isOpen={showCreateTaskModal}
+              onClickTask={() => setShowCreateTaskModal(true)}
+              onClose={() => setShowCreateTaskModal(false)}
+              onSubmit={handleCreateTask}
+              projectMembers={projectMembers}
+              isLoading={createTaskLoading}
+              userRole={userRole}
             />
           </div>
         )}

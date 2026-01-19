@@ -10,11 +10,14 @@ import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { useMouse, useThrottle, useWindowScroll } from '@uidotdev/usehooks';
 import {
   addDays,
+  addWeeks,
   addMonths,
   differenceInDays,
   differenceInHours,
+  differenceInWeeks,
   differenceInMonths,
   endOfDay,
+  endOfWeek,
   endOfMonth,
   format,
   formatDate,
@@ -23,6 +26,7 @@ import {
   getDaysInMonth,
   isSameDay,
   startOfDay,
+  startOfWeek,
   startOfMonth,
 } from 'date-fns';
 import { atom, useAtom } from 'jotai';
@@ -83,7 +87,7 @@ export type GanttMarkerProps = {
   label: string;
 };
 
-export type Range = 'daily' | 'monthly' | 'quarterly';
+export type Range = 'daily' | 'weekly' | 'monthly' | 'quarterly';
 
 export type TimelineData = {
   year: number;
@@ -112,6 +116,10 @@ const getsDaysIn = (range: Range) => {
   // For when range is daily
   let fn = (_date: Date) => 1;
 
+  if (range === 'weekly') {
+    fn = () => 7;
+  }
+
   if (range === 'monthly' || range === 'quarterly') {
     fn = getDaysInMonth;
   }
@@ -121,6 +129,10 @@ const getsDaysIn = (range: Range) => {
 
 const getDifferenceIn = (range: Range) => {
   let fn = differenceInDays;
+
+  if (range === 'weekly') {
+    fn = differenceInWeeks;
+  }
 
   if (range === 'monthly' || range === 'quarterly') {
     fn = differenceInMonths;
@@ -142,6 +154,10 @@ const getInnerDifferenceIn = (range: Range) => {
 const getStartOf = (range: Range) => {
   let fn = startOfDay;
 
+  if (range === 'weekly') {
+    fn = startOfWeek;
+  }
+
   if (range === 'monthly' || range === 'quarterly') {
     fn = startOfMonth;
   }
@@ -152,6 +168,10 @@ const getStartOf = (range: Range) => {
 const getEndOf = (range: Range) => {
   let fn = endOfDay;
 
+  if (range === 'weekly') {
+    fn = endOfWeek;
+  }
+
   if (range === 'monthly' || range === 'quarterly') {
     fn = endOfMonth;
   }
@@ -161,6 +181,10 @@ const getEndOf = (range: Range) => {
 
 const getAddRange = (range: Range) => {
   let fn = addDays;
+
+  if (range === 'weekly') {
+    fn = addWeeks;
+  }
 
   if (range === 'monthly' || range === 'quarterly') {
     fn = addMonths;
@@ -389,6 +413,39 @@ const DailyHeader: FC = () => {
   );
 };
 
+const WeeklyHeader: FC = () => {
+  const gantt = useContext(GanttContext);
+
+  return gantt.timelineData.map((year) => {
+    const yearStart = new Date(year.year, 0, 1);
+    const firstWeekStart = startOfWeek(yearStart, { weekStartsOn: 1 });
+
+    const weeksInYear = 52;
+
+    return (
+      <div className="relative flex flex-col" key={year.year}>
+        <GanttContentHeader
+          columns={weeksInYear}
+          title={`${year.year}`}
+          renderHeaderItem={(item: number) => {
+            const start = addWeeks(firstWeekStart, item);
+            const end = endOfWeek(start, { weekStartsOn: 1 });
+
+            return (
+              <p className="text-[11px] whitespace-nowrap">
+                {format(start, "dd MMM")} - {format(end, "dd MMM")}
+              </p>
+            );
+          }}
+        />
+
+        <GanttColumns columns={weeksInYear} />
+      </div>
+    );
+  });
+};
+
+
 const MonthlyHeader: FC = () => {
   const gantt = useContext(GanttContext);
 
@@ -434,6 +491,7 @@ const QuarterlyHeader: FC = () => {
 
 const headers: Record<Range, FC> = {
   daily: DailyHeader,
+  weekly: WeeklyHeader,
   monthly: MonthlyHeader,
   quarterly: QuarterlyHeader,
 };
@@ -805,41 +863,22 @@ export const GanttFeatureDragHelper: FC<GanttFeatureDragHelperProps> = ({
 
 export type GanttFeatureItemCardProps = Pick<GanttFeature, 'id'> & {
   children?: ReactNode;
+  BgColor: GanttStatus;
 };
 
 export const GanttFeatureItemCard: FC<GanttFeatureItemCardProps> = ({
   id,
   children,
+  BgColor,
 }) => {
   const [, setDragging] = useGanttDragging();
   const { attributes, listeners, setNodeRef } = useDraggable({ id });
   const isPressed = Boolean(attributes['aria-pressed']);
-  const [colorCard, setColorCard] = useState("");
 
-  const pastelColors = [
-    "#FFD2CF",
-    "#FFE2C2",
-    "#FCEBC7",
-    "#FBF6E2",
-    "#EDF7CB",
-    "#D8F2C9",
-    "#BDF0D8",
-    "#B6E9F0",
-  ];
-
-  function getStatusColor() {
-    const randomIndex = Math.floor(Math.random() * pastelColors.length);
-    setColorCard(pastelColors[randomIndex]);
-  }
-
-  useEffect(() => setDragging(isPressed), [isPressed, setDragging]);
-
-  useEffect( () => {
-    getStatusColor()
-  }, []);
+  useEffect(() => setDragging(isPressed), [isPressed, setDragging]);;
 
   return (
-    <Card className="h-full w-full rounded-md p-2 text-xs shadow-sm" style={{ backgroundColor: colorCard }}>
+    <Card className="h-full w-full rounded-md p-2 text-xs shadow-sm" style={{ backgroundColor: BgColor.color }}>
       <div
         className={cn(
           'flex h-full w-full items-center justify-between gap-2 text-left',
@@ -976,7 +1015,7 @@ export const GanttFeatureItem: FC<GanttFeatureItemProps> = ({
           onDragStart={handleItemDragStart}
           sensors={[mouseSensor]}
         >
-          <GanttFeatureItemCard id={feature.id}>
+          <GanttFeatureItemCard id={feature.id} BgColor={feature.status}>
             {children ?? (
               <p className="flex-1 truncate text-xs">{feature.name}</p>
             )}
@@ -1206,7 +1245,10 @@ export const GanttProvider: FC<GanttProviderProps> = ({
   const rowHeight = 36;
   let columnWidth = 50;
 
-  if (range === 'monthly') {
+  if (range === "weekly") {
+    columnWidth = 180;
+  }
+  else if (range === 'monthly') {
     columnWidth = 150;
   } else if (range === 'quarterly') {
     columnWidth = 100;
@@ -1490,7 +1532,7 @@ export const GanttToday: FC<GanttTodayProps> = ({ className }) => {
     >
       <div
         className={cn(
-          'group pointer-events-auto sticky top-0 flex select-auto flex-col flex-nowrap items-center justify-center whitespace-nowrap rounded-b-md bg-card px-2 py-1 text-foreground text-xs',
+          'bg-green-300 group pointer-events-auto sticky top-0 flex select-auto flex-col flex-nowrap items-center justify-center whitespace-nowrap rounded-b-md px-2 py-1 text-foreground text-xs',
           className
         )}
       >
@@ -1499,7 +1541,7 @@ export const GanttToday: FC<GanttTodayProps> = ({ className }) => {
           {formatDate(date, 'MMM dd, yyyy')}
         </span>
       </div>
-      <div className={cn('h-full w-px bg-card', className)} />
+      <div className={cn('h-full w-px bg-green-300', className)} />
     </div>
   );
 };

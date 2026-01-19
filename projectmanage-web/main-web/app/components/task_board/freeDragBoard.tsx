@@ -14,11 +14,29 @@ import dayjs from "dayjs";
 import { FaPlus } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa6";
 import { set } from "date-fns";
+import CreateTaskModal from "../CreateTaskModal";
 
 const clamp = (v: number, min: number, max: number) =>
   Math.min(Math.max(v, min), max);
 
-export default function FreeDragBoard({ tasks, project, projectId, SelectedTask, onOpenPopup, onReload, isReload }: any) {
+export default function FreeDragBoard(
+  { 
+    tasks, 
+    project, 
+    projectId, 
+    SelectedTask, 
+    onOpenPopup, 
+    onReload, 
+    isReload, 
+    isOpen,
+    onClickTask,
+    onClose,
+    onSubmit, 
+    projectMembers, 
+    isLoading, 
+    userRole 
+  }: any) {
+
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
@@ -333,7 +351,7 @@ export default function FreeDragBoard({ tasks, project, projectId, SelectedTask,
                     <h2 className="font-semibold">รายการงาน</h2>
                     <div className="text-gray-500/90">( {leftBoard.length} )</div>
                   </div>
-                  <div onClick={() => setAddTask(!showAddTask)} className="p-1 border-dashed hover:bg-gray-100">
+                  <div onClick={onClickTask} className="p-1 border-dashed hover:bg-gray-100">
                     <FaPlus  className="text-gray-500/90 size-4" />
                   </div>
                     
@@ -407,9 +425,21 @@ export default function FreeDragBoard({ tasks, project, projectId, SelectedTask,
           </div>
         </div>
 
-        {showAddTask && (
-            <AddTaskPage user={currentUserId} project={project} projectId={projectId} onClose={() => setAddTask(false)}/>
+        {userRole === 'Leader' && (
+            // <AddTaskPage 
+            //   user={currentUserId} 
+            //   project={project} 
+            //   projectId={projectId} 
+            //   onClose={() => setAddTask(false)}/>
+            <CreateTaskModal
+              isOpen={isOpen}
+              onClose={onClose}
+              onSubmit={onSubmit}
+              projectMembers={projectMembers}
+              isLoading={isLoading}
+            />
         )}
+
         {showAddBoard && (
           <AddBoardPage 
             boards={boards}
