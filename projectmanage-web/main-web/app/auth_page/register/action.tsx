@@ -69,6 +69,6 @@ export async function registerUser(formData: FormData) {
     return { error: "Failed to connect to the server." };
   }
   
-  redirect('/login');
+  redirect('/auth_page/login');
 
 }

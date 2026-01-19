@@ -399,7 +399,7 @@ export default function TaskDetailPage() {
       console.log('Done!'); // debug
 
       // แสดงข้อความสำเร็จ
-      alert('ส่งงานเรียบร้อยแล้ว!');
+      // alert('ส่งงานเรียบร้อยแล้ว!');
 
     } catch (error: any) {
       console.error('Error submitting work:', error);
@@ -645,10 +645,10 @@ export default function TaskDetailPage() {
       const response = await axios.delete(`/api/tasks/${task.documentId}`);
 
       if (response.data.success) {
-        alert('ลบ Task สำเร็จ');
+        // alert('ลบ Task สำเร็จ');
         router.push(`/main_pages/projects/${projectId}`);
       } else {
-        alert('เกิดข้อผิดพลาดในการลบ Task');
+        // alert('เกิดข้อผิดพลาดในการลบ Task');
       }
     } catch (error: any) {
       console.error('Error deleting task:', error);
@@ -761,7 +761,7 @@ export default function TaskDetailPage() {
         setReviewComment('');
         
         // Show success message
-        alert(reviewAction === 'approve' ? 'อนุมัติงานเรียบร้อยแล้ว' : 'ไม่อนุมัติงาน กรุณาแจ้งให้ผู้ส่งงานแก้ไข');
+        // alert(reviewAction === 'approve' ? 'อนุมัติงานเรียบร้อยแล้ว' : 'ไม่อนุมัติงาน กรุณาแจ้งให้ผู้ส่งงานแก้ไข');
         
         // Refresh all data - รอให้ alert ถูกปิดก่อน
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -769,11 +769,11 @@ export default function TaskDetailPage() {
         // Reload page to show updated data
         window.location.reload();
       } else {
-        alert('เกิดข้อผิดพลาดในการตรวจสอบงาน');
+        // alert('เกิดข้อผิดพลาดในการตรวจสอบงาน');
       }
     } catch (error: any) {
       console.error('Error reviewing task:', error);
-      alert('เกิดข้อผิดพลาดในการตรวจสอบงาน: ' + (error.response?.data?.message || error.message));
+      // alert('เกิดข้อผิดพลาดในการตรวจสอบงาน: ' + (error.response?.data?.message || error.message));
     } finally {
       setReviewLoading(false);
     }
@@ -1687,7 +1687,7 @@ export default function TaskDetailPage() {
 
                 {/* File Management Modal */}
                 {showFileManagementModal && selectedFiles.length > 0 && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                  <div className="fixed inset-0 bg-black/60 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
                       {/* Modal Header */}
                       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
@@ -2654,7 +2654,7 @@ export default function TaskDetailPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && task && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-red-600 flex items-center space-x-2">
@@ -2746,8 +2746,8 @@ export default function TaskDetailPage() {
 
       {/* Review Modal */}
       {showReviewModal && task && reviewAction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
             <div className="flex items-center justify-between mb-6">
               <h3 className={`text-lg font-semibold flex items-center space-x-2 ${
                 reviewAction === 'approve' ? 'text-green-600' : 'text-red-600'
@@ -2890,10 +2890,10 @@ export default function TaskDetailPage() {
 
       {/* Submit Work Modal - Enhanced */}
       {showSubmitModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/60 bg-opacity-50 drop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50">
+            <div className="flex items-center justify-between rounded-t-2xl px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                   <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2917,7 +2917,7 @@ export default function TaskDetailPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="flex-1 overflow-y-auto px-8 py-5">
               {/* Task Information */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5">
                 <div className="flex items-start space-x-3">

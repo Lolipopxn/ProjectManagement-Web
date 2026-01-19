@@ -54,7 +54,7 @@ export default function RenderTaskCard({
             hover:shadow-md hover:border-gray-300 hover:bg-gray-100 hover:-translate-1
             transition-all duration-300
             relative overflow-hidden
-            ${task.task_status === "continue" && task.task_type === "normal_task" ? "running-border" : ""}
+            ${task.task_status === "continue" && task.task_type === "normal_task" ? "relative" : ""}
             ${task.task_status === "completed" && task.task_type === "normal_task"  && "bg-green-50 border-2 border-green-300 hover:bg-green-100 hover:border-green-200"}
             ${task.task_status === "rejected" && task.task_type === "normal_task" && "bg-rose-50 border-2 border-rose-200 hover:bg-rose-100 hover:border-rose-200"}
 

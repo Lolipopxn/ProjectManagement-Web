@@ -405,7 +405,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                             disabled={!isTaskOwner()}
                             className={`py-2  px-6 rounded-lg scale-90 ${isTaskOwner() ? 'bg-[#50589C] text-white hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}`}
                         >
-                            {task.task_type === 'normaltask' ? 'ส่งงาน' : 'เเนบไฟล์'}
+                            {task.task_type === 'normal_task' ? 'ส่งงาน' : 'เเนบไฟล์'}
                         </button>
                         
                     </div>
@@ -422,11 +422,12 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                         <button
                                             key={task.task_status}
                                             onClick={STATUS_BUTTON[task.task_status].onClick}
-                                            disabled={STATUS_BUTTON[task.task_status].disabled}
+                                            disabled={STATUS_BUTTON[task.task_status].disabled || !isTaskOwner()}
                                             className={`
                                                 py-1 px-3 rounded-md
                                                 transition duration-300
                                                 animate-in fade-in slide-in-from-bottom-2
+                                                ${isTaskOwner() ? '' : 'bg-gray-300 hover:bg-gray-300 text-white cursor-not-allowed'}
                                                 ${STATUS_BUTTON[task.task_status].className}
                                                 ${STATUS_BUTTON[task.task_status].disabled ? 'cursor-not-allowed' : ''}
                                             `}
@@ -537,14 +538,15 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                             <div className="flex flex-row items-center px-4 justify-between border-b pb-2 border-gray-200">
                                 <span>รายชื่อผู้ได้รับหมอบหมายงาน</span>
                                 <div className='flex flex-row items-center gap-2'>
-                                    <button onClick={() => {setOpenEdit((prev) => !prev)}} className={`py-2 px-4 text-sm rounded-md text-white transition ${
-                                        isOpenEdit
-                                        ? 'bg-[#50589C]'
-                                        : 'bg-gray-400 hover:bg-gray-700'
-                                    }`}>
+                                    <button onClick={() => {setOpenEdit((prev) => !prev)}} className={`py-2 px-4 text-sm rounded-md text-white transition 
+                                        ${isOpenEdit && 'bg-[#50589C]'}
+                                        ${isTaskOwner() ? 'bg-gray-400 hover:bg-gray-700' : 'bg-gray-300 text-white cursor-not-allowed'}
+                                    `}>
                                         <FaRegEdit className='size-4' />
                                     </button>
-                                    <button onClick={() => setAssignModalOpen(true)} className='py-2 px-4 bg-[#696FC7] text-sm rounded-md text-white hover:bg-[#50589C]/90'>
+                                    <button onClick={() => setAssignModalOpen(true)} className={`py-2 px-4 text-sm rounded-md text-white
+                                        ${isTaskOwner() ? 'bg-[#696FC7] hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}
+                                    `}>
                                         <FaPlus className='size-4' />
                                     </button>
                                 </div>
