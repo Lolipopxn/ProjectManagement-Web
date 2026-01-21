@@ -8,12 +8,11 @@ import { MdOutlineGroup } from "react-icons/md";
 export default function Header() {
     return (
             <section id="header" className="bg-[#161815] h-auto">
-                <div className="container mx-auto relative py-25 px-4 text-white max-w-[1320px] h-auto flex flex-col justify-center items-center text-center space-y-8">
+                <div className="container mx-auto relative py-40 px-4 text-white max-w-[1320px] h-auto flex flex-col justify-center items-center text-center space-y-8">
                     <div className="space-y-5">
                        <h1 className="text-[#6E8CFB] text-2xl md:text-7xl font-semibold leading-[1.2] text-shadow-lg text-shadow-blue-700">Project Management <br /> <span className="text-white">For You</span></h1> 
-                       
                     </div>
-
+                    
                     <p className="text-[#909090] text-md">แพลตฟอร์มที่ออกแบบมาสำหรับ นักเรียน นักศึกษา เพื่อช่วยให้คุณจัดการงานและทำงานร่วมกันได้อย่างราบรื่น</p>
 
                     <a href="#howto">

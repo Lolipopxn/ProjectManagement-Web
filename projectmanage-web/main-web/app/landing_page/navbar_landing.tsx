@@ -16,10 +16,7 @@ export default function Nav() {
                 <div className="flex flex-col md:flex-row md:items-center gap-5">
                     <div className="flex flex-row items-center">
                         <a href="#">
-                            <img src="/Logo-main.png" alt="Logo" className="h-10 w-10 md:h-14 md:w-14"/>
-                        </a>
-                        <a href="#" className="">
-                           MyDaily
+                            <img src="/TAMA2.png" alt="Logo" className="h-10 w-10 md:h-10 md:w-28"/>
                         </a>
                         
                     </div>
