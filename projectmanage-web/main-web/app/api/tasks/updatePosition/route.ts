@@ -19,18 +19,21 @@ export async function PUT(req: any) {
     const body = await req.json();
     const { documentId, board_name, pos_x, pos_y, is_left } = body;
 
-    const res = await axios.put(`${process.env.STRAPI_BASE_URL}/api/tasks/${documentId}`, {
-      data: {
+    const res = await axios.put(`${process.env.STRAPI_BASE_URL}/api/tasks/${documentId}`,
+     { data: {
         board_name,
         pos_x,
         pos_y,
         is_left
       },
-
-      headers: {
-          Authorization: `Bearer ${token}`,
-      },
-    });
+     },
+     {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

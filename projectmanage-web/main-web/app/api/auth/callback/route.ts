@@ -10,14 +10,14 @@ const config = {
 };
 
 export const dynamic = 'force-dynamic' // defaults to auto
-export async function GET(request: Request, params: { params: { provider: string } }) {
+export async function GET(request: Request, params: { params: Promise<{ provider: string }> }) {
   
   const { searchParams } = new URL(request.url)
   const token = searchParams.get('access_token')
   
   if (!token) return NextResponse.redirect(new URL("/", request.url));
   
-  const backendUrl = process.env.STRAPI_BASE_URL ?? "http://localhost:1337";
+  const backendUrl = process.env.STRAPI_BASE_URL;
   const path = `/api/auth/google/callback`;
 
   const url = new URL(backendUrl + path);

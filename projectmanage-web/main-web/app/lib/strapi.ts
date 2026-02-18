@@ -1,9 +1,9 @@
 import axios from 'axios';
-const STRAPI = process.env.STRAPI_BASE_URL;
+const STRAPI = process.env.NEXT_PUBLIC_STRAPI_BASE_URL;
 
 
 export async function fetchMessages(token: string, projectSlug: string, limit = 50) {
-    const { data } = await axios.get(`http://127.0.0.1:1337/api/projects/${projectSlug}/messages`, {
+    const { data } = await axios.get(`${STRAPI}/api/projects/${projectSlug}/messages`, {
         headers: { Authorization: `Bearer ${token}` },
         params: { limit }
     });

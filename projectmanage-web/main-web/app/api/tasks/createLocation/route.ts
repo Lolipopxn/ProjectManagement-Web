@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Create task in Strapi
     const strapiResponse = await axios.post(
-      'http://localhost:1337/api/tasks',
+      `${process.env.STRAPI_BASE_URL}/api/tasks`,
       {
         data: { 
                 task_name,

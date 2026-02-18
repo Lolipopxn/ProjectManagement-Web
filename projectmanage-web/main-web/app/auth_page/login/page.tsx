@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [state, formAction] = useActionState(login, initialState);
 
   const handleGoogleLogin = () => {
-    const strapi = "http://localhost:1337";
+    const strapi = process.env.NEXT_PUBLIC_STRAPI_BASE_URL;
 
     window.location.href =
       `${strapi}/api/connect/google`;

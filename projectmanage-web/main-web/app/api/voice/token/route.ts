@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { cookies } from "next/headers";
 
-const STRAPI_BASE = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
+const STRAPI_BASE = process.env.STRAPI_BASE_URL;
 
 export async function POST(req: Request) {
   const jwt = (await cookies()).get("token")?.value;

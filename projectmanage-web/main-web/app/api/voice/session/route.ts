@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const STRAPI_URL =
-  process.env.NEXT_PUBLIC_STRAPI_URL ||
-  process.env.STRAPI_URL ||
-  "http://localhost:1337";
+const STRAPI_URL = process.env.STRAPI_BASE_URL;
 
 /** ---- helpers ---- */
 async function getAuthToken() {

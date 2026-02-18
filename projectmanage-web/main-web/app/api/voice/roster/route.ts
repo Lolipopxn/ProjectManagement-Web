@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch roster data from Strapi
-    const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || process.env.STRAPI_URL || "http://localhost:1337";
+    const strapiUrl = process.env.STRAPI_BASE_URL;
     const cookieStore = await cookies();
     const strapiToken = cookieStore.get('token')?.value;
 

@@ -6,7 +6,7 @@ import axios from 'axios';
 export const config = { api: { bodyParser: false } };
 
 
-const STRAPI = 'http://127.0.0.1:1337'
+const STRAPI = process.env.STRAPI_BASE_URL;
 
 async function verifyMembership(token: string, projectSlug: string) {
     // 1) get current user

@@ -488,12 +488,12 @@ export default function TaskDetailPage() {
     
     // ถ้า URL ขึ้นต้นด้วย /uploads แล้ว ให้เชื่อมกับ backend URL
     if (fileUrl.startsWith('/uploads')) {
-      return `${process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'}${fileUrl}`;
+      return `${process.env.NEXT_PUBLIC_STRAPI_BASE_URL || 'http://localhost:1337'}${fileUrl}`;
     }
     
     // ถ้าไม่มี /uploads ให้เพิ่มเข้าไป
     const cleanUrl = fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`;
-    return `${process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'}/uploads${cleanUrl}`;
+    return `${process.env.NEXT_PUBLIC_STRAPI_BASE_URL || 'http://localhost:1337'}/uploads${cleanUrl}`;
   };
 
   // Helper function to extract filename from URL
@@ -1325,7 +1325,7 @@ export default function TaskDetailPage() {
         <div className="flex-1 p-6 max-w-[1900px]">
           {/* Breadcrumb */}
           <div className="flex items-center space-x-2 text-gray-600 mb-6">
-            <a href="/overview" className="hover:text-blue-600">Home</a>
+            <a href="/main_pages/overview" className="hover:text-blue-600">Home</a>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -2793,7 +2793,7 @@ export default function TaskDetailPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center justify-between">
                   <span>
                     ความคิดเห็น {reviewAction === 'reject' && <span className="text-red-500">*</span>}
                   </span>

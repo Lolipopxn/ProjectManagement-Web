@@ -6,10 +6,10 @@ export default [
       contentSecurityPolicy: {
         useDefaults: true,
         directives: {
-          'connect-src': ["'self'", process.env.APP_ORIGIN],
+          'connect-src': ["'self'", process.env.FRONTEND_URL],
           "frame-ancestors": [
             "'self'",
-            "http://localhost:3000",
+            process.env.FRONTEND_URL,
           ],
         }
       }
@@ -18,7 +18,7 @@ export default [
   {
     name: "strapi::cors",
     config: {
-      origin: ["http://localhost:3000"],
+      origin: [process.env.FRONTEND_URL],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       headers: ["Content-Type", "Authorization"],
       credentials: true,

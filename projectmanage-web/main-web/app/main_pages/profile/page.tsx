@@ -106,7 +106,7 @@ export default function EditProfilePage() {
         location,
       };
 
-      await axios.put(`http://127.0.0.1:1337/api/users/${user.id}`, payload, {
+      await axios.put(`${process.env.NEXT_PUBLIC_STRAPI_BASE_URL}/api/users/${user.id}`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
