@@ -135,6 +135,50 @@ export default function TaskDetailPage() {
   const [showTaskMenu, setShowTaskMenu] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  
+  // Link submission states
+  const [submissionLinks, setSubmissionLinks] = useState<string[]>([]);
+  const [newLink, setNewLink] = useState('');
+  const [linkError, setLinkError] = useState('');
+
+  // Validate URL
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Handle add link
+  const handleAddLink = () => {
+    const trimmedLink = newLink.trim();
+    
+    if (!trimmedLink) {
+      setLinkError('กรุณากรอก URL');
+      return;
+    }
+    
+    if (!isValidUrl(trimmedLink)) {
+      setLinkError('URL ไม่ถูกต้อง กรุณากรอก URL ที่สมบูรณ์ เช่น https://example.com');
+      return;
+    }
+    
+    if (submissionLinks.includes(trimmedLink)) {
+      setLinkError('URL นี้ถูกเพิ่มไปแล้ว');
+      return;
+    }
+    
+    setSubmissionLinks([...submissionLinks, trimmedLink]);
+    setNewLink('');
+    setLinkError('');
+  };
+
+  // Handle remove link
+  const handleRemoveLink = (index: number) => {
+    setSubmissionLinks(submissionLinks.filter((_, i) => i !== index));
+  };
 
   // Handle file selection (verify file then open modal)
   const handleFileSelect = (file: File) => {
@@ -357,19 +401,25 @@ export default function TaskDetailPage() {
 
       console.log('Creating submission...'); // debug
 
-      // สร้าง submission เดียว โดยไม่สนใจว่ามีไฟล์หรือไม่
+      // สร้าง submission เดียว โดยรวม links และ file URLs
       const fileUrls = uploadedFiles.map(f => f.fileUrl);
       const uploadedFileNames = uploadedFiles.map(f => f.fileName).join(', ');
+      
+      // รวม links กับ file URLs
+      const allUrls = [...fileUrls, ...submissionLinks];
+      
       const defaultDescription = uploadedFiles.length > 0 
         ? `ส่งงาน: ${uploadedFileNames}` 
-        : 'ส่งงานโดยไม่แนบไฟล์';
+        : submissionLinks.length > 0 
+          ? 'ส่งงานผ่าน Link'
+          : 'ส่งงานโดยไม่แนบไฟล์';
       
       const submissionResponse = await axios.post('/api/submissions', {
         task_document_id: taskDocumentId,
         task_id_number: task.id,
         submitted_by_user_id_number: user.id,
         submission_description: taskComment.trim() || defaultDescription,
-        file_urls: fileUrls, // เก็บเป็น array (อาจจะว่างได้)
+        file_urls: allUrls, // เก็บทั้ง file URLs และ links
         is_active: true // ส่งงาน = active
       });
 
@@ -377,7 +427,7 @@ export default function TaskDetailPage() {
         throw new Error('Failed to create submission');
       }
       
-      console.log('Submission created with', fileUrls.length, 'files'); // debug
+      console.log('Submission created with', allUrls.length, 'items (files + links)'); // debug
 
       console.log('Updating task status...'); // debug
 
@@ -392,6 +442,8 @@ export default function TaskDetailPage() {
       setSelectedFiles([]); // ล้างไฟล์ที่เลือก
       setFileNames({}); // ล้างชื่อไฟล์ที่กำหนดเอง
       setTaskComment(''); // ล้าง comment ของ Task
+      setSubmissionLinks([]); // ล้าง links
+      setNewLink(''); // ล้าง input link
       setEditingFileIndex(null); // ยกเลิกการแก้ไขชื่อไฟล์
       setShowSubmitModal(false); // ปิด modal
       await refreshSubmissions();
@@ -1320,6 +1372,96 @@ export default function TaskDetailPage() {
 
   return (
     <div className="min-h-screen w-full bg-gray-50">
+      {/* Floating Project Leader Button - Fixed at top-right */}
+      {userRole === 'Leader' && (
+        <div className="fixed top-24 right-6 z-50 task-menu-container">
+          <div className="relative">
+            <button
+              onClick={() => setShowTaskMenu(!showTaskMenu)}
+              className="flex items-center space-x-2.5 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow-sm hover:shadow transition-all duration-150"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              </svg>
+              <span className="text-sm font-medium">Project Leader</span>
+              <svg className={`w-3.5 h-3.5 transition-transform duration-150 ${showTaskMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showTaskMenu && (
+              <div className="absolute top-full right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-10 animate-in fade-in slide-in-from-top-2 duration-200 task-menu-container">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                    <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Menu</span>
+                  </div>
+                </div>
+
+                <div className="py-2">
+                  <button
+                    onClick={() => {
+                      window.location.href = `/main_pages/projects/${projectId}`;
+                      setShowTaskMenu(false);
+                    }}
+                    className="w-full group px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center space-x-3"
+                  >
+                    <div className="w-10 h-10 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="font-medium block">จัดการโปรเจค</span>
+                      <span className="text-xs text-gray-500">ดูภาพรวมและแก้ไขโปรเจค</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleStartEdit();
+                      setShowTaskMenu(false);
+                    }}
+                    className="w-full group px-4 py-3 text-left text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors flex items-center space-x-3"
+                  >
+                    <div className="w-10 h-10 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center transition-colors">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="font-medium block">แก้ไข Task</span>
+                      <span className="text-xs text-gray-500">แก้ไขรายละเอียดงาน</span>
+                    </div>
+                  </button>
+
+                  <div className="border-t border-gray-100 my-2"></div>
+
+                  <button
+                    onClick={() => {
+                      handleShowDeleteModal();
+                      setShowTaskMenu(false);
+                    }}
+                    className="w-full group px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-3"
+                  >
+                    <div className="w-10 h-10 bg-red-100 group-hover:bg-red-200 rounded-lg flex items-center justify-center transition-colors">
+                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="font-medium block">ลบ Task</span>
+                      <span className="text-xs text-gray-500">ลบงานนี้ออกจากระบบ</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
         <div className="flex-1 p-6 max-w-[1900px]">
@@ -1921,10 +2063,10 @@ export default function TaskDetailPage() {
                             </div>
                             <div>
                               <p className="font-medium text-gray-900">
-                                ไฟล์แนบ ({submission.file_urls?.length || 0} ไฟล์)
+                                งานที่ส่ง ({submission.file_urls?.length || 0} รายการ)
                               </p>
                               <p className="text-sm text-gray-500">
-                                อัปโหลดโดย {submission.submittedByUser?.username} • {formatDateTime(submission.submission_date)}
+                                ส่งโดย {submission.submittedByUser?.username} • {formatDateTime(submission.submission_date)}
                               </p>
                             </div>
                           </div>
@@ -1947,48 +2089,82 @@ export default function TaskDetailPage() {
                           {submission.file_urls?.map((fileUrl, index) => {
                             const fullFileUrl = getFileUrl(fileUrl);
                             const fileName = getFileNameFromUrl(fileUrl);
+                            const isExternalLink = fileUrl.startsWith('http://') || fileUrl.startsWith('https://');
                             
                             return (
                               <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors group">
                                 <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
+                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                    isExternalLink ? 'bg-purple-100' : 'bg-blue-100'
+                                  }`}>
+                                    {isExternalLink ? (
+                                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                      </svg>
+                                    ) : (
+                                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                      </svg>
+                                    )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 truncate" title={fileName}>
-                                      {fileName}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      ไฟล์ที่ {index + 1}
-                                    </p>
+                                    {isExternalLink ? (
+                                      <>
+                                        <div className="flex items-center space-x-2 mb-1">
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                            Link
+                                          </span>
+                                        </div>
+                                        <a 
+                                          href={fullFileUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-sm font-medium text-purple-700 hover:text-purple-900 hover:underline break-all"
+                                          title={fileUrl}
+                                        >
+                                          {fileUrl}
+                                        </a>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <p className="text-sm font-medium text-gray-900 truncate" title={fileName}>
+                                          {fileName}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                          ไฟล์ที่ {index + 1}
+                                        </p>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
-                                  <a 
-                                    href={fullFileUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
-                                    title="ดาวน์โหลดไฟล์"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                    <span>ดาวน์โหลด</span>
-                                  </a>
-                                  <button
-                                    onClick={() => window.open(fullFileUrl, '_blank')}
-                                    className="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
-                                    title="ดูไฟล์"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                    <span>ดู</span>
-                                  </button>
+                                  {isExternalLink ? (
+                                    <a 
+                                      href={fullFileUrl} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
+                                      title="เปิดลิงก์"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                      </svg>
+                                      <span>เปิดลิงก์</span>
+                                    </a>
+                                  ) : (
+                                    <a 
+                                      href={fullFileUrl} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
+                                      title="ดาวน์โหลดไฟล์"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                      </svg>
+                                      <span>ดาวน์โหลด</span>
+                                    </a>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -2170,59 +2346,71 @@ export default function TaskDetailPage() {
                               {submission.file_urls.map((fileUrl, idx) => {
                                 const fullFileUrl = getFileUrl(fileUrl);
                                 const fileName = getFileNameFromUrl(fileUrl);
+                                const isExternalLink = fileUrl.startsWith('http://') || fileUrl.startsWith('https://');
                                 
                                 return (
                                   <div 
                                     key={idx} 
                                     className={`flex items-center space-x-1.5 px-2 py-1.5 rounded flex-shrink-0 ${
                                       submission.is_active 
-                                        ? 'bg-blue-50 border border-blue-200 hover:bg-blue-100' 
+                                        ? isExternalLink 
+                                          ? 'bg-purple-50 border border-purple-200 hover:bg-purple-100'
+                                          : 'bg-blue-50 border border-blue-200 hover:bg-blue-100'
                                         : 'bg-gray-100 border border-gray-200'
                                     } transition-colors group`}
                                   >
-                                    <svg className={`w-3.5 h-3.5 flex-shrink-0 ${
-                                      submission.is_active ? 'text-blue-600' : 'text-gray-500'
-                                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
+                                    {isExternalLink ? (
+                                      <svg className={`w-3.5 h-3.5 flex-shrink-0 ${
+                                        submission.is_active ? 'text-purple-600' : 'text-gray-500'
+                                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                      </svg>
+                                    ) : (
+                                      <svg className={`w-3.5 h-3.5 flex-shrink-0 ${
+                                        submission.is_active ? 'text-blue-600' : 'text-gray-500'
+                                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                      </svg>
+                                    )}
                                     <span 
                                       className={`text-xs font-medium max-w-[150px] truncate ${
-                                        submission.is_active ? 'text-blue-700' : 'text-gray-600'
+                                        submission.is_active 
+                                          ? isExternalLink ? 'text-purple-700' : 'text-blue-700'
+                                          : 'text-gray-600'
                                       }`}
-                                      title={fileName}
+                                      title={isExternalLink ? fileUrl : fileName}
                                     >
-                                      {fileName}
+                                      {isExternalLink ? (fileUrl.length > 30 ? fileUrl.substring(0, 30) + '...' : fileUrl) : fileName}
                                     </span>
                                     {submission.is_active && (
-                                      <div className="flex items-center space-x-1">
-                                        <a 
-                                          href={fullFileUrl} 
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
-                                          onClick={(e) => e.stopPropagation()}
-                                          className="text-xs text-blue-600 hover:text-blue-800 font-semibold hover:underline flex items-center space-x-0.5 transition-colors"
-                                          title="ดาวน์โหลดไฟล์"
-                                        >
-                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                          </svg>
-                                          <span>ดาวน์โหลด</span>
-                                        </a>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            window.open(fullFileUrl, '_blank');
-                                          }}
-                                          className="text-xs text-gray-600 hover:text-gray-800 font-semibold hover:underline flex items-center space-x-0.5 transition-colors"
-                                          title="ดูไฟล์ในแท็บใหม่"
-                                        >
-                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                          </svg>
-                                          <span>ดู</span>
-                                        </button>
-                                      </div>
+                                      <a 
+                                        href={fullFileUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className={`text-xs font-semibold hover:underline flex items-center space-x-0.5 transition-colors ${
+                                          isExternalLink 
+                                            ? 'text-purple-600 hover:text-purple-800'
+                                            : 'text-blue-600 hover:text-blue-800'
+                                        }`}
+                                        title={isExternalLink ? 'เปิดลิงก์' : 'ดาวน์โหลดไฟล์'}
+                                      >
+                                        {isExternalLink ? (
+                                          <>
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                            <span>เปิด</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                            <span>ดาวน์โหลด</span>
+                                          </>
+                                        )}
+                                      </a>
                                     )}
                                   </div>
                                 );
@@ -2375,78 +2563,9 @@ export default function TaskDetailPage() {
             </button>
 
             {/* Right Column - Task Info & Actions */}
-            <div className={`space-y-6 transition-all duration-500 ease-in-out ${
+            <div className={`space-y-6 mt-[8rem] transition-all duration-500 ease-in-out ${
               isRightPanelOpen ? 'lg:block opacity-100 translate-x-0' : 'lg:hidden opacity-0 translate-x-full'
             }`}>
-              {/* Project Leader Section - Only for Leaders */}
-              {userRole === 'Leader' && (
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">สำหรับ Project Leader</h3>
-                  
-                  {/* Project Management Button */}
-                  <div className="mb-4">
-                    <button
-                      onClick={() => window.location.href = `/main_pages/projects/${projectId}`}
-                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
-                      <span>จัดการโปรเจค</span>
-                    </button>
-                  </div>
-
-                  {/* Task Management Button */}
-                  <div className="relative task-menu-container">
-                    <button
-                      onClick={() => setShowTaskMenu(!showTaskMenu)}
-                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors shadow-sm"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      </svg>
-                      <span>จัดการ Task</span>
-                      <svg className={`w-4 h-4 transition-transform ${showTaskMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {showTaskMenu && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
-                        <button
-                          onClick={() => {
-                            handleStartEdit();
-                            setShowTaskMenu(false);
-                          }}
-                          className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center space-x-3"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          <span>แก้ไข Task</span>
-                        </button>
-                        
-                        <div className="border-t border-gray-100 my-1"></div>
-                        
-                        <button
-                          onClick={() => {
-                            handleShowDeleteModal();
-                            setShowTaskMenu(false);
-                          }}
-                          className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-3"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          <span>ลบ Task</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {/* Task Information Card */}
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">ข้อมูล Task</h3>
@@ -3053,6 +3172,108 @@ export default function TaskDetailPage() {
                 </div>
               )}
 
+              {/* Links Section */}
+              <div className="mb-5">
+                <h4 className="text-base font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  <span>ลิงก์งาน (ถ้ามี)</span>
+                </h4>
+                
+                {/* Add Link Input */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex space-x-2">
+                    <div className="flex-1">
+                      <input
+                        type="url"
+                        value={newLink}
+                        onChange={(e) => {
+                          setNewLink(e.target.value);
+                          setLinkError('');
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddLink();
+                          }
+                        }}
+                        placeholder="https://example.com หรือ https://drive.google.com/..."
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        disabled={submitting}
+                      />
+                      {linkError && (
+                        <p className="mt-1 text-xs text-red-600 flex items-center space-x-1">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span>{linkError}</span>
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={handleAddLink}
+                      disabled={submitting || !newLink.trim()}
+                      className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span>เพิ่ม</span>
+                    </button>
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 flex items-center space-x-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <span>รองรับ Google Drive, Dropbox, OneDrive, GitHub หรือลิงก์อื่นๆ</span>
+                  </p>
+                </div>
+
+                {/* Links List */}
+                {submissionLinks.length > 0 && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                    {submissionLinks.map((link, index) => (
+                      <div key={index} className="bg-purple-50 border border-purple-200 rounded-lg p-3 hover:bg-purple-100 transition-colors group">
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                Link #{index + 1}
+                              </span>
+                            </div>
+                            <a 
+                              href={link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium text-purple-700 hover:text-purple-900 hover:underline break-all"
+                            >
+                              {link}
+                            </a>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveLink(index)}
+                            disabled={submitting}
+                            className="flex-shrink-0 p-1.5 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-all opacity-70 group-hover:opacity-100"
+                            title="ลบลิงก์นี้"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Comments Section */}
               <div className="mb-5">
                 <div className="flex items-center justify-between mb-3">
@@ -3085,10 +3306,19 @@ export default function TaskDetailPage() {
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-600">
-                  {selectedFiles.length > 0 ? (
-                    <span>กำลังส่ง <strong className="text-gray-900">{selectedFiles.length} ไฟล์</strong></span>
+                  {selectedFiles.length > 0 || submissionLinks.length > 0 ? (
+                    <span>
+                      กำลังส่ง 
+                      {selectedFiles.length > 0 && (
+                        <strong className="text-gray-900"> {selectedFiles.length} ไฟล์</strong>
+                      )}
+                      {selectedFiles.length > 0 && submissionLinks.length > 0 && ' และ'}
+                      {submissionLinks.length > 0 && (
+                        <strong className="text-purple-700"> {submissionLinks.length} ลิงก์</strong>
+                      )}
+                    </span>
                   ) : (
-                    <span>ส่งงาน<strong className="text-gray-900">โดยไม่มีไฟล์</strong></span>
+                    <span>ส่งงาน<strong className="text-gray-900">โดยไม่มีไฟล์หรือลิงก์</strong></span>
                   )}
                 </div>
                 <div className="flex items-center space-x-3">
