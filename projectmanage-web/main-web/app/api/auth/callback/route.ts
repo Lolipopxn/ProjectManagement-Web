@@ -9,6 +9,8 @@ const config = {
   secure: process.env.NODE_ENV === "production",
 };
 
+const frontendUrl = process.env.NEXT_PUBLIC_APP_ORIGIN;
+
 export const dynamic = 'force-dynamic' // defaults to auto
 export async function GET(request: Request, params: { params: Promise<{ provider: string }> }) {
   
@@ -28,5 +30,5 @@ export async function GET(request: Request, params: { params: Promise<{ provider
 
   ;(await cookies()).set("token", data.jwt, config);
 
-  return NextResponse.redirect(new URL("/main_pages/overview", request.url));
+  return NextResponse.redirect(new URL(`/main_pages/overview`, frontendUrl));
 }
