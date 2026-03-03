@@ -167,13 +167,13 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
         feature.id === id ? { ...feature, startAt, endAt } : feature
       )
     );
-    console.log(`Move feature: ${id} from ${startAt} to ${endAt}`);
+    // console.log(`Move feature: ${id} from ${startAt} to ${endAt}`);
   };
   const handleAddFeature = (date: Date) =>
     console.log(`Add feature: ${date.toISOString()}`);
 
   return (
-    <GanttProvider range="daily" zoom={150} className="border border-gray-200 shadow-md">
+    <GanttProvider range="daily" zoom={150} className="border border-gray-200 shadow-md scale-95 md:scale-100">
 
       <GanttSidebar className='mb-60 md:mb-30'>
         {Object.entries(grouped).map(([group, features]) => (

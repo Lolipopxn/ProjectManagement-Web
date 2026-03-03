@@ -62,14 +62,14 @@ export default function NotificationDropdown({
     : notifications;
 
   // Debug logging
-  console.log("=== NOTIFICATION DROPDOWN DEBUG ===");
-  console.log("Current User:", currentUser);
-  console.log("All Notifications:", notifications.length);
-  console.log("User Notifications (filtered):", userNotifications.length);
-  if (notifications.length > 0) {
-    console.log("First notification sample:", notifications[0]);
-  }
-  console.log("===================================");
+  // console.log("=== NOTIFICATION DROPDOWN DEBUG ===");
+  // console.log("Current User:", currentUser);
+  // console.log("All Notifications:", notifications.length);
+  // console.log("User Notifications (filtered):", userNotifications.length);
+  // if (notifications.length > 0) {
+  //   console.log("First notification sample:", notifications[0]);
+  // }
+  // console.log("===================================");
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -219,7 +219,7 @@ export default function NotificationDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] overflow-hidden flex flex-col"
+      className="absolute -right-20 w-90 md:right-0 mt-3 md:mt-2 md:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] overflow-hidden flex flex-col"
     >
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">

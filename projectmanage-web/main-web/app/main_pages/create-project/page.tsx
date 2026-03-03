@@ -428,7 +428,7 @@ export default function CreateProjectPage() {
     <div className="min-h-screen w-full bg-white flex justify-center">   
       <div className='flex-1 max-w-[1900px]'>
         {/* Main Content */}
-          <div className="flex flex-row justify-center px-8 py-8">
+          <div className="flex flex-col md:flex-row justify-center px-8 py-8">
             <div className='flex-1 md:pl-10 md:pr-20'>
               {/* Header */}
               <div className="mb-2 flex flex-row items-center space-x-6">
@@ -594,7 +594,7 @@ export default function CreateProjectPage() {
             </div>
 
             {/* Project Members Card - Right Side */}
-              <div className=" w-1/3">
+              <div className="hidden md:flex md:w-1/3">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">สมาชิกโปรเจ็กต์</h2>

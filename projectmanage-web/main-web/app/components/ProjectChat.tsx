@@ -151,7 +151,7 @@ export default function ProjectChatPopup({
 
   return (
     <div className="fixed -inset-20 z-50 flex items-center justify-center bg-black/30">
-      <div className="w-[96vw] max-w-[45vw] h-[86vh] max-h-[880px] md:w-[90vw] md:h-[84vh] rounded-2xl overflow-hidden shadow-2xl bg-[#F9F7F7] flex flex-col">
+      <div className="w-[96vw] max-w-[100vw] h-[86vh] max-h-[100vh] md:w-[90vw] md:h-[84vh] scale-90 md:scale-100 rounded-2xl overflow-hidden shadow-2xl bg-[#F9F7F7] flex flex-col">
         {/* header */}
         <div className="flex items-center justify-between px-6 py-3 bg-[#112D4E] text-[#F9F7F7]">
           <div className="font-semibold truncate">Project Chat - {projectName}</div>

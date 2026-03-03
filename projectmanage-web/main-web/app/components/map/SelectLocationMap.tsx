@@ -121,15 +121,15 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   return (
     <div className="fixed inset-0 shadow-lg bg-white z-99 flex flex-col items-center justify-center transform animate-in slide-in-from-bottom-4 duration-200 space-y-3">
-      <div className="grid grid-cols-2 gap-4 w-full h-full p-6">
+      <div className="flex flex-col md:grid md:grid-cols-2 gap-4 w-full h-full p-6 overflow-y-auto ">
         {/* left */}
-        <div className="col-span-1 flex flex-col gap-4">
+        <div className="md:col-span-1 flex flex-col gap-4">
           {/* close */}
           <div className="w-full">
             <button className="flex flex-row items-center gap-2 hover:bg-gray-200 rounded-full py-2 px-4">
               <IoMdArrowRoundBack className="size-4" />
               <span
-                className="cursor-pointer text-lg font-medium"
+                className="cursor-pointer text-base md:text-lg font-medium"
                 onClick={resetForm}
               >
                 กลับ
@@ -137,9 +137,9 @@ const handleSubmit = async (e: React.FormEvent) => {
             </button>
           </div>
           {/* title */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 truncate">
-            <span className="text-2xl font-semibold">เพิ่มการนัดหมาย</span>
-            <p className="text-gray-600">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 ">
+            <span className="text-md md:text-2xl font-semibold">เพิ่มการนัดหมาย</span>
+            <p className="text-sm md:text-base text-gray-600">
               สามารถนัดหมายการประชุมผ่านฟอร์มนี้
               เเละสามารถเลือกสถานที่นัดหมายจากแผนที่ด้านขวา
             </p>
@@ -151,13 +151,13 @@ const handleSubmit = async (e: React.FormEvent) => {
                   type="text"
                   value={taskName}
                   onChange={(e) => setTaskName(e.target.value)}
-                  className="p-2 outline-none text-lg"
+                  className="p-2 outline-none text-base md:text-lg"
                   placeholder="หัวข้อการนัดหมาย"
                 />
                 <textarea 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="rounded-md p-2 outline-2 min-h-15 h-40 max-h-40 outline-none"  placeholder="รายละเอียดเพิ่มเติม..." 
+                  className="rounded-md p-2 outline-2 min-h-15 h-40 max-h-40 outline-none text-sm md:text-base"  placeholder="รายละเอียดเพิ่มเติม..." 
                 />
               </div>
               
@@ -167,42 +167,42 @@ const handleSubmit = async (e: React.FormEvent) => {
                 {/* date & time begin */}
                 <div className="flex flex-row items-center justify-start gap-4">              
                   <div className="flex flex-col flex-2 gap-2">
-                    <label className="text-sm">วันนัดหมาย</label>
+                    <label className="text-xs md:text-sm">วันนัดหมาย</label>
                     <input 
                       type="date"
                       value={beginDate} 
                       onChange={(e) => setBeginDate(e.target.value)}
-                      className="ml-1 outline-1 rounded-lg bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
+                      className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
                   </div>
                   
                   <div className="flex gap-2 flex-col flex-1">
-                    <label className="text-sm">ตั้งเเต่</label>
+                    <label className="text-xs md:text-sm">ตั้งเเต่</label>
                   <input 
                     type="time" 
                     value={beginTime}
                     onChange={(e) => setBeginTime(e.target.value)}
-                    className="ml-1 outline-1 rounded-lg bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
+                    className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
                   </div>                
                 </div>
 
                 {/* date & time end */}
                 <div className="flex flex-row items-center justify-start gap-4">              
                   <div className="flex flex-col flex-2 gap-2">
-                    <label className="text-sm">วันที่สิ้นสุด</label>
+                    <label className="text-xs md:text-sm">วันที่สิ้นสุด</label>
                     <input 
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
                       type="date" 
-                      className="ml-1 outline-1 rounded-lg bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
+                      className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
                   </div>
                   
                   <div className="flex gap-2 flex-col flex-1">
-                    <label className="text-sm">จนถึง</label>
+                    <label className="text-xs md:text-sm">จนถึง</label>
                   <input 
                     value={dueTime}
                     onChange={(e) => setDueTime(e.target.value)}
                     type="time" 
-                    className="ml-1 outline-1 rounded-lg bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
+                    className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
                   </div>                
                 </div>
              
@@ -233,7 +233,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         </div>
 
         {/* right */}
-        <div className="col-span-1 flex flex-col gap-2 border-l border-gray-300 px-4 py-2">
+        <div className="md:col-span-1 flex flex-col gap-2 md:border-l border-gray-300 px-4 py-2 w-85 h-85 md:w-full md:h-full">
           {/* Search Input */}
           <div className=" bg-white py-2">
             <Autocomplete

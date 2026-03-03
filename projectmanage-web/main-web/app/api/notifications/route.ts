@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log("Fetching notifications from Strapi...");
+    // console.log("Fetching notifications from Strapi...");
 
     const response = await fetch(
       `${STRAPI_URL}/api/notifications?populate=*&sort=createdAt:desc&pagination[limit]=50`,
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log("Notifications fetched successfully:", data.data?.length || 0);
+    // console.log("Notifications fetched successfully:", data.data?.length || 0);
 
     // Strapi 5 returns { data: [...] }
     return NextResponse.json({

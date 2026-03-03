@@ -36,7 +36,7 @@ export const TaskStatusTimeline: React.FC<Props> = ({ currentStatus }) => {
         : 'text-gray-900';
 
         return (
-          <div key={step.key} className="flex items-center">
+          <div key={step.key} className="flex items-center w-25 h-25 md:w-full md:h-full">
             {/* Node */}
             <motion.div
               animate={

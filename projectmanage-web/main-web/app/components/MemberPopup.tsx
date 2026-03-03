@@ -54,7 +54,7 @@ export default function MemberPopup(
       }`}
     >
       {/* Members */}
-      <div className="bg-white rounded-lg shadow-sm py-6 px-8 space-y-3">
+      <div className="bg-white rounded-lg shadow-sm py-6 px-8 space-y-3 scale-80 md:scale-100">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">

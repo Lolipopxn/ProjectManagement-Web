@@ -12,11 +12,11 @@ export default function Nav() {
 
     return (
         <nav className="bg-[#161815] fixed top-0 left-0 w-full z-50">
-            <div className="container mx-auto relative py-2 md:py-4 px-4 text-white text-sm max-w-[1320px] h-auto flex flex-col md:flex-row md:justify-between md:items-center">
+            <div className="container mx-auto relative py-3 md:py-4 px-4 text-white text-sm max-w-[1320px] h-auto flex flex-col md:flex-row md:justify-between md:items-center">
                 <div className="flex flex-col md:flex-row md:items-center gap-5">
                     <div className="flex flex-row items-center">
                         <a href="#">
-                            <img src="/TAMA2.png" alt="Logo" className="h-10 w-10 md:h-10 md:w-28"/>
+                            <img src="/TAMA2.png" alt="Logo" className="h-9 w-28 md:h-10 md:w-28"/>
                         </a>
                         
                     </div>
@@ -33,7 +33,7 @@ export default function Nav() {
                 </ul>
 
                 {/*section toggle hidden*/}
-                <GiHamburgerMenu onClick={toggleMenu} className="absolute right-5 mt-3 md:mt-5 text-xl md:hidden"/>
+                <GiHamburgerMenu onClick={toggleMenu} className="absolute right-5 mt-2 md:mt-5 text-xl md:hidden"/>
      
             </div>
         </nav>

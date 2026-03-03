@@ -122,7 +122,7 @@ export default function CreateTaskModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white scale-80 md:scale-105 rounded-xl px-4 shadow-2xl w-full max-w-3xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-white scale-100 md:scale-105 rounded-xl px-4 shadow-2xl w-full max-w-3xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className='flex flex-col border-b border-gray-200 '>
           <div className="flex items-center justify-between p-6">
@@ -150,71 +150,73 @@ export default function CreateTaskModal({
           </div> 
 
           {/* Other Setting */}
-          <div className='flex flex-row justify-start items-center px-6 gap-6'>
+          <div className='flex flex-row justify-start items-center px-6 gap-4 md:gap-6'>
             <button 
               onClick={() => setChangePage(0)}
-              className={`p-2 bg-white rounded-md  ${changePage === 0 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>เนื้อหา</button>
+              className={`p-2 bg-white rounded-md text-sm md:text-md ${changePage === 0 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>เนื้อหา</button>
             <button 
               onClick={() => setChangePage(1)}
-              className={`p-2 bg-white rounded-md  ${changePage === 1 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>กำหนดเวลา</button>
+              className={`p-2 bg-white rounded-md text-sm md:text-md ${changePage === 1 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>กำหนดเวลา</button>
             <button 
               onClick={() => setChangePage(2)}
-              className={`p-2 bg-white rounded-md  ${changePage === 2 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>หมอบหมายงาน</button>
+              className={`p-2 bg-white rounded-md text-sm md:text-md ${changePage === 2 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>หมอบหมายงาน</button>
           </div>
         </div>
         
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {changePage === 0 && (
-            <div className='overflow-y-scroll scrollbar-autoHide h-75 px-2 space-y-3'>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  ชื่องาน <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={taskName}
-                  onChange={(e) => setTaskName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white"
-                  placeholder="ป้อนชื่อ Task ที่ต้องการสร้าง"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  รายละเอียด
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white resize-none"
-                  placeholder="อธิบายรายละเอียดของ Task นี้"
-                  rows={4}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className='flex flex-row items-center space-x-4 py-2'>
-                <span>สีของงาน : </span>
-                {Object.keys(colorClasses).map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setSelectedColor(color)}
-                    className={`
-                      p-3 rounded-full
-                      ${colorClasses[color]}
-                      transition
-                      ${
-                        selectedColor === color
-                          ? "ring-2 ring-offset-2 ring-black"
-                          : "hover:ring-2 hover:ring-gray-300"
-                      }
-                    `}
+            <div className='overflow-y-scroll scrollbar-autoHide h-75 px-2'>
+              <div className='scale-95 md:scale-100 space-y-3'>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    ชื่องาน <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={taskName}
+                    onChange={(e) => setTaskName(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white"
+                    placeholder="ป้อนชื่อ Task ที่ต้องการสร้าง"
+                    required
+                    disabled={isLoading}
                   />
-                ))}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    รายละเอียด
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white resize-none"
+                    placeholder="อธิบายรายละเอียดของ Task นี้"
+                    rows={4}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className='flex flex-row items-center space-x-4 py-2'>
+                  <span>สีของงาน : </span>
+                  {Object.keys(colorClasses).map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setSelectedColor(color)}
+                      className={`
+                        p-3 rounded-full
+                        ${colorClasses[color]}
+                        transition
+                        ${
+                          selectedColor === color
+                            ? "ring-2 ring-offset-2 ring-black"
+                            : "hover:ring-2 hover:ring-gray-300"
+                        }
+                      `}
+                    />
+                  ))}
+                </div>
               </div>
           </div>
           )}
@@ -222,7 +224,7 @@ export default function CreateTaskModal({
           {changePage === 1 && (
             <div className='overflow-y-scroll scrollbar-autoHide h-75 px-2'>     
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-3 scale-90 md:scale-100">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     เริ่มงาน

@@ -50,7 +50,7 @@ export default function RenderTaskCard({
   return (
     <div
       className={`
-          border border-gray-200 rounded-lg p-5 mb-4
+          border border-gray-200 rounded-lg p-5 md:mb-4
             hover:shadow-md hover:border-gray-300 hover:bg-gray-100 hover:-translate-1
             transition-all duration-300
             relative overflow-hidden
@@ -79,9 +79,9 @@ export default function RenderTaskCard({
       )}
 
       {/* Task Name with Actions */}
-      <div className="flex items-start justify-between mb-10">
+      <div className="flex items-start justify-between mb-1 md:mb-10">
         <div className="flex-1 truncate">
-          <h5 className="font-semibold  text-lg cursor-pointer transition-colors leading-tight">
+          <h5 className="font-semibold text-sm md:text-lg cursor-pointer transition-colors leading-tight">
             {task.task_name}
           </h5>
         </div>
@@ -115,7 +115,7 @@ export default function RenderTaskCard({
       </div>
 
       {/* Task Details - Compact Layout */}
-      <div className="flex flex-wrap items-center justify-between text-sm text-gray-600 gap-4 px-2">
+      <div className="flex flex-wrap items-center justify-between text-sm text-gray-600 gap-4 md:px-2">
         {/* Status */}
         <div
           className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium ${taskStatusConfig.bgColor} ${taskStatusConfig.textColor}`}

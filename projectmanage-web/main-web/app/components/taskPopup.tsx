@@ -354,7 +354,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
 
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 truncate">
-            <div className="w-full max-w-6xl mx-auto px-10 py-10 space-y-6 bg-white shadow-2xl rounded-xl scale-80 md:scale-105 transition-all duration animate-in slide-in-from-bottom-4">
+            <div className="w-full max-w-6xl mx-auto px-5 py-8 md:px-10 md:py-10 space-y-6 bg-white shadow-2xl rounded-xl scale-90 md:scale-105 transition-all duration animate-in slide-in-from-bottom-4">
                 {task.task_status === 'continue' && (
                     <svg className='running-border-svg' aria-hidden='true'>
                         <rect className='running-border-rect'></rect>
@@ -362,8 +362,8 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                 )}
                 <div className="flex flex-col border-b border-gray-300 space-y-6">
                     <div className="flex flex-row justify-between px-4">
-                        <div className='flex flex-row flex-1 gap-4 items-center'>
-                            <span className=' text-3xl truncate'>{task.task_name}</span>
+                        <div className='flex flex-row flex-1 gap-4 items-center truncate'>
+                            <span className='text-3xl truncate'>{task.task_name}</span>
                             <div className={`flex flex-row items-center gap-2 bg-gray-200 rounded-full py-1 px-2 mt-2 border border-gray-400
                                 ${task.task_type === 'location_task' && 'bg-purple-200 border-purple-400'}
                             `}>
@@ -377,7 +377,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                         </button>                    
                     </div>
                     <div className="flex flex-row justify-between items-center px-4">
-                        <div className='flex flex-row justify-start items-center gap-6'>
+                        <div className='flex flex-row justify-start items-center gap-6 w-75 md:w-full overflow-auto'>
                             <button 
                                 onClick={() => setChangePage(0)}
                                 className={`p-2 bg-white rounded-md  ${changePage === 0 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>รายละเอียด</button>
@@ -410,14 +410,14 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                         
                     </div>
                 </div>
-                <div className='h-100 flex flex-col bg-white space-y-3 px-6'>
+                <div className='h-100 flex flex-col bg-white space-y-3 md:px-6'>
                     {changePage === 0 && (
-                        <div className="flex flex-row gap-6 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="flex flex-row gap-6 w-full animate-in fade-in slide-in-from-bottom-2 duration-300 overflow-y-scroll scrollbar-autoHide">
 
                             {/* LEFT : Description */}
-                            <div className="flex flex-col flex-[2] bg-white rounded-xl ">
-                                <div className="flex flex-row items-center justify-between py-4 border-b border-gray-300">
-                                    <h3 className="text-lg font-semibold">คำอธิบาย</h3>
+                            <div className="flex flex-col flex-[2] bg-white rounded-xl">
+                                <div className="flex flex-row items-center justify-between py-4 border-b border-gray-300 w-80 md:w-full">
+                                    <h3 className="text-base md:text-lg font-semibold">คำอธิบาย</h3>
                                     {STATUS_BUTTON[task.task_status] && task.task_type === 'normal_task' && (
                                         <button
                                             key={task.task_status}
@@ -534,9 +534,13 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                     )}                  
 
                     {changePage === 1 && (
-                        <div className='flex flex-col space-y-2 text-lg animate-in fade-in slide-in-from-bottom-2 duration-300'> 
+                        <div className='flex flex-col space-y-2 text-lg animate-in fade-in slide-in-from-bottom-2 duration-300 scale-90 md:scale-100'> 
                             <div className="flex flex-row items-center px-4 justify-between border-b pb-2 border-gray-200">
-                                <span>รายชื่อผู้ได้รับหมอบหมายงาน</span>
+                                <div>
+                                   <span className='md:block hidden'>รายชื่อผู้ได้รับหมอบหมายงาน</span>
+                                   <span className='md:hidden block'>ผู้ที่ได้รับหมอบหมาย</span> 
+                                </div>
+                                
                                 <div className='flex flex-row items-center gap-2'>
                                     <button onClick={() => {setOpenEdit((prev) => !prev)}} className={`py-2 px-4 text-sm rounded-md text-white transition 
                                         ${isOpenEdit && 'bg-[#50589C]'}
@@ -552,11 +556,11 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                 </div>
                                 
                             </div>
-                            <div className='mt-4 px-2 w-full h-85  whitespace-pre-wrap overflow-y-scroll scrollbar-autoHide border-b border-gray-300'>                       
+                            <div className='mt-4 px-2 w-full h-85 hidden md:block whitespace-pre-wrap overflow-y-scroll scrollbar-autoHide border-b border-gray-300'>                       
                                 <div className='w-full border border-[#50589C] shadow-md'>
                                     <table className='table-auto w-full h-auto'>
                                         <thead className='bg-[#50589C] text-white sticky top-0 z-10'>
-                                            <tr className='h-12 [&>th]:text-start [&>th]:pl-6'>
+                                            <tr className='h-12 md:[&>th]:text-start md:[&>th]:pl-6'>
                                                 <th>ชื่อผู้ใช้</th>
                                                 <th>อีเมล</th>
                                                 <th>สิทธ์</th>
@@ -604,12 +608,57 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                         </tbody>
                                     </table>                                         
                                 </div>   
+                            </div>
+
+                            {/* Mobile*/}
+                            <div className="block md:hidden space-y-3">
+                            {task.assigned_to_user_ids?.map((user: any) => (
+                                <div key={user.id} className="border border-[#50589C] rounded-lg p-3 shadow-sm bg-white">
+                                
+                                <div className="flex items-center gap-2">
+                                    <CgProfile className="size-6"/>
+                                    <span className="font-medium">{user.username}</span>
+                                </div>
+
+                                <div className="text-sm text-gray-600 mt-1">
+                                    {user.email}
+                                </div>
+
+                                <div className="flex items-center justify-between mt-2">
+                                    <span className="text-sm font-medium">
+                                    {getUserRoleInProject(user.id)}
+                                    </span>
+
+                                    {isOpenEdit && (
+                                    <button
+                                        disabled={loadingUserId === user.id}
+                                        onClick={async () => {
+                                        setLoadingUserId(user.id);
+                                        await axios.post('/api/tasks/remove-user', {
+                                            taskId: task.documentId,
+                                            userId: user.id,
+                                        });
+                                        await refreshTask();
+                                        }}
+                                        className="p-1 hover:bg-red-200 rounded-md"
+                                    >
+                                        {loadingUserId === user.id ? (
+                                        <span className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin block" />
+                                        ) : (
+                                        <MdDelete className="size-6 text-red-500" />
+                                        )}
+                                    </button>
+                                    )}
+                                </div>
+
+                                </div>
+                            ))}
                             </div>                   
                         </div>                    
                     )}
                     {changePage === 2 && (
-                    <div className='flex flex-col space-y-3 text-lg animate-in fade-in slide-in-from-bottom-2 duration-300'>
-                        <span className="border-b pb-2 border-gray-200">งานที่ส่งแล้ว</span>
+                    <div className='flex flex-col space-y-3 px-4 md:px-0 text-lg animate-in fade-in slide-in-from-bottom-2 duration-300'>
+                        <span className="text-sm md:text-base border-b pb-2 border-gray-200">งานที่ส่งแล้ว</span>
 
                         <div className='px-6 py-4 h-85 w-250 rounded-lg overflow-y-scroll scrollbar-autoHide space-y-4'>
                             {/* submission list */}
@@ -691,9 +740,12 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
 
                     {changePage === 3 && (
                     <div className='flex flex-col items-center space-y-6 text-lg h-full w-full animate-in fade-in slide-in-from-bottom-2 duration-300'>
-                        <div className='flex flex-col items-center gap-4 mt-6'>
-                             <TaskStatusTimeline currentStatus={task.task_status} />                         
-                        </div> 
+                        <div className='w-80 h-100 md:w-full md:h-full p-2 overflow-x-scroll overflow-y-clip md:overflow-visible'>
+                            <div className='flex flex-col items-center justify-center gap-4 md:mt-6 scale-80 md:scale-100 '>
+                                <TaskStatusTimeline currentStatus={task.task_status} />                         
+                            </div> 
+                        </div>              
+
                         <div className='flex flex-col self-start p-2 w-full h-full gap-4'>
                             <span className='font-bold text-lg'>ประวัติการดำเนินการ</span>
                             <div className='flex flex-col border-1 border-gray-300 rounded-lg h-53 w-full p-4 overflow-y-scroll scrollbar-autoHide animate-in fade-in slide-in-from-bottom-2 duration-500'>

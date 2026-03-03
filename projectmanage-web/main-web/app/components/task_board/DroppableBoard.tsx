@@ -8,7 +8,7 @@ export function LeftDroppable({ children }: any) {
   const { setNodeRef } = useDroppable({ id: "left" });
 
   return (
-    <div ref={setNodeRef} className="w-1/4">
+    <div ref={setNodeRef} className="w-full md:w-1/4 ">
       {children}
     </div>
   );

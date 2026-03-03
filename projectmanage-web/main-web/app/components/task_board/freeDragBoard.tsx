@@ -275,7 +275,7 @@ export default function FreeDragBoard(
   }, []);
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-4 flex-col md:flex-row">
       <DndContext
         onDragStart={({ active }) => {
           setActiveId(active.id as string);
@@ -345,7 +345,7 @@ export default function FreeDragBoard(
       >
         {/* Left Board */}
         <LeftDroppable>
-            <div className="w-full bg-[#F9F8F8] pb-10 rounded-lg p-3 space-y-4">
+            <div className="w-full bg-[#F9F8F8] md:pb-10 rounded-lg p-3 space-y-4">
                 <div className="flex flex-row justify-between items-center px-3">
                   <div className="flex flex-row gap-2">
                     <h2 className="font-semibold">รายการงาน</h2>
@@ -357,7 +357,7 @@ export default function FreeDragBoard(
                     
                 </div>
                 
-                <div className="px-3 max-h-screen overflow-y-auto overflow-x-clip">
+                <div className="px-3 h-25 md:h-95 overflow-y-auto overflow-x-clip">
                     {leftBoard.map((task: any) => (
                         <LeftDraggable key={task.id} task={task} />
                     ))}

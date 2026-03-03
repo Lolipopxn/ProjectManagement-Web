@@ -1403,7 +1403,7 @@ const progressPercent =
 
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300 max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300 max-h-[90vh] overflow-y-auto scale-90 md:scale-100">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
             <div className="flex items-center space-x-3">
@@ -1902,11 +1902,11 @@ const progressPercent =
   };
 
   return (
-    <div className="min-h-screen w-auto md:w-full bg-white">
+    <div className="min-h-screen w-full bg-white">
       <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
-        <div className={`flex-1 p-6 space-y-3 ${ToggleView === 3 ? 'max-w-sm md:max-w-[1900px]' : 'max-w-sm md:max-w-[1900px]'}`}>
-          <div className='flex flex-row justify-between items-center'>
+        <div className={`flex-1 p-6 space-y-1 md:space-y-3 ${ToggleView === 3 ? 'max-w-md md:max-w-[1900px]' : 'max-w-md md:max-w-[1900px]'}`}>
+          <div className='flex flex-row justify-between px-4 md:items-center text-sm md:text-base'>
             {/* Breadcrumb */}
             <div className="flex items-center space-x-2 text-gray-600">
               <a href="/main_pages/overview" className="hover:text-blue-600">Home</a>
@@ -1917,24 +1917,24 @@ const progressPercent =
             </div>
 
             {/*Other option*/}
-            <div className='hidden md:flex'>
-              <div className="flex items-center  divide-x-2 divide-gray-300">               
+            <div className='flex'>
+              <div className="flex items-center divide-x-2 divide-gray-300">               
                 {/* Voice button */}
-                <div className='flex justify-center items-center px-2'>
+                <div className='flex justify-center items-center px-1 md:px-2'>
                   <VoiceRoomButton slug={project.slug}>
                     ห้องพูดคุย
                   </VoiceRoomButton>
                 </div>
                 {/* Chat button */}
-                <div className='flex justify-center items-center px-2'>
+                <div className='flex justify-center items-center px-1 md:px-2'>
                   <button
                     onClick={() => setOpen(true)}
-                      className="relative flex items-center space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors"
+                      className="relative flex items-center md:space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors"
                   >
                     <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.474L3 21l2.474-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
                     </svg>
-                    <span>เเชท</span>
+                    <span className='hidden md:flex'>เเชท</span>
                     {unread > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                         {unread > 9 ? "9+" : unread}
@@ -1944,30 +1944,30 @@ const progressPercent =
                 </div>
 
                 {/* Member button */}
-                <div className="flex justify-center items-center px-2">
+                <div className="flex justify-center items-center px-1 md:px-2">
                   <button
-                    className="relative flex items-center space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors"
+                    className="relative flex items-center md:space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors"
                     onClick={() => setToggleMember(!toggleMember)}
                   >
                     <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span>สมาชิก</span>
+                    <span className='hidden md:flex'>สมาชิก</span>
                   </button>
                 </div>
 
                 {/* Project Management Button - Only for Leaders */}
                 {userRole === 'Leader' && (
-                  <div className="flex justify-center items-center px-2">
+                  <div className="flex justify-center items-center px-1 md:px-2">
                     <button
                       onClick={() => setShowProjectManageModal(true)}
-                      className="flex items-center space-x-2 px-3 py-1.5 bg-[#636CCB] hover:bg-[#636CCB]/80 text-white rounded-sm text-sm font-medium transition-colors shadow-sm"
+                      className="flex items-center md:space-x-2 px-3 py-1.5 bg-[#636CCB] hover:bg-[#636CCB]/80 text-white rounded-sm text-sm font-medium transition-colors shadow-sm"
                       title="จัดการโปรเจค"
                     >
                       <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                       </svg>
-                      <span>จัดการ</span>
+                      <span className='hidden md:flex'>จัดการ</span>
                     </button>
                   </div>
                 )}        
@@ -1976,16 +1976,16 @@ const progressPercent =
           </div>
 
           {/* Project Header - Compact Design */}
-          <div className="bg-white border-b-1 border-gray-300 p-4 mb-6">
-            <div className="flex flex-col md:flex-row items-center md:justify-between gap-2 md:gap-0">
+          <div className="bg-white border-b-1 border-gray-300 p-4 mb-6 mt-2">
+            <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between gap-2 md:gap-0">
               {/* Project Info */}
               { !projectLoading ? (
                 <div className="flex items-center space-x-4">
-                  <div className="hidden size-9 bg-[#6E8CFB] rounded-sm md:flex items-center justify-center shadow-sm">
-                    <AiFillReconciliation  className='size-6 text-white'/>
+                  <div className="size-7 md:size-9 bg-[#6E8CFB] rounded-sm flex items-center justify-center shadow-sm">
+                    <AiFillReconciliation  className='size-5 md:size-6 text-white'/>
                   </div>
                   <div>
-                    <div className="flex items-center space-x-2 md:space-x-2">
+                    <div className="flex items-center space-x-3 md:space-x-2">
                       <div className="text-2xl mb-1 font-medium text-gray-900">{project.project_name}</div>
                       <span className={`flex px-2 py-1 rounded-full text-xs font-medium ${
                         userRole === 'Leader' 
@@ -2005,7 +2005,7 @@ const progressPercent =
                       <svg className="hidden md:inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <span>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
+                      <span className='hidden md:flex'>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
                     </div>
                   </div>
                 </div>
@@ -2020,7 +2020,7 @@ const progressPercent =
               </div>)}
               
 
-              <div className='flex flex-row justify-center space-x-2'>
+              <div className='flex flex-row justify-center space-x-2 text-sm md:text-md'>
                 {/* Announcement button */}        
                 <div className={`flex justify-center items-center ${ToggleView === 0 ? 'text-black border-b-2' : 'text-gray-500'}`}>
                   <button onClick={() => setToggleView(0)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500`}>
@@ -2060,13 +2060,13 @@ const progressPercent =
               <div className="space-y-4">
                 {/* My Tasks */}
                 <div className="bg-white border-b-2 border-gray-200 px-3">
-                  <div className="flex items-center justify-between mb-6 space-x-20">
+                  <div className="flex items-center justify-between mb-6 md:space-x-20">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                         <GrAnnounce className='size-4'/>
                       </div>
                       <div className='flex flex-row items-center space-x-2'>
-                        <h3 className="font-semibold text-gray-900">ประกาศในโปรเจคนี้</h3>
+                        <h3 className="text-sm md:text-base font-semibold text-gray-900">ประกาศ</h3>
                         <p className="text-sm text-gray-500">( {[...myTasks, ...otherTasks].filter(task => task.task_type === 'location_task').length})</p>
                       </div>
 
@@ -2076,12 +2076,12 @@ const progressPercent =
                       <div className='relative'>
                         <button 
                           onClick={() => {setOpenOptions(prev => !prev) }}
-                          className="flex items-center space-x-2 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                          className="flex items-center space-x-1 md:space-x-2 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white py-2 md:py-1 px-2 md:px-3 md:py-2 rounded-lg font-medium transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                           </svg>
-                          <span>เพิ่มงานใหม่</span>
+                          <span className='text-sm'>เพิ่มงาน</span>
                         </button>
 
                         {/* Options */}
@@ -2177,230 +2177,242 @@ const progressPercent =
                 <div className="bg-white border-b-2 border-gray-200 px-3">
                   <div className="flex items-center justify-between mb-6 space-x-20">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div className='flex flex-row items-center space-x-2'>
-                        <h3 className="font-semibold text-gray-900">งานของโปรเจค</h3>
-                        <p className="text-sm text-gray-500">( {[...myTasks, ...otherTasks].length} งาน )</p>
-                      </div>
-                      <div className="relative inline-block">
-                        {/* Trigger */}
-                        <button
-                          onClick={() => setOpenFilter((prev) => !prev)}
-                          className="flex items-center gap-2 py-1 px-4 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-700"
-                        >
-                          <span>{filterLabelMap[taskFilter]}</span>
 
-                          {/* Arrow Icon */}
-                          <svg
-                            className={`w-4 h-4 transition-transform duration-200 ${
-                              openFilter ? "rotate-180" : "rotate-0"
-                            }`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                      <div className="flex flex-col items-start md:items-center space-x-3 md:flex-row ">
+                        <div className='flex flex-row items-center space-x-2'>
+                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <div className='flex flex-row items-center space-x-2'>
+                            <h3 className="font-semibold text-sm md:text-base text-gray-900 truncate">
+                              <span className="md:hidden">งาน</span>
+                              <span className="hidden md:inline">งานของโปรเจค</span>
+                            </h3>
+                            <p className="text-sm text-gray-500 truncate">( {[...myTasks, ...otherTasks].length} งาน )</p>
+                          </div>
+                        </div>
+                        
+                        <div className="relative inline-block md:mt-0 mt-4 text-sm md:text-base">
+                          {/* Trigger */}
+                          <button
+                            onClick={() => setOpenFilter((prev) => !prev)}
+                            className="flex items-center gap-2 py-2 px-3 md:py-1 md:px-4 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-700"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
+                            <span>{filterLabelMap[taskFilter]}</span>
 
-                        {/* Dropdown */}
-                        <div
-                          className={`
-                            absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl z-20
-                            border border-gray-100
-                            transform transition-all duration-300 ease-out origin-top
-                            ${
-                              openFilter
-                                ? "opacity-100 scale-100 translate-y-0"
-                                : "opacity-0 scale-95 -translate-y-3 pointer-events-none"
-                            }
-                          `}
-                        >
-                          {/* Section: ภาพรวม */}
-                          <div className="px-3 py-2">
-                            <p className="text-xs font-semibold text-gray-400 mb-1">ภาพรวม</p>
-                            {["All", "myTask"].map((key) => (
-                              <button
-                                key={key}
-                                onClick={() => {
-                                  setTaskFilter(key as TaskFilter);
-                                  setOpenFilter(false);
-                                }}
-                                className={`
-                                  w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                                  transition-all duration-200
-                                  ${
-                                    taskFilter === key
-                                      ? "bg-[#50589C]/10 text-[#50589C] font-medium"
-                                      : "text-gray-700 hover:bg-gray-100"
-                                  }
-                                `}
-                              >
-                                <span className="text-base">
-                                  {key === "All" ? <FcSurvey className="size-5"/> : <IoMdPerson className="size-5"/>}
-                                </span>
-                                {(filterLabelMap as any)[key]}
-                              </button>
-                            ))}
-                          </div>
+                            {/* Arrow Icon */}
+                            <svg
+                              className={`w-4 h-4 transition-transform duration-200 ${
+                                openFilter ? "rotate-180" : "rotate-0"
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
 
-                          <div className="h-px bg-gray-100 my-1" />
+                          {/* Dropdown */}
+                          <div
+                            className={`
+                              absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl z-20
+                              border border-gray-100
+                              transform transition-all duration-300 ease-out origin-top
+                              ${
+                                openFilter
+                                  ? "opacity-100 scale-100 translate-y-0"
+                                  : "opacity-0 scale-95 -translate-y-3 pointer-events-none"
+                              }
+                            `}
+                          >
+                            {/* Section: ภาพรวม */}
+                            <div className="px-3 py-2">
+                              <p className="text-xs font-semibold text-gray-400 mb-1">ภาพรวม</p>
+                              {["All", "myTask"].map((key) => (
+                                <button
+                                  key={key}
+                                  onClick={() => {
+                                    setTaskFilter(key as TaskFilter);
+                                    setOpenFilter(false);
+                                  }}
+                                  className={`
+                                    w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+                                    transition-all duration-200
+                                    ${
+                                      taskFilter === key
+                                        ? "bg-[#50589C]/10 text-[#50589C] font-medium"
+                                        : "text-gray-700 hover:bg-gray-100"
+                                    }
+                                  `}
+                                >
+                                  <span className="text-base">
+                                    {key === "All" ? <FcSurvey className="size-5"/> : <IoMdPerson className="size-5"/>}
+                                  </span>
+                                  {(filterLabelMap as any)[key]}
+                                </button>
+                              ))}
+                            </div>
 
-                          {/* Section: สถานะงาน */}
-                          <div className="px-3 py-2">
-                            <p className="text-xs font-semibold text-gray-400 mb-1">สถานะงาน</p>
-                            {["not turn in", "continue", "pending_review", "rejected"].map((key) => (
-                              <button
-                                key={key}
-                                onClick={() => {
-                                  setTaskFilter(key as TaskFilter);
-                                  setOpenFilter(false);
-                                }}
-                                className={`
-                                  w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                                  transition-all duration-200
-                                  ${
-                                    taskFilter === key
-                                      ? "bg-[#50589C]/10 text-[#50589C] font-medium"
-                                      : "text-gray-700 hover:bg-gray-100"
-                                  }
-                                `}
-                              >
-                                <span className="text-base">
-                                  {key === "not turn in" && <CgSandClock  className="size-5 text-yellow-600"/>}
-                                  {key === "continue" && <FcProcess className="size-5"/>}
-                                  {key === "pending_review" && <FcSearch className="size-5"/>}
-                                  {key === "rejected" && <FaTimes  className="size-5 text-red-600"/>}
-                                </span>
-                                {(filterLabelMap as any)[key]}
-                              </button>
-                            ))}
-                          </div>
+                            <div className="h-px bg-gray-100 my-1" />
 
-                          <div className="h-px bg-gray-100 my-1" />
+                            {/* Section: สถานะงาน */}
+                            <div className="px-3 py-2">
+                              <p className="text-xs font-semibold text-gray-400 mb-1">สถานะงาน</p>
+                              {["not turn in", "continue", "pending_review", "rejected"].map((key) => (
+                                <button
+                                  key={key}
+                                  onClick={() => {
+                                    setTaskFilter(key as TaskFilter);
+                                    setOpenFilter(false);
+                                  }}
+                                  className={`
+                                    w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+                                    transition-all duration-200
+                                    ${
+                                      taskFilter === key
+                                        ? "bg-[#50589C]/10 text-[#50589C] font-medium"
+                                        : "text-gray-700 hover:bg-gray-100"
+                                    }
+                                  `}
+                                >
+                                  <span className="text-base">
+                                    {key === "not turn in" && <CgSandClock  className="size-5 text-yellow-600"/>}
+                                    {key === "continue" && <FcProcess className="size-5"/>}
+                                    {key === "pending_review" && <FcSearch className="size-5"/>}
+                                    {key === "rejected" && <FaTimes  className="size-5 text-red-600"/>}
+                                  </span>
+                                  {(filterLabelMap as any)[key]}
+                                </button>
+                              ))}
+                            </div>
 
-                          {/* Section: ผลลัพธ์ */}
-                          <div className="px-3 py-2">
-                            <p className="text-xs font-semibold text-gray-400 mb-1">ผลลัพธ์</p>
-                            {["completed", "late"].map((key) => (
-                              <button
-                                key={key}
-                                onClick={() => {
-                                  setTaskFilter(key as TaskFilter);
-                                  setOpenFilter(false);
-                                }}
-                                className={`
-                                  w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                                  transition-all duration-200
-                                  ${
-                                    taskFilter === key
-                                      ? "bg-[#50589C]/10 text-[#50589C] font-medium"
-                                      : "text-gray-700 hover:bg-gray-100"
-                                  }
-                                `}
-                              >
-                                <span className="text-base">
-                                  {key === "completed" ? <FcOk className="size-5"/> : <FcHighPriority className="size-5"/>}
-                                </span>
-                                {(filterLabelMap as any)[key]}
-                              </button>
-                            ))}
+                            <div className="h-px bg-gray-100 my-1" />
+
+                            {/* Section: ผลลัพธ์ */}
+                            <div className="px-3 py-2">
+                              <p className="text-xs font-semibold text-gray-400 mb-1">ผลลัพธ์</p>
+                              {["completed", "late"].map((key) => (
+                                <button
+                                  key={key}
+                                  onClick={() => {
+                                    setTaskFilter(key as TaskFilter);
+                                    setOpenFilter(false);
+                                  }}
+                                  className={`
+                                    w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+                                    transition-all duration-200
+                                    ${
+                                      taskFilter === key
+                                        ? "bg-[#50589C]/10 text-[#50589C] font-medium"
+                                        : "text-gray-700 hover:bg-gray-100"
+                                    }
+                                  `}
+                                >
+                                  <span className="text-base">
+                                    {key === "completed" ? <FcOk className="size-5"/> : <FcHighPriority className="size-5"/>}
+                                  </span>
+                                  {(filterLabelMap as any)[key]}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
-
+                      
                     </div>
 
-                      <div className="flex-1 space-y-1 mb-1">
+                    <div className="flex flex-col items-end md:items-start space-x-3 md:flex-row md:justify-between w-full">
+                      <div className="flex-1 space-y-1 mb-1 ">
                         {/* Label */}
-                        <div className="flex justify-between text-xs text-gray-600">
-                          <span>ความคืบหน้า</span>
-                          <span>
-                            {completedTasks}/{totalTasks} งาน ({progressPercent}%)
-                          </span>
-                        </div>
+                        <div className="flex justify-between text-xs text-gray-600 w-full md:w-8/10 ">
+                          <span className="truncate">ความคืบหน้า</span>
+                            <span className="truncate">
+                              {completedTasks}/{totalTasks} งาน ({progressPercent}%)
+                            </span>
+                          </div>
 
-                        {/* Progress bar background */}
-                        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                          {/* Progress bar */}
-                          <div
-                            className="h-full bg-green-500 transition-all duration-500"
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                        </div>
+                          {/* Progress bar background */}
+                          <div className="w-full md:w-8/10 h-3 bg-gray-200 rounded-full overflow-hidden">
+                            {/* Progress bar */}
+                            <div
+                              className="h-full bg-green-500 transition-all duration-500"
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
                       </div>
 
 
-                    {userRole === 'Leader' && (
-                      <div className='relative'>
-                        <button 
-                          onClick={() => {setOpenOptions(prev => !prev) }}
-                          className="flex items-center space-x-2 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          <span>สร้างงาน</span>
-                        </button>
+                      {userRole === 'Leader' && (
+                        <div className='relative'>
+                          <button
+                            onClick={() => { setOpenOptions(prev => !prev) }}
+                            className="flex items-center space-x-2 mr-3 md:mr-0 mt-2 md:mt-0 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            <span>สร้างงาน</span>
+                          </button>
 
                         {/* Options */}
-                      <div
-                        className={`
-                          absolute right-0 mt-2 w-40 bg-white shadow-md border border-gray-200 z-50
-                          transform transition-all duration-500 divide-y divide-gray-200
-                          ${openOptions
-                            ? "opacity-100 scale-100 translate-y-0"
-                            : "opacity-0 scale-95 -translate-y-3 pointer-events-none"}
-                        `}
-                      >
-                        <div className={`
-                          transform transition-all duration-200 truncate
-                          ${openOptions
-                            ? "opacity-100 scale-100 translate-y-0"
-                            : "opacity-0 scale-95 -translate-y-4"}
-                        `}>
-                          <button
-                            onClick={() => {
-                              setShowCreateTaskModal(true);
-                              setOpenOptions(false);
-                            }}
-                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 hover:text-[#50589C]"
-                          >
-                            <div className='flex flex-row items-center gap-2'>
-                              <AiFillFileText className='size-4'/>
-                              <span className='text-md flex-1'>งานทั่วไป</span>
-                            </div>
-                             
-                          </button>
-                        </div>
+                        <div
+                          className={`
+                            absolute right-0 mt-2 w-40 bg-white shadow-md border border-gray-200 z-50
+                            transform transition-all duration-500 divide-y divide-gray-200
+                            ${openOptions
+                              ? "opacity-100 scale-100 translate-y-0"
+                              : "opacity-0 scale-95 -translate-y-3 pointer-events-none"}
+                          `}
+                        >
+                          <div className={`
+                            transform transition-all duration-200 truncate
+                            ${openOptions
+                              ? "opacity-100 scale-100 translate-y-0"
+                              : "opacity-0 scale-95 -translate-y-4"}
+                          `}>
+                            <button
+                              onClick={() => {
+                                setShowCreateTaskModal(true);
+                                setOpenOptions(false);
+                              }}
+                              className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 hover:text-[#50589C]"
+                            >
+                              <div className='flex flex-row items-center gap-2'>
+                                <AiFillFileText className='size-4'/>
+                                <span className='text-md flex-1'>งานทั่วไป</span>
+                              </div>
+                              
+                            </button>
+                          </div>
 
-                        <div className={`
-                          transform transition-all duration-200 delay-200
-                          ${openOptions
-                            ? "opacity-100 scale-100 translate-y-0"
-                            : "opacity-0 scale-95 -translate-y-4"}
-                        `}>
-                          <button
-                            onClick={() => {
-                              setShowCreateLocationModal(true);
-                              setOpenOptions(false);
-                            }}
-                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 hover:text-[#50589C]"
-                          >
-                            <div className='flex flex-row items-center gap-2'>
-                              <AiFillEnvironment className='size-4'/>
-                              <span className='text-md flex-1'>นัดหมาย</span>
-                            </div>
-                          </button>
-                        </div>
-                                          
-                        </div>    
-                      </div>               
-                    )}                    
+                          <div className={`
+                            transform transition-all duration-200 delay-200
+                            ${openOptions
+                              ? "opacity-100 scale-100 translate-y-0"
+                              : "opacity-0 scale-95 -translate-y-4"}
+                          `}>
+                            <button
+                              onClick={() => {
+                                setShowCreateLocationModal(true);
+                                setOpenOptions(false);
+                              }}
+                              className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 hover:text-[#50589C]"
+                            >
+                              <div className='flex flex-row items-center gap-2'>
+                                <AiFillEnvironment className='size-4'/>
+                                <span className='text-md flex-1'>นัดหมาย</span>
+                              </div>
+                            </button>
+                          </div>
+                                            
+                          </div>    
+                        </div>               
+                      )} 
+                    </div>
+             
                   </div>
                   
                   <div className="grid grid-cols-1 max-h-[calc(90vh-240px)] px-2 py-2 mb-6 overflow-y-auto lg:grid-cols-2 gap-2 ">

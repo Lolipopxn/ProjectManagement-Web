@@ -109,7 +109,7 @@ export default function Navbar() {
         {/* Left side - App name and navigation */}
         <div className="flex items-center space-x-5 md:space-x-20 text-lg md:text-md">
           <a href="/main_pages/overview" className="font-semibold">
-            <img src="/TAMA2.png" alt="Logo" className="h-8 w-full"/>
+            <img src="/TAMA2.png" alt="Logo" className="h-8 w-23 md:h-8 md:w-full"/>
           </a>
 
           {/* Navigation Links */}
@@ -149,10 +149,10 @@ export default function Navbar() {
           </a> */}
 
           {/* Notification button with dropdown */}
-          <div className="relative">
+          <div className="relative mr-3">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="hidden md:flex p-1 hover:bg-[#6972c3] rounded-lg transition-colors relative"
+              className="flex p-1 hover:bg-[#6972c3] rounded-lg transition-colors relative"
             >
               <MdNotifications size={25} />
               {/* Notification badge - แสดงจำนวน unread */}
