@@ -108,8 +108,9 @@ export default function Navbar() {
       <div className="container reactive mx-auto h-auto max-w-full flex items-center justify-between">
         {/* Left side - App name and navigation */}
         <div className="flex items-center space-x-5 md:space-x-20 text-lg md:text-md">
-          <a href="/main_pages/overview" className="font-semibold">
-            <img src="/TAMA2.png" alt="Logo" className="h-8 w-23 md:h-8 md:w-full"/>
+          <a href="/main_pages/overview" className="font-semibold flex flex-row items-center gap-2">
+            <img src="/tamifye.png" alt="Logo" className="size-8 md:size-10 rounded-full"/>
+            <span className="hidden md:inline">Tamifye</span>
           </a>
 
           {/* Navigation Links */}
