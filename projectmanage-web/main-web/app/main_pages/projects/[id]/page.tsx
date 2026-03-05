@@ -472,7 +472,7 @@ export default function ProjectDetailPage() {
           }
         }
         
-        setShowCreateTaskModal(false);
+        // setShowCreateTaskModal(false);
         // alert('Task created successfully!');
       } else {
         // alert('Error creating task: ' + response.data.message);

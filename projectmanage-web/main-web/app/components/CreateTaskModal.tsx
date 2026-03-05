@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
+import ConfirmPopup from './ComfirmPopup';
+
 interface ProjectMember {
   id: number;
   documentId?: string;
@@ -51,6 +53,8 @@ export default function CreateTaskModal({
   const [assignedUserId, setAssignedUserId] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>("white");
 
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const [Success, setSuccess] = useState(false);
 
   const[changePage, setChangePage] = useState(0);
@@ -79,10 +83,10 @@ export default function CreateTaskModal({
     setSuccess(false);
   }, [Success]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (done: (status: "success" | "fail") => void) => {
     if (!taskName.trim()) {
       alert('กรุณากรอกชื่อ Task');
+      done("fail");
       return;
     }
     
@@ -99,8 +103,11 @@ export default function CreateTaskModal({
       });
 
       setSuccess(true);
+
+      done("success");
     } catch (err) {
         console.error("submit failed", err);
+        done("fail");
     }
   };
 
@@ -164,7 +171,7 @@ export default function CreateTaskModal({
         </div>
         
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={(e) => { e.preventDefault(); setShowConfirm(true); }} className="p-6 space-y-5">
           {changePage === 0 && (
             <div className='overflow-y-scroll scrollbar-autoHide h-75 px-2'>
               <div className='scale-95 md:scale-100 space-y-3'>
@@ -375,6 +382,15 @@ export default function CreateTaskModal({
                 </>
               )}
             </button>
+            {showConfirm && (
+              <ConfirmPopup
+                message="ยืนยันการสร้างงาน?"
+                description="คุณแน่ใจหรือไม่ว่าต้องการสร้างงานนี้? คุณสามารถแก้ไขงานนี้ได้หลังจากสร้างแล้ว"
+                onCancel={() => setShowConfirm(false)}
+                onConfirm={(done) => handleSubmit(done)}
+                onSuccessClose={() => onClose()}
+              />
+            )}
           </div>
         </form>
       </div>

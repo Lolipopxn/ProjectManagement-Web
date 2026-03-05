@@ -9,6 +9,8 @@ import { IoMdArrowRoundBack, IoMdAdd } from "react-icons/io";
 import { MdOutlinePostAdd } from "react-icons/md";
 import { FaAngleDoubleRight, FaAngleDoubleLeft  } from "react-icons/fa";
 
+import ConfirmPopup from '../../components/ComfirmPopup';
+
 // โปรเจ็กต์นี้ใช้ field created_by_user แทน relation เพื่อเก็บ user ID ของผู้สร้าง
 // สำหรับ project members ใช้ field ใหม่ project_idnumber และ user_id_in_project แทน relations
 
@@ -55,7 +57,8 @@ export default function CreateProjectPage() {
   const [selectedRole, setSelectedRole] = useState('member');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
-  const [ isAddUser, setAddUser ] = useState(false);
+  const [isAddUser, setAddUser] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const MEMBERS_PER_PAGE = 3;
   const [currentPage, setCurrentPage] = useState(1);
@@ -188,8 +191,7 @@ export default function CreateProjectPage() {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (done: (status: "success" | "fail") => void) => {
     setIsLoading(true);
     setError('');
 
@@ -197,18 +199,21 @@ export default function CreateProjectPage() {
     if (!formData.project_name.trim()) {
       setError('กรุณากรอกชื่อโปรเจ็กต์');
       setIsLoading(false);
+      done("fail");
       return;
     }
     
     if (!formData.description.trim()) {
       setError('กรุณากรอกคำอธิบายโปรเจ็กต์');
       setIsLoading(false);
+      done("fail");
       return;
     }
 
     if (!formData.start_date || !formData.end_date) {
       setError('กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด');
       setIsLoading(false);
+      done("fail");
       return;
     }
 
@@ -216,6 +221,7 @@ export default function CreateProjectPage() {
     if (new Date(formData.end_date) <= new Date(formData.start_date)) {
       setError('วันที่สิ้นสุดต้องมาหลังวันที่เริ่มต้น');
       setIsLoading(false);
+      done("fail");
       return;
     }
 
@@ -269,25 +275,27 @@ export default function CreateProjectPage() {
       // });
 
       if (response.status === 200) {
+
+        done("success");
         // ใน Strapi v5 ใช้ documentId แทน id
         const createdProjectDocumentId = response.data.project?.data?.documentId;
         const createdProjectId = response.data.project?.data?.id; // เก็บ id ไว้สำหรับ project_members
         
-        console.log('Project creation response data:', {
-          fullResponse: response.data,
-          documentId: createdProjectDocumentId,
-          numericId: createdProjectId,
-          currentUserId: currentUserId
-        });
+        // console.log('Project creation response data:', {
+        //   fullResponse: response.data,
+        //   documentId: createdProjectDocumentId,
+        //   numericId: createdProjectId,
+        //   currentUserId: currentUserId
+        // });
         
         if (createdProjectDocumentId && currentUserId) {
           try {
-            console.log(`Adding project creator as leader: ${currentUserId}`);
-            console.log('Project data for creator:', {
-              project_id_number: createdProjectId,
-              user_id_in_project: currentUserId,
-              project_document_id: createdProjectDocumentId
-            });
+            // console.log(`Adding project creator as leader: ${currentUserId}`);
+            // console.log('Project data for creator:', {
+            //   project_id_number: createdProjectId,
+            //   user_id_in_project: currentUserId,
+            //   project_document_id: createdProjectDocumentId
+            // });
             
             // เพิ่มผู้สร้างโปรเจ็กต์เป็นหัวหน้าโปรเจ็กต์ก่อน
             // ส่งข้อมูลตาม project-member schema ที่ถูกต้อง
@@ -300,7 +308,7 @@ export default function CreateProjectPage() {
               // role enumeration และ relations จะถูกจัดการใน API route
             };
             
-            console.log('Creator member data to send:', JSON.stringify(creatorMemberData, null, 2));
+            // console.log('Creator member data to send:', JSON.stringify(creatorMemberData, null, 2));
             
             // Validate data before sending
             if (!creatorMemberData.project_id_number || !creatorMemberData.user_id_in_project || 
@@ -315,7 +323,7 @@ export default function CreateProjectPage() {
             
             const creatorResponse = await axios.post('/api/project-members', creatorMemberData);
             
-            console.log('Successfully added project creator as leader:', creatorResponse.data);
+            // console.log('Successfully added project creator as leader:', creatorResponse.data);
             
             // เพิ่มสมาชิกอื่นๆ (ถ้ามี)
             if (projectMembers.length > 0) {
@@ -333,11 +341,11 @@ export default function CreateProjectPage() {
                     // role enumeration และ relations จะถูกจัดการใน API route
                   };
                   
-                  console.log(`Attempting to add member:`, memberData);
+                  // console.log(`Attempting to add member:`, memberData);
                   
                   const memberResponse = await axios.post('/api/project-members', memberData);
                   
-                  console.log(`Successfully added member ${member.userId}:`, memberResponse.data);
+                  // console.log(`Successfully added member ${member.userId}:`, memberResponse.data);
                 } catch (memberError: any) {
                   console.error(`Failed to add member ${member.userId}:`, {
                     error: memberError.message,
@@ -350,14 +358,14 @@ export default function CreateProjectPage() {
               }
             }
             
-            console.log('Finished processing all project members');
-            console.log('Project creation completed successfully:', {
-              projectId: createdProjectId,
-              documentId: createdProjectDocumentId,
-              totalMembersAdded: projectMembers.length + 1,
-              creatorAdded: true,
-              additionalMembersAdded: projectMembers.length
-            });
+            // console.log('Finished processing all project members');
+            // console.log('Project creation completed successfully:', {
+            //   projectId: createdProjectId,
+            //   documentId: createdProjectDocumentId,
+            //   totalMembersAdded: projectMembers.length + 1,
+            //   creatorAdded: true,
+            //   additionalMembersAdded: projectMembers.length
+            // });
           } catch (memberError: any) {
             console.error('Error in member processing:', {
               error: memberError.message,
@@ -377,7 +385,7 @@ export default function CreateProjectPage() {
         }
 
         // แสดงข้อความสำเร็จพร้อมสรุปข้อมูล
-        const totalMembers = projectMembers.length + 1; // รวมผู้สร้างด้วย
+        const totalMembers = projectMembers.length + 1;
         const successMessage = `สร้างโปรเจ็กต์ "${formData.project_name}" สำเร็จแล้ว! 
           รวมสมาชิก ${totalMembers} คน 
           คุณเป็น Project Leader 
@@ -390,13 +398,15 @@ export default function CreateProjectPage() {
         // รอ 3 วินาทีแล้วไปหน้าโปรเจ็กต์ที่สร้าง (ใช้ documentId)
         setTimeout(() => {
           router.push(`/main_pages/projects/${createdProjectDocumentId}`);
-        }, 3000);
+        }, 1000);
       } else {
         setError('ไม่สามารถสร้างโปรเจ็กต์ได้ กรุณาลองใหม่อีกครั้ง');
+        done("fail");
       }
     } catch (error: any) {
       console.error('Error creating project:', error);
       console.error('Error response:', error.response?.data); // Debug log
+      done("fail");
       
       // ตรวจสอบว่าเป็น error เรื่อง authentication หรือไม่
       if (error.response?.status === 401) {
@@ -452,7 +462,7 @@ export default function CreateProjectPage() {
                       <h2 className="text-xl font-semibold text-white">เพิ่มโปรเจ็กต์</h2>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={(e) => { e.preventDefault(); setShowConfirm(true);}} className="space-y-6">
                       {/* Project Name */}
                       <div>
                         <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -585,7 +595,15 @@ export default function CreateProjectPage() {
                           className="flex-1 bg-[#50589C] text-white py-2 px-4 rounded-md hover:bg-[#50589C]/80 focus:outline-none focus:ring-2 focus:ring-[#50589C] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           {isLoading ? 'กำลังสร้าง...' : 'สร้างโปรเจ็กต์'}
-                        </button>  
+                        </button>
+                        {showConfirm && (
+                          <ConfirmPopup
+                            message="ยืนยันการสร้างโปรเจ็กต์?"
+                            description="ระบบจะสร้างโปรเจ็กต์ใหม่พร้อมกับสมาชิกที่คุณเพิ่มไว้ โปรดตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยัน"
+                            onCancel={() => setShowConfirm(false)}
+                            onConfirm={(done) => handleSubmit(done)}
+                          />
+                        )}
                       </div>
                     </form>
                   </div>
