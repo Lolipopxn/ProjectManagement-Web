@@ -284,12 +284,12 @@ export default function DashboardPage() {
       <Link
         key={project.id}
         href={`/main_pages/projects/${project.documentId || project.id}`}
-        className="block bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-blue-400"
+        className="block bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-blue-400 dark:bg-gray-800 dark:border-gray-400 dark:hover:border-blue-500"
       >
         {/* Project Header */}
         <div className="mb-3">
           <div className="flex items-start justify-between mb-2">
-            <h3 className="font-semibold text-sm text-gray-900 line-clamp-1 flex-1 pr-2">
+            <h3 className="font-semibold text-sm text-gray-900 line-clamp-1 flex-1 pr-2 dark:text-gray-300">
               {project.project_name}
             </h3>
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -301,7 +301,7 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-400">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -314,7 +314,7 @@ export default function DashboardPage() {
         {/* Progress Section - Compact & Clean */}
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] text-gray-600 font-medium">ความคืบหน้า</span>
+            <span className="text-[10px] text-gray-600 font-medium dark:text-gray-400">ความคืบหน้า</span>
             <span className={`text-xs font-bold ${
               progressPercentage >= 80 ? 'text-green-600' : 
               progressPercentage >= 50 ? 'text-blue-600' : 
@@ -424,7 +424,7 @@ export default function DashboardPage() {
       <div className="pt-3 border-t border-gray-200 h-[56px]">
         {/* Compact Info Badge */}
         <div className="flex items-center justify-center mb-2">
-          <span className="text-[9px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
+          <span className="text-[9px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full dark:text-gray-200 dark:bg-gray-700">
             {startItem}-{endItem} จาก {totalItems}
           </span>
         </div>
@@ -435,7 +435,7 @@ export default function DashboardPage() {
           <button
             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="flex items-center gap-0.5 px-2 py-1 rounded-md hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors text-[10px] font-medium text-gray-700"
+            className="flex items-center gap-0.5 px-2 py-1 rounded-md hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors text-[10px] font-medium text-gray-700 dark:text-gray-200 dark:hover:bg-gray-600/30"
             aria-label="Previous page"
             title="หน้าก่อนหน้า"
           >
@@ -450,13 +450,13 @@ export default function DashboardPage() {
             <>
               <button
                 onClick={() => setCurrentPage(1)}
-                className="w-6 h-6 rounded-md text-[10px] font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                className="w-6 h-6 rounded-md text-[10px] font-medium text-gray-600 hover:bg-gray-100 transition-colors dark:text-gray-200 dark:hover:bg-gray-600/30"
                 title="หน้าที่ 1"
               >
                 1
               </button>
               {currentPage > 3 && (
-                <span className="px-1 text-gray-400 text-xs">...</span>
+                <span className="px-1 text-gray-400 text-xs dark:text-gray-200">...</span>
               )}
             </>
           )}
@@ -469,8 +469,8 @@ export default function DashboardPage() {
                 onClick={() => setCurrentPage(page)}
                 className={`min-w-[24px] h-6 px-2 rounded-md text-[10px] font-semibold transition-all ${
                   currentPage === page
-                    ? 'bg-blue-600 text-white shadow-sm scale-105'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-blue-600 text-white shadow-sm scale-105 dark:bg-blue-500'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600/30'
                 }`}
                 title={`หน้า ${page}`}
               >
@@ -487,7 +487,7 @@ export default function DashboardPage() {
               )}
               <button
                 onClick={() => setCurrentPage(totalPages)}
-                className="w-6 h-6 rounded-md text-[10px] font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                className="w-6 h-6 rounded-md text-[10px] font-medium text-gray-600 hover:bg-gray-100 transition-colors dark:text-gray-200 dark:hover:bg-gray-600/30"
                 title={`หน้าที่ ${totalPages}`}
               >
                 {totalPages}
@@ -499,7 +499,7 @@ export default function DashboardPage() {
           <button
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className="flex items-center gap-0.5 px-2 py-1 rounded-md hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors text-[10px] font-medium text-gray-700"
+            className="flex items-center gap-0.5 px-2 py-1 rounded-md hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors text-[10px] font-medium text-gray-700 dark:text-gray-200 dark:hover:bg-gray-600/30"
             aria-label="Next page"
             title="หน้าถัดไป"
           >
@@ -516,10 +516,10 @@ export default function DashboardPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-700 font-medium">กำลังโหลด Dashboard...</p>
+          <p className="text-gray-700 font-medium dark:text-gray-200">กำลังโหลด Dashboard...</p>
         </div>
       </div>
     );
@@ -528,7 +528,7 @@ export default function DashboardPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center dark:from-gray-800 dark:to-gray-900">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="w-20 h-20 bg-red-100 rounded-2xl mx-auto mb-6 flex items-center justify-center">
             <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -536,11 +536,11 @@ export default function DashboardPage() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">{error}</h2>
-          <p className="text-gray-600 mb-8">กรุณาลองใหม่อีกครั้งหรือเข้าสู่ระบบ</p>
+          <p className="text-gray-600 mb-8 dark:text-gray-200">กรุณาลองใหม่อีกครั้งหรือเข้าสู่ระบบ</p>
           <div className="flex gap-3 justify-center">
             <button 
               onClick={() => window.location.reload()} 
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-600/30"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-600/30 "
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -563,7 +563,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100">   
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">   
       <div className="flex"> 
         {/* Main Content */}
         <div className="flex-1 p-4 md:p-6 lg:p-8">
@@ -571,17 +571,17 @@ export default function DashboardPage() {
           <div className="mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 dark:text-gray-200">
                   Dashboard
                 </h1>
-                <p className="text-sm md:text-base text-gray-600">
+                <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
                   ภาพรวมโครงการทั้งหมดของคุณ
                 </p>
               </div>
               
               {/* Quick Stats Cards */}
               <div className="flex gap-3">
-                <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-all duration-200">
+                <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-all duration-200 dark:bg-gray-700 dark:border-gray-600">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                       <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -589,13 +589,13 @@ export default function DashboardPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 font-medium">โครงการ</p>
-                      <p className="text-2xl font-bold text-gray-900">{projects.length}</p>
+                      <p className="text-xs text-gray-500 font-medium dark:text-gray-200">โครงการ</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-300">{projects.length}</p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-all duration-200">
+                <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-all duration-200 dark:bg-gray-700 dark:border-gray-600">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                       <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -603,8 +603,8 @@ export default function DashboardPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 font-medium">งานทั้งหมด</p>
-                      <p className="text-2xl font-bold text-gray-900">{totalStats.totalTasks}</p>
+                      <p className="text-xs text-gray-500 font-medium dark:text-gray-200">งานทั้งหมด</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-300">{totalStats.totalTasks}</p>
                     </div>
                   </div>
                 </div>
@@ -614,14 +614,14 @@ export default function DashboardPage() {
 
           {/* Projects Grid */}
           {projectStats.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-sm p-12 text-center border border-gray-100">
+              <div className="bg-white rounded-2xl shadow-sm p-12 text-center border border-gray-100 dark:bg-gray-700 dark:border-gray-600">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl mx-auto mb-6 flex items-center justify-center">
                   <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">เริ่มต้นสร้างโครงการแรกของคุณ</h3>
-                <p className="text-gray-600 mb-8 max-w-md mx-auto">จัดการงานและติดตามความคืบหน้าได้อย่างมีประสิทธิภาพ</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 dark:text-gray-300">เริ่มต้นสร้างโครงการแรกของคุณ</h3>
+                <p className="text-gray-600 mb-8 max-w-md mx-auto dark:text-gray-200">จัดการงานและติดตามความคืบหน้าได้อย่างมีประสิทธิภาพ</p>
                 <Link
                   href="/main_pages/create-project"
                   className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40"
@@ -635,13 +635,13 @@ export default function DashboardPage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                 {/* Active Projects Column */}
-                <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex flex-col">
+                <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex flex-col dark:bg-gray-700 dark:border-gray-600">
                   <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                         <div className="w-2 h-2 bg-green-600 rounded-full"></div>
                       </div>
-                      <h3 className="text-sm font-bold text-gray-900">กำลังดำเนินการ</h3>
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-gray-300">กำลังดำเนินการ</h3>
                     </div>
                     <span className="text-lg font-bold text-green-600">{groupedProjects.active.length}</span>
                   </div>
@@ -656,13 +656,13 @@ export default function DashboardPage() {
                 </div>
 
                 {/* On-Hold Projects Column */}
-                <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex flex-col">
+                <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex flex-col dark:bg-gray-700 dark:border-gray-600">
                   <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
                         <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
                       </div>
-                      <h3 className="text-sm font-bold text-gray-900">พักการทำงาน</h3>
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-gray-300">พักการทำงาน</h3>
                     </div>
                     <span className="text-lg font-bold text-yellow-600">{groupedProjects['on-hold'].length}</span>
                   </div>
@@ -677,13 +677,13 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Completed Projects Column */}
-                <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex flex-col">
+                <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex flex-col dark:bg-gray-700 dark:border-gray-600">
                   <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                         <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                       </div>
-                      <h3 className="text-sm font-bold text-gray-900">เสร็จสิ้น</h3>
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-gray-300">เสร็จสิ้น</h3>
                     </div>
                     <span className="text-lg font-bold text-blue-600">{groupedProjects.completed.length}</span>
                   </div>
@@ -698,13 +698,13 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Cancelled Projects Column */}
-                <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex flex-col">
+                <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex flex-col dark:bg-gray-700 dark:border-gray-600">
                   <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                         <div className="w-2 h-2 bg-red-600 rounded-full"></div>
                       </div>
-                      <h3 className="text-sm font-bold text-gray-900">ยกเลิก</h3>
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-gray-300">ยกเลิก</h3>
                     </div>
                     <span className="text-lg font-bold text-red-600">{groupedProjects.cancelled.length}</span>
                   </div>

@@ -64,7 +64,7 @@ export function LeftDraggable({ task, onClickTask}: any) {
       style={style}
       {...listeners}
       {...attributes}
-      className="border-1 border-gray-500/50 shadow-md py-2 px-3 my-2 bg-white cursor-grab rounded-lg"
+      className="border-1 border-gray-500/50 shadow-md py-2 px-3 my-2 bg-white cursor-grab rounded-lg dark:bg-gray-700"
       onClick={(e) => {
         e.stopPropagation();
         onClickTask();
@@ -118,7 +118,7 @@ export function RightDraggable({ task, position, onClickTask, onOpenPopup }: any
       <LuExpand 
         {...listeners}
         {...attributes}
-        className="hidden absolute top-3 right-3 size-3 cursor-grab active:cursor-grabbing select-none group-hover:flex focus:outline-none focus:ring-0"
+        className="hidden absolute top-3 right-3 size-3 cursor-grab active:cursor-grabbing select-none group-hover:flex focus:outline-none focus:ring-0 dark:text-black"
         onClick={(e) => e.stopPropagation()}
       />
 

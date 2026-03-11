@@ -354,21 +354,21 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
 
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 truncate">
-            <div className="w-full max-w-6xl mx-auto px-5 py-8 md:px-10 md:py-10 space-y-6 bg-white shadow-2xl rounded-xl scale-90 md:scale-105 transition-all duration animate-in slide-in-from-bottom-4">
+            <div className="w-full max-w-6xl mx-auto px-5 py-8 md:px-10 md:py-10 space-y-6 bg-white shadow-2xl rounded-xl scale-90 md:scale-105 transition-all duration animate-in slide-in-from-bottom-4 dark:bg-gray-800">
                 {task.task_status === 'continue' && (
                     <svg className='running-border-svg' aria-hidden='true'>
                         <rect className='running-border-rect'></rect>
                     </svg>
                 )}
-                <div className="flex flex-col border-b border-gray-300 space-y-6">
+                <div className="flex flex-col border-b border-gray-300 space-y-6 dark:border-gray-600">
                     <div className="flex flex-row justify-between px-4">
                         <div className='flex flex-row flex-1 gap-4 items-center truncate'>
                             <span className='text-3xl truncate'>{task.task_name}</span>
                             <div className={`flex flex-row items-center gap-2 bg-gray-200 rounded-full py-1 px-2 mt-2 border border-gray-400
                                 ${task.task_type === 'location_task' && 'bg-purple-200 border-purple-400'}
                             `}>
-                                <FaTag className='size-3'/>
-                                <span className='text-sm'>{task.task_type === 'normal_task' ? 'งานทั่วไป' : 'ประกาศ' }</span>
+                                <FaTag className='size-3 dark:text-black'/>
+                                <span className='text-sm dark:text-black'>{task.task_type === 'normal_task' ? 'งานทั่วไป' : 'ประกาศ' }</span>
                             </div>
                         </div>
                         
@@ -380,24 +380,24 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                         <div className='flex flex-row justify-start items-center gap-6 w-75 md:w-full overflow-auto'>
                             <button 
                                 onClick={() => setChangePage(0)}
-                                className={`p-2 bg-white rounded-md  ${changePage === 0 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>รายละเอียด</button>
+                                className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 0 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>รายละเอียด</button>
                         
                             {task.task_type === 'location_task' && (
                                 <button 
                                 onClick={() => setChangePage(4)}
-                                className={`p-2 bg-white rounded-md  ${changePage === 4 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>สถานที่</button>
+                                className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 4 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>สถานที่</button>
                             )}                        
 
                             <button 
                                 onClick={() => setChangePage(1)}
-                                className={`p-2 bg-white rounded-md  ${changePage === 1 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>ผู้ได้รับหมอบหมาย</button>
+                                className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 1 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>ผู้ได้รับหมอบหมาย</button>
                             
                             <button 
                                 onClick={() => setChangePage(2)}
-                                className={`p-2 bg-white rounded-md  ${changePage === 2 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>`{task.task_type === 'normal_task'? "งานที่ส่งเเล้ว" :"ไฟล์ที่เกี่ยวข้อง"}</button>
+                                className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 2 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>{task.task_type === 'normal_task'? "งานที่ส่งเเล้ว" :"ไฟล์ที่เกี่ยวข้อง"}</button>
                             <button 
                                 onClick={() => setChangePage(3)}
-                                className={`p-2 bg-white rounded-md  ${changePage === 3 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>{task.task_type === 'normal_task'? "สถานะงาน" :"สถานะ"}</button>   
+                                className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 3 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>{task.task_type === 'normal_task'? "สถานะงาน" :"สถานะ"}</button>   
                         </div>
                         
                         <button 
@@ -410,12 +410,12 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                         
                     </div>
                 </div>
-                <div className='h-100 flex flex-col bg-white space-y-3 md:px-6'>
+                <div className='h-100 flex flex-col bg-white space-y-3 md:px-6 dark:bg-gray-800'>
                     {changePage === 0 && (
                         <div className="flex flex-row gap-6 w-full animate-in fade-in slide-in-from-bottom-2 duration-300 overflow-y-scroll scrollbar-autoHide">
 
                             {/* LEFT : Description */}
-                            <div className="flex flex-col flex-[2] bg-white rounded-xl">
+                            <div className="flex flex-col flex-[2] bg-white rounded-xl dark:bg-gray-800">
                                 <div className="flex flex-row items-center justify-between py-4 border-b border-gray-300 w-80 md:w-full">
                                     <h3 className="text-base md:text-lg font-semibold">คำอธิบาย</h3>
                                     {STATUS_BUTTON[task.task_status] && task.task_type === 'normal_task' && (
@@ -455,35 +455,35 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                     
                                 </div>
 
-                                <div className="px-2 py-4 h-85 overflow-y-scroll scrollbar-autoHide whitespace-pre-wrap text-gray-700 leading-relaxed">
+                                <div className="px-2 py-4 h-85 overflow-y-scroll scrollbar-autoHide whitespace-pre-wrap text-gray-700 leading-relaxed dark:text-gray-300">
                                     {task.description}
                                 </div>
                             </div>
 
                             {/* RIGHT : Task Schedule */}
                             <div className="flex flex-col flex-1 px-6 bg-white rounded-xl shadow-md border border-gray-200
-                                            transition hover:shadow-lg hover:-translate-y-1 duration-300">
+                                            transition hover:shadow-lg hover:-translate-y-1 duration-300 dark:bg-gray-800 dark:border-gray-700">
                                 <div className="px-6 py-4 border-b border-gray-300 text-center">
                                     <h3 className="text-lg font-semibold">กำหนดงาน</h3>
                                 </div>
 
-                                <div className="py-5 space-y-4 text-md text-gray-700">
+                                <div className="py-5 space-y-4 text-md text-gray-700 dark:text-gray-300">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-gray-500">เริ่มงาน:</span>
+                                        <span className="text-gray-500 dark:text-gray-200">เริ่มงาน:</span>
                                         <span className="font-medium text-sm">
                                             {formatThaiDate(task.begin_date)}                                        
                                         </span>
                                     </div>
 
                                     <div className="flex justify-between items-center">
-                                        <span className="text-gray-500">จบงาน:</span>
+                                        <span className="text-gray-500 dark:text-gray-200">จบงาน:</span>
                                         <span className="font-medium text-sm">
                                             {formatThaiDate(task.due_date)}
                                         </span>
                                     </div>
 
                                     <div className="pt-3 border-t border-gray-300 flex justify-between items-center">
-                                        <span className="text-gray-500">เวลาที่เหลือ:</span>
+                                        <span className="text-gray-500 dark:text-gray-200">เวลาที่เหลือ:</span>
                                         {task.task_status === "completed" && (
                                             <span className="py-1 px-2 rounded-full text-sm font-medium bg-green-200 text-green-800 animate-pulse ">
                                                 เสร็จสมบูรณ์
@@ -500,7 +500,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-gray-500">สถานะงาน:</span>
+                                        <span className="text-gray-500 dark:text-gray-200">สถานะงาน:</span>
                                         <span
                                             key={task.task_status}
                                             className="font-medium text-sm inline-block
@@ -685,7 +685,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                             const fileName = getFileNameFromUrl(fileUrl);
                                             
                                             return (
-                                            <div key={index} className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-lg hover:bg-gray-100 transition-colors group">
+                                            <div key={index} className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-lg hover:bg-gray-100 transition-colors group dark:bg-gray-700">
                                                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                                                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -693,7 +693,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                                         </svg>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium text-gray-900 truncate" title={fileName}>
+                                                        <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-200" title={fileName}>
                                                         {fileName}
                                                         </p>
                                                     </div>

@@ -41,7 +41,7 @@ export default function AssignUserModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-lg rounded-xl shadow-xl p-6 space-y-4">
+      <div className="bg-white w-full max-w-lg rounded-xl shadow-xl p-6 space-y-4 dark:bg-gray-700 dark:text-gray-200">
         {/* header */}
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-bold">
@@ -66,17 +66,17 @@ export default function AssignUserModal({
                 key={member.id}
                 className={`flex items-center justify-between border rounded-lg p-3 ${
                   isAssigned
-                    ? 'bg-gray-100 opacity-60'
-                    : 'hover:bg-gray-50'
+                    ? 'bg-gray-100 opacity-60 dark:bg-gray-600'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-600'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <CgProfile className="size-6" />
                   <div>
-                    <div className="font-medium">
+                    <div className="font-medium dark:text-gray-200">
                       {member.userInfo?.username}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       {member.userInfo?.email}
                     </div>
                   </div>
@@ -88,7 +88,7 @@ export default function AssignUserModal({
                     className={`px-2 py-1 text-xs rounded-full ${
                       member.role_in_project === 'Leader'
                         ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-200 text-gray-700'
+                        : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
                     }`}
                   >
                     {member.role_in_project === 'Leader'
@@ -102,8 +102,8 @@ export default function AssignUserModal({
                     onClick={() => onAssign(member.userInfo!.id)}
                     className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm ${
                         isAssigned || isLoading
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-[#50589C] text-white hover:bg-[#50589C]/90'
+                        ? 'bg-gray-300 cursor-not-allowed dark:bg-gray-500 dark:text-gray-400'
+                        : 'bg-[#50589C] text-white hover:bg-[#50589C]/90 dark:bg-blue-400 dark:hover:bg-blue-400/90'
                     }`}
                     >
                     {isLoading ? (

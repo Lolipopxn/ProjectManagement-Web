@@ -1056,10 +1056,10 @@ const progressPercent =
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">กำลังโหลดข้อมูลโปรเจ็กต์...</p>
+          <p className="text-gray-600 dark:text-gray-300">กำลังโหลดข้อมูลโปรเจ็กต์...</p>
         </div>
       </div>
     );
@@ -1068,10 +1068,10 @@ const progressPercent =
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">{error}</h2>
-          <p className="text-gray-600 mb-6">กรุณาลองใหม่อีกครั้งหรือติดต่อผู้ดูแลระบบ</p>
+          <p className="text-gray-600 mb-6 dark:text-gray-300">กรุณาลองใหม่อีกครั้งหรือติดต่อผู้ดูแลระบบ</p>
           <div className="space-x-4">
             <button 
               onClick={() => window.location.reload()} 
@@ -1081,7 +1081,7 @@ const progressPercent =
             </button>
             <a 
               href="/main_pages/overview" 
-              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block dark:bg-gray-300 dark:hover:bg-gray-400 dark:text-gray-800"
             >
               กลับสู่หน้าหลัก
             </a>
@@ -1094,13 +1094,13 @@ const progressPercent =
   // Project not found
   if (!project) {
     return (
-      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">ไม่พบโปรเจ็กต์</h2>
-          <p className="text-gray-600 mb-6">โปรเจ็กต์ที่คุณกำลังมองหาอาจถูกลบหรือย้ายไปแล้ว</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 dark:text-white">ไม่พบโปรเจ็กต์</h2>
+          <p className="text-gray-600 mb-6 dark:text-gray-300">โปรเจ็กต์ที่คุณกำลังมองหาอาจถูกลบหรือย้ายไปแล้ว</p>
           <a 
             href="/main_pages/overview" 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors dark:bg-gray-300 dark:hover:bg-gray-400 dark:text-gray-800"
           >
             กลับสู่หน้าหลัก
           </a>
@@ -1144,9 +1144,9 @@ const progressPercent =
 
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300 dark:bg-gray-800">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-600">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1154,14 +1154,14 @@ const progressPercent =
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">จัดการงาน</h3>
-                <p className="text-sm text-gray-500 truncate">{selectedTask.task_name}</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-200">จัดการงาน</h3>
+                <p className="text-sm text-gray-500 truncate dark:text-gray-400">{selectedTask.task_name}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={resetModal}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-600"
               disabled={taskManageLoading}
             >
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1174,14 +1174,14 @@ const progressPercent =
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {/* Action Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
                 เลือกการจัดการ
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <label className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
                   action === 'delete'
                     ? 'bg-red-50 text-red-800 border-red-200'
-                    : 'border-gray-200 bg-white'
+                    : 'border-gray-200 bg-white dark:text-gray-300 dark:bg-gray-700 dark:border-gray-600'
                 }`}>
                   <input
                     type="radio"
@@ -1208,7 +1208,7 @@ const progressPercent =
                 <label className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
                   action === 'reassign'
                     ? 'bg-blue-50 text-blue-800 border-blue-200'
-                    : 'border-gray-200 bg-white'
+                    : 'border-gray-200 bg-white dark:text-gray-300 dark:bg-gray-700 dark:border-gray-600'
                 }`}>
                   <input
                     type="radio"
@@ -1220,7 +1220,7 @@ const progressPercent =
                     disabled={taskManageLoading}
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-sm">เปลี่ยนผู้รับผิดชอบ</div>
+                    <div className="font-medium text-sm ">เปลี่ยนผู้รับผิดชอบ</div>
                     <div className="text-xs text-gray-500 mt-1">มอบหมายงานให้คนใหม่</div>
                   </div>
                   {action === 'reassign' && (
@@ -1237,18 +1237,18 @@ const progressPercent =
             {/* Delete Action */}
             {action === 'delete' && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                   พิมพ์ชื่องานเพื่อยืนยันการลบ <span className="text-red-500">*</span>
                 </label>
-                <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                  <p className="text-sm text-gray-600 mb-1">ชื่องานที่ต้องพิมพ์:</p>
-                  <p className="font-medium text-gray-900">{selectedTask.task_name}</p>
+                <div className="bg-gray-50 rounded-lg p-3 mb-3 dark:bg-gray-700">
+                  <p className="text-sm text-gray-600 mb-1 dark:text-gray-200">ชื่องานที่ต้องพิมพ์:</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-400">{selectedTask.task_name}</p>
                 </div>
                 <input
                   type="text"
                   value={taskNameInput}
                   onChange={(e) => setTaskNameInput(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none dark:bg-gray-800 dark:border-gray-600"
                   placeholder="พิมพ์ชื่องานตรงตามด้านบน"
                   required
                   disabled={taskManageLoading}
@@ -1259,17 +1259,17 @@ const progressPercent =
             {/* Reassign Action */}
             {action === 'reassign' && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                   เลือกผู้รับผิดชอบใหม่ <span className="text-red-500">*</span>
                 </label>
                 
                 {/* Current Assignee */}
-                <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                  <p className="text-sm text-gray-600 mb-1">ผู้รับผิดชอบปัจจุบัน:</p>
-                  <p className="font-medium text-gray-900">
+                <div className="bg-gray-50 rounded-lg p-3 mb-3 dark:bg-gray-700">
+                  <p className="text-sm text-gray-600 mb-1 dark:text-gray-200">ผู้รับผิดชอบปัจจุบัน:</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-300">
                     {currentAssignee?.userInfo?.username || `User ${selectedTask.assigned_to_user_ids_number}`}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                     User ID: {selectedTask.assigned_to_user_ids_number}
                   </p>
                 </div>
@@ -1277,7 +1277,7 @@ const progressPercent =
                 <select
                   value={newAssigneeId || ''}
                   onChange={(e) => setNewAssigneeId(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
                   required
                   disabled={taskManageLoading}
                 >
@@ -1297,11 +1297,11 @@ const progressPercent =
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100">
+            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100 dark:border-gray-600">
               <button
                 type="button"
                 onClick={resetModal}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all"
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
                 disabled={taskManageLoading}
               >
                 ยกเลิก
@@ -1403,9 +1403,9 @@ const progressPercent =
 
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300 max-h-[90vh] overflow-y-auto scale-90 md:scale-100">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300 max-h-[90vh] overflow-y-auto scale-90 md:scale-100 dark:bg-gray-800">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-300">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1413,17 +1413,17 @@ const progressPercent =
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">จัดการโปรเจค</h3>
-                <p className="text-sm text-gray-500 truncate">{project.project_name}</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-200">จัดการโปรเจค</h3>
+                <p className="text-sm text-gray-500 truncate dark:text-gray-300">{project.project_name}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={resetModal}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors dark:hover:bg-gray-600"
               disabled={projectManageLoading}
             >
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-400 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -1433,14 +1433,14 @@ const progressPercent =
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {/* Action Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
                 เลือกการจัดการ
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <label className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
                   action === 'edit'
-                    ? 'bg-blue-50 text-blue-800 border-blue-200'
-                    : 'border-gray-200 bg-white'
+                    ? 'bg-blue-50 text-blue-800 border-blue-200 '
+                    : 'border-gray-200 bg-white dark:text-gray-300 dark:bg-gray-700 dark:border-gray-600'
                 }`}>
                   <input
                     type="radio"
@@ -1467,7 +1467,7 @@ const progressPercent =
                 <label className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
                   action === 'delete'
                     ? 'bg-red-50 text-red-800 border-red-200'
-                    : 'border-gray-200 bg-white'
+                    : 'border-gray-200 bg-white dark:text-gray-300 dark:bg-gray-700 dark:border-gray-600'
                 }`}>
                   <input
                     type="radio"
@@ -1497,7 +1497,7 @@ const progressPercent =
             {action === 'edit' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                     ชื่อโปรเจค <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1505,7 +1505,7 @@ const progressPercent =
                     name="projectName"
                     value={formData.projectName}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
                     placeholder="กรอกชื่อโปรเจค"
                     required
                     disabled={projectManageLoading}
@@ -1513,7 +1513,7 @@ const progressPercent =
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                     คำอธิบาย <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -1521,7 +1521,7 @@ const progressPercent =
                     value={formData.description}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
                     placeholder="อธิบายรายละเอียดโปรเจค"
                     required
                     disabled={projectManageLoading}
@@ -1530,7 +1530,7 @@ const progressPercent =
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                       วันที่เริ่มต้น <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1538,13 +1538,13 @@ const progressPercent =
                       name="startDate"
                       value={formData.startDate}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
                       required
                       disabled={projectManageLoading}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                       วันที่สิ้นสุด <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1552,7 +1552,7 @@ const progressPercent =
                       name="endDate"
                       value={formData.endDate}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
                       required
                       disabled={projectManageLoading}
                     />
@@ -1560,14 +1560,14 @@ const progressPercent =
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                     สถานะโปรเจค
                   </label>
                   <select
                     name="projectStatus"
                     value={formData.projectStatus}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
                     disabled={projectManageLoading}
                   >
                     <option value="active">กำลังดำเนินการ</option>
@@ -1582,18 +1582,18 @@ const progressPercent =
             {/* Delete Action */}
             {action === 'delete' && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                   พิมพ์ชื่อโปรเจคเพื่อยืนยันการลบ <span className="text-red-500">*</span>
                 </label>
-                <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                  <p className="text-sm text-gray-600 mb-1">ชื่อโปรเจคที่ต้องพิมพ์:</p>
-                  <p className="font-medium text-gray-900">{project.project_name}</p>
+                <div className="bg-gray-50 rounded-lg p-3 mb-3 dark:bg-gray-700">
+                  <p className="text-sm text-gray-600 mb-1 dark:text-gray-300">ชื่อโปรเจคที่ต้องพิมพ์:</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-300">{project.project_name}</p>
                 </div>
                 <input
                   type="text"
                   value={projectNameInput}
                   onChange={(e) => setProjectNameInput(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
                   placeholder="พิมพ์ชื่อโปรเจคตรงตามด้านบน"
                   required
                   disabled={projectManageLoading}
@@ -1611,7 +1611,7 @@ const progressPercent =
               <button
                 type="button"
                 onClick={resetModal}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all"
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
                 disabled={projectManageLoading}
               >
                 ยกเลิก
@@ -1719,7 +1719,7 @@ const progressPercent =
 
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300 dark:bg-gray-800">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
             <div className="flex items-center space-x-3">
@@ -1729,8 +1729,8 @@ const progressPercent =
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">เพิ่มสมาชิกโปรเจ็กต์</h3>
-                <p className="text-sm text-gray-500">เชิญสมาชิกใหม่เข้าร่วมโปรเจ็กต์</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-200">เพิ่มสมาชิกโปรเจ็กต์</h3>
+                <p className="text-sm text-gray- dark:text-gray-300">เชิญสมาชิกใหม่เข้าร่วมโปรเจ็กต์</p>
               </div>
             </div>
             <button
@@ -1748,11 +1748,11 @@ const progressPercent =
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                 เลือกผู้ใช้ <span className="text-red-500">*</span>
               </label>
               {usersLoading ? (
-                <div className="flex items-center justify-center py-12 text-gray-500">
+                <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-300">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mr-3"></div>
                   <div>
                     <p className="text-sm font-medium">กำลังโหลดรายชื่อผู้ใช้...</p>
@@ -1760,15 +1760,15 @@ const progressPercent =
                   </div>
                 </div>
               ) : availableUsers.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 dark:bg-gray-700 dark:border-gray-400">
                   <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 dark:bg-gray-600">
                       <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                     </div>
-                    <h3 className="font-semibold text-gray-700 mb-2">ไม่มีผู้ใช้ที่สามารถเพิ่มได้</h3>
-                    <p className="text-sm text-gray-500 max-w-sm">
+                    <h3 className="font-semibold text-gray-700 mb-2 dark:text-gray-300">ไม่มีผู้ใช้ที่สามารถเพิ่มได้</h3>
+                    <p className="text-sm text-gray-500 max-w-sm dark:text-gray-400">
                       ผู้ใช้ทั้งหมดเป็นสมาชิกของโปรเจ็กต์นี้แล้ว หรืออาจไม่มีผู้ใช้อื่นในระบบ
                     </p>
                   </div>
@@ -1779,7 +1779,7 @@ const progressPercent =
                     <select
                       value={userId || ''}
                       onChange={(e) => setUserId(e.target.value ? parseInt(e.target.value) : null)}
-                      className="w-full px-4 py-4 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none bg-gray-50 focus:bg-white appearance-none text-sm"
+                      className="w-full px-4 py-4 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none bg-gray-50 focus:bg-white appearance-none text-sm dark:bg-gray-700 dark:border-gray-400 dark:text-gray-300"
                       required
                       disabled={addMemberLoading}
                     >
@@ -1823,7 +1823,7 @@ const progressPercent =
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
                 เลือกบทบาท
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -1835,7 +1835,7 @@ const progressPercent =
                     <label className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
                       role === roleOption.value
                         ? getRoleColor(roleOption.value) + ' border-current'
-                        : 'border-gray-200 bg-white'
+                        : 'border-gray-200 bg-white dark:bg-gray-700 dark:border-gray-400'
                     }`}>
                       <input
                         type="radio"
@@ -1870,7 +1870,7 @@ const progressPercent =
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all"
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
                 disabled={addMemberLoading}
               >
                 ยกเลิก
@@ -1902,26 +1902,26 @@ const progressPercent =
   };
 
   return (
-    <div className="min-h-screen w-full bg-white">
+    <div className="min-h-screen w-full bg-white dark:bg-gray-900">
       <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
         <div className={`flex-1 p-6 space-y-1 md:space-y-3 ${ToggleView === 3 ? 'max-w-md md:max-w-[1900px]' : 'max-w-md md:max-w-[1900px]'}`}>
           <div className='flex flex-row justify-between px-4 md:items-center text-sm md:text-base'>
             {/* Breadcrumb */}
-            <div className="flex items-center space-x-2 text-gray-600">
+            <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
               <a href="/main_pages/overview" className="hover:text-blue-600">Home</a>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-gray-900 font-medium">{project.project_name}</span>
+              <span className="text-gray-900 font-medium dark:text-gray-200">{project.project_name}</span>
             </div>
 
             {/*Other option*/}
             <div className='flex'>
-              <div className="flex items-center divide-x-2 divide-gray-300">               
+              <div className="flex items-center divide-x-2 divide-gray-300 dark:divide-gray-400">               
                 {/* Voice button */}
                 <div className='flex justify-center items-center px-1 md:px-2'>
-                  <VoiceRoomButton slug={project.slug}>
+                  <VoiceRoomButton slug={project.slug} className='dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors'>
                     ห้องพูดคุย
                   </VoiceRoomButton>
                 </div>
@@ -1929,7 +1929,7 @@ const progressPercent =
                 <div className='flex justify-center items-center px-1 md:px-2'>
                   <button
                     onClick={() => setOpen(true)}
-                      className="relative flex items-center md:space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors"
+                      className="relative flex items-center md:space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   >
                     <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.474L3 21l2.474-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
@@ -1946,7 +1946,7 @@ const progressPercent =
                 {/* Member button */}
                 <div className="flex justify-center items-center px-1 md:px-2">
                   <button
-                    className="relative flex items-center md:space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors"
+                    className="relative flex items-center md:space-x-2 bg-white hover:bg-[#636CCB] text-black hover:text-white px-3 py-1.5 rounded-sm text-sm transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                     onClick={() => setToggleMember(!toggleMember)}
                   >
                     <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1976,7 +1976,7 @@ const progressPercent =
           </div>
 
           {/* Project Header - Compact Design */}
-          <div className="bg-white border-b-1 border-gray-300 p-4 mb-6 mt-2">
+          <div className="bg-white border-b-1 border-gray-300 p-4 mb-6 mt-2 dark:bg-gray-900 dark:border-gray-300">
             <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between gap-2 md:gap-0">
               {/* Project Info */}
               { !projectLoading ? (
@@ -1986,7 +1986,7 @@ const progressPercent =
                   </div>
                   <div>
                     <div className="flex items-center space-x-3 md:space-x-2">
-                      <div className="text-2xl mb-1 font-medium text-gray-900">{project.project_name}</div>
+                      <div className="text-2xl mb-1 font-medium text-gray-900 dark:text-gray-300">{project.project_name}</div>
                       <span className={`flex px-2 py-1 rounded-full text-xs font-medium ${
                         userRole === 'Leader' 
                           ? 'bg-purple-100 text-purple-700 border border-purple-200' 
@@ -2000,7 +2000,7 @@ const progressPercent =
                     </div>
                   </div>
                   {/* Date begin - end */}
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                     <div className="flex items-center space-x-1">
                       <svg className="hidden md:inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2011,39 +2011,39 @@ const progressPercent =
                 </div>
               ): (
               <div className="flex items-center space-x-4 animate-pulse">
-                <div className="h-7 w-full bg-gray-200 rounded mb-2" />
-                  <div className="h-4 w-3/4 bg-gray-200 rounded mb-4" />
+                <div className="h-7 w-full bg-gray-200 rounded mb-2 dark:bg-gray-700" />
+                  <div className="h-4 w-3/4 bg-gray-200 rounded mb-4 dark:bg-gray-700" />
                   <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-full bg-gray-200" />
-                    <div className="h-4 w-24 bg-gray-200 rounded" />
+                    <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-700" />
+                    <div className="h-4 w-24 bg-gray-200 rounded dark:bg-gray-700" />
                   </div>
               </div>)}
               
 
               <div className='flex flex-row justify-center space-x-2 text-sm md:text-md'>
                 {/* Announcement button */}        
-                <div className={`flex justify-center items-center ${ToggleView === 0 ? 'text-black border-b-2' : 'text-gray-500'}`}>
-                  <button onClick={() => setToggleView(0)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500`}>
+                <div className={`flex justify-center items-center ${ToggleView === 0 ? 'text-black border-b-2 dark:border-gray-300 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <button onClick={() => setToggleView(0)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
                     Announcement
                   </button>
                 </div>
                 {/* overview button */}        
-                <div className={`flex justify-center items-center ${ToggleView === 1 ? 'text-black border-b-2' : 'text-gray-500'}`}>
-                  <button onClick={() => setToggleView(1)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500`}>
+                <div className={`flex justify-center items-center ${ToggleView === 1 ? 'text-black border-b-2 dark:border-gray-300 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <button onClick={() => setToggleView(1)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
                     Overview
                   </button>
                 </div>
 
                 {/* Board button */}        
-                <div className={`flex justify-center items-center ${ToggleView === 2 ? 'text-black border-b-2' : 'text-gray-500'}`}>
-                  <button onClick={() => setToggleView(2)} className="bg-white py-1 px-2 font-medium rounded-sm text-gray-500 hover:bg-gray-100 ring-gray-500">
+                <div className={`flex justify-center items-center ${ToggleView === 2 ? 'text-black border-b-2 dark:border-gray-300 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <button onClick={() => setToggleView(2)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
                     Board
                   </button>
                 </div>
 
                 {/* GanttChart button */}        
-                <div className={`flex justify-center items-center ${ToggleView === 3 ? 'text-black border-b-2' : 'text-gray-500'}`}>
-                  <button onClick={() => setToggleView(3)} className="bg-white py-1 px-2 font-medium rounded-sm text-gray-500 hover:bg-gray-100 ring-gray-500">
+                <div className={`flex justify-center items-center ${ToggleView === 3 ? 'text-black border-b-2 dark:border-gray-300 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <button onClick={() => setToggleView(3)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
                     Timeline
                   </button>
                 </div>
@@ -2059,15 +2059,15 @@ const progressPercent =
               {/* Tasks Overview */}
               <div className="space-y-4">
                 {/* My Tasks */}
-                <div className="bg-white border-b-2 border-gray-200 px-3">
+                <div className="bg-white border-b-2 border-gray-200 px-3 dark:bg-gray-900 dark:border-gray-300">
                   <div className="flex items-center justify-between mb-6 md:space-x-20">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <GrAnnounce className='size-4'/>
+                        <GrAnnounce className='size-4 dark:text-black'/>
                       </div>
                       <div className='flex flex-row items-center space-x-2'>
-                        <h3 className="text-sm md:text-base font-semibold text-gray-900">ประกาศ</h3>
-                        <p className="text-sm text-gray-500">( {[...myTasks, ...otherTasks].filter(task => task.task_type === 'location_task').length})</p>
+                        <h3 className="text-sm md:text-base font-semibold text-gray-900 dark:text-gray-300">ประกาศ</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">( {[...myTasks, ...otherTasks].filter(task => task.task_type === 'location_task').length})</p>
                       </div>
 
                     </div>
@@ -2087,7 +2087,7 @@ const progressPercent =
                         {/* Options */}
                       <div
                         className={`
-                          absolute right-0 mt-2 w-40 bg-white shadow-md border border-gray-200 z-50
+                          absolute right-0 mt-2 w-40 bg-white shadow-md border border-gray-200 z-30 dark:bg-gray-700 dark:border-gray-600 
                           transform transition-all duration-500 divide-y divide-gray-200
                           ${openOptions
                             ? "opacity-100 scale-100 translate-y-0"
@@ -2174,7 +2174,7 @@ const progressPercent =
               {/* Tasks Overview */}
               <div className="space-y-4">
                 {/* My Tasks */}
-                <div className="bg-white border-b-2 border-gray-200 px-3">
+                <div className="bg-white border-b-2 border-gray-200 px-3 dark:bg-gray-900 dark:border-gray-300">
                   <div className="flex items-center justify-between mb-6 space-x-20">
                     <div className="flex items-center space-x-3">
 
@@ -2186,7 +2186,7 @@ const progressPercent =
                             </svg>
                           </div>
                           <div className='flex flex-row items-center space-x-2'>
-                            <h3 className="font-semibold text-sm md:text-base text-gray-900 truncate">
+                            <h3 className="font-semibold text-sm md:text-base text-gray-900 truncate dark:text-gray-300">
                               <span className="md:hidden">งาน</span>
                               <span className="hidden md:inline">งานของโปรเจค</span>
                             </h3>
@@ -2198,7 +2198,7 @@ const progressPercent =
                           {/* Trigger */}
                           <button
                             onClick={() => setOpenFilter((prev) => !prev)}
-                            className="flex items-center gap-2 py-2 px-3 md:py-1 md:px-4 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-700"
+                            className="flex items-center gap-2 py-2 px-3 md:py-1 md:px-4 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-700 whitespace-nowrap"
                           >
                             <span>{filterLabelMap[taskFilter]}</span>
 
@@ -2219,7 +2219,7 @@ const progressPercent =
                           <div
                             className={`
                               absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl z-20
-                              border border-gray-100
+                              border border-gray-100 dark:bg-gray-700 dark:border-gray-600
                               transform transition-all duration-300 ease-out origin-top
                               ${
                                 openFilter
@@ -2230,7 +2230,7 @@ const progressPercent =
                           >
                             {/* Section: ภาพรวม */}
                             <div className="px-3 py-2">
-                              <p className="text-xs font-semibold text-gray-400 mb-1">ภาพรวม</p>
+                              <p className="text-xs font-semibold text-gray-400 mb-1 dark:text-gray-300">ภาพรวม</p>
                               {["All", "myTask"].map((key) => (
                                 <button
                                   key={key}
@@ -2243,8 +2243,8 @@ const progressPercent =
                                     transition-all duration-200
                                     ${
                                       taskFilter === key
-                                        ? "bg-[#50589C]/10 text-[#50589C] font-medium"
-                                        : "text-gray-700 hover:bg-gray-100"
+                                        ? "bg-[#50589C]/10 text-[#50589C] font-medium dark:text-white dark:bg-[#50589C]/20"
+                                        : "text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
                                     }
                                   `}
                                 >
@@ -2260,7 +2260,7 @@ const progressPercent =
 
                             {/* Section: สถานะงาน */}
                             <div className="px-3 py-2">
-                              <p className="text-xs font-semibold text-gray-400 mb-1">สถานะงาน</p>
+                              <p className="text-xs font-semibold text-gray-400 mb-1 dark:text-gray-300">สถานะงาน</p>
                               {["not turn in", "continue", "pending_review", "rejected"].map((key) => (
                                 <button
                                   key={key}
@@ -2273,8 +2273,8 @@ const progressPercent =
                                     transition-all duration-200
                                     ${
                                       taskFilter === key
-                                        ? "bg-[#50589C]/10 text-[#50589C] font-medium"
-                                        : "text-gray-700 hover:bg-gray-100"
+                                        ? "bg-[#50589C]/10 text-[#50589C] font-medium dark:text-white dark:bg-[#50589C]/20"
+                                        : "text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
                                     }
                                   `}
                                 >
@@ -2293,7 +2293,7 @@ const progressPercent =
 
                             {/* Section: ผลลัพธ์ */}
                             <div className="px-3 py-2">
-                              <p className="text-xs font-semibold text-gray-400 mb-1">ผลลัพธ์</p>
+                              <p className="text-xs font-semibold text-gray-400 mb-1 dark:text-gray-300">ผลลัพธ์</p>
                               {["completed", "late"].map((key) => (
                                 <button
                                   key={key}
@@ -2306,8 +2306,8 @@ const progressPercent =
                                     transition-all duration-200
                                     ${
                                       taskFilter === key
-                                        ? "bg-[#50589C]/10 text-[#50589C] font-medium"
-                                        : "text-gray-700 hover:bg-gray-100"
+                                        ? "bg-[#50589C]/10 text-[#50589C] font-medium dark:text-white dark:bg-[#50589C]/20"
+                                        : "text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
                                     }
                                   `}
                                 >
@@ -2327,7 +2327,7 @@ const progressPercent =
                     <div className="flex flex-col items-end md:items-start space-x-3 md:flex-row md:justify-between w-full">
                       <div className="flex-1 space-y-1 mb-1 ">
                         {/* Label */}
-                        <div className="flex justify-between text-xs text-gray-600 w-full md:w-8/10 ">
+                        <div className="flex justify-between text-xs text-gray-600 w-full md:w-8/10 dark:text-gray-300">
                           <span className="truncate">ความคืบหน้า</span>
                             <span className="truncate">
                               {completedTasks}/{totalTasks} งาน ({progressPercent}%)
@@ -2360,7 +2360,7 @@ const progressPercent =
                         {/* Options */}
                         <div
                           className={`
-                            absolute right-0 mt-2 w-40 bg-white shadow-md border border-gray-200 z-50
+                            absolute right-0 mt-2 w-40 bg-white shadow-md border border-gray-200 z-30 dark:bg-gray-700 dark:border-gray-600
                             transform transition-all duration-500 divide-y divide-gray-200
                             ${openOptions
                               ? "opacity-100 scale-100 translate-y-0"
@@ -2427,8 +2427,8 @@ const progressPercent =
                         })
                         .map(task => renderTaskCard(task))
                     ) : (
-                      <div className="col-span-full text-center py-8 text-gray-500">
-                        <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
+                        <svg className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                         <p className="text-sm">ยังไม่มีงานที่มอบหมายให้คุณ</p>

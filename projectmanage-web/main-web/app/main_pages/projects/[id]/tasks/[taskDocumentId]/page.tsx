@@ -1314,10 +1314,10 @@ export default function TaskDetailPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">กำลังโหลดข้อมูล Task...</p>
+          <p className="text-gray-600 dark:text-gray-300">กำลังโหลดข้อมูล Task...</p>
         </div>
       </div>
     );
@@ -1371,10 +1371,10 @@ export default function TaskDetailPage() {
 
 
   return (
-    <div className="min-h-screen w-full bg-gray-50">
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
       {/* Floating Project Leader Button - Fixed at top-right */}
       {userRole === 'Leader' && (
-        <div className="fixed top-24 right-6 z-50 task-menu-container">
+        <div className="fixed top-24 right-6 z-30 task-menu-container">
           <div className="relative">
             <button
               onClick={() => setShowTaskMenu(!showTaskMenu)}
@@ -1391,11 +1391,11 @@ export default function TaskDetailPage() {
 
             {/* Dropdown Menu */}
             {showTaskMenu && (
-              <div className="absolute top-full right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-10 animate-in fade-in slide-in-from-top-2 duration-200 task-menu-container">
+              <div className="absolute top-full right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-10 animate-in fade-in slide-in-from-top-2 duration-200 task-menu-container dark:bg-gray-800 dark:border-gray-700">
                 <div className="px-4 py-2 border-b border-gray-100">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                    <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Menu</span>
+                    <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide dark:text-purple-400">Menu</span>
                   </div>
                 </div>
 
@@ -1405,7 +1405,7 @@ export default function TaskDetailPage() {
                       window.location.href = `/main_pages/projects/${projectId}`;
                       setShowTaskMenu(false);
                     }}
-                    className="w-full group px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center space-x-3"
+                    className="w-full group px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center space-x-3 dark:text-gray-200 dark:hover:bg-blue-600"
                   >
                     <div className="w-10 h-10 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
                       <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1414,7 +1414,7 @@ export default function TaskDetailPage() {
                     </div>
                     <div>
                       <span className="font-medium block">จัดการโปรเจค</span>
-                      <span className="text-xs text-gray-500">ดูภาพรวมและแก้ไขโปรเจค</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-300">ดูภาพรวมและแก้ไขโปรเจค</span>
                     </div>
                   </button>
 
@@ -1423,7 +1423,7 @@ export default function TaskDetailPage() {
                       handleStartEdit();
                       setShowTaskMenu(false);
                     }}
-                    className="w-full group px-4 py-3 text-left text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors flex items-center space-x-3"
+                    className="w-full group px-4 py-3 text-left text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors flex items-center space-x-3 dark:text-gray-200 dark:hover:bg-green-600"
                   >
                     <div className="w-10 h-10 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center transition-colors">
                       <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1432,7 +1432,7 @@ export default function TaskDetailPage() {
                     </div>
                     <div>
                       <span className="font-medium block">แก้ไข Task</span>
-                      <span className="text-xs text-gray-500">แก้ไขรายละเอียดงาน</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-300">แก้ไขรายละเอียดงาน</span>
                     </div>
                   </button>
 
@@ -1452,7 +1452,7 @@ export default function TaskDetailPage() {
                     </div>
                     <div>
                       <span className="font-medium block">ลบ Task</span>
-                      <span className="text-xs text-gray-500">ลบงานนี้ออกจากระบบ</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-300">ลบงานนี้ออกจากระบบ</span>
                     </div>
                   </button>
                 </div>
@@ -1466,7 +1466,7 @@ export default function TaskDetailPage() {
         {/* Main Content */}
         <div className="flex-1 p-6 max-w-[1900px]">
           {/* Breadcrumb */}
-          <div className="flex items-center space-x-2 text-gray-600 mb-6">
+          <div className="flex items-center space-x-2 text-gray-600 mb-6 dark:text-gray-300">
             <a href="/main_pages/overview" className="hover:text-blue-600">Home</a>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1480,7 +1480,7 @@ export default function TaskDetailPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <span className="text-gray-900 font-medium">{task.task_name}</span>
+            <span className="text-gray-900 font-medium dark:text-gray-300">{task.task_name}</span>
           </div>
 
           <div className={`grid grid-cols-1 gap-6 transition-all duration-300 ${isRightPanelOpen ? 'lg:grid-cols-3' : 'lg:grid-cols-1'}`}>
@@ -1490,10 +1490,10 @@ export default function TaskDetailPage() {
               {!isEditing ? (
                 // Display Mode - Title with description (no box)
                 <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-3 dark:text-gray-200">
                     {task.task_name}
                   </h1>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 mb-6">
+                  <div className="flex items-center space-x-4 text-sm text-gray-500 mb-6 dark:text-gray-300">
                     <span>สร้างเมื่อ {formatDate(task.createdAt)}</span>
                     {task.updatedAt !== task.createdAt && (
                       <span>• แก้ไขล่าสุด {formatDate(task.updatedAt)}</span>
@@ -1501,7 +1501,7 @@ export default function TaskDetailPage() {
                   </div>
                   {task.description && (
                     <div className="prose max-w-none">
-                      <p className="text-gray-700 text-base leading-relaxed whitespace-pre-wrap">
+                      <p className="text-gray-700 text-base leading-relaxed whitespace-pre-wrapb dark:text-gray-300">
                         {task.description}
                       </p>
                     </div>
@@ -1509,10 +1509,10 @@ export default function TaskDetailPage() {
                 </div>
               ) : (
                 // Edit Mode
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6 dark:bg-gray-800">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-semibold text-gray-900">แก้ไข Task</h2>
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-200">แก้ไข Task</h2>
                       <button
                         onClick={handleCancelEdit}
                         className="p-2 hover:bg-gray-100 rounded-lg"
@@ -1528,14 +1528,14 @@ export default function TaskDetailPage() {
                     <div className="space-y-4">
                       {/* Task Name */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                           ชื่อ Task <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={editForm.taskName}
                           onChange={(e) => setEditForm(prev => ({ ...prev, taskName: e.target.value }))}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                           placeholder="ใส่ชื่อ Task"
                           disabled={editLoading}
                         />
@@ -1543,14 +1543,14 @@ export default function TaskDetailPage() {
 
                       {/* Description */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                           รายละเอียด
                         </label>
                         <textarea
                           value={editForm.description}
                           onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
                           rows={3}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                           placeholder="ใส่รายละเอียดของ Task (ไม่บังคับ)"
                           disabled={editLoading}
                         />
@@ -1559,26 +1559,26 @@ export default function TaskDetailPage() {
                       {/* Due Date and Time */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                             วันที่กำหนดส่ง <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="date"
                             value={editForm.dueDate}
                             onChange={(e) => setEditForm(prev => ({ ...prev, dueDate: e.target.value }))}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                             disabled={editLoading}
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                             เวลากำหนดส่ง
                           </label>
                           <input
                             type="time"
                             value={editForm.dueTime}
                             onChange={(e) => setEditForm(prev => ({ ...prev, dueTime: e.target.value }))}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                             disabled={editLoading}
                           />
                         </div>
@@ -1586,13 +1586,13 @@ export default function TaskDetailPage() {
 
                       {/* Assigned User */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                           มอบหมายให้
                         </label>
                         <select
                           value={editForm.assignedUserId || ''}
                           onChange={(e) => setEditForm(prev => ({ ...prev, assignedUserId: e.target.value ? parseInt(e.target.value) : null }))}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                           disabled={editLoading}
                         >
                           <option value="">เลือกผู้รับผิดชอบ</option>
@@ -1612,7 +1612,7 @@ export default function TaskDetailPage() {
                         <button
                           type="button"
                           onClick={handleCancelEdit}
-                          className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all"
+                          className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all dark:hover:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
                           disabled={editLoading}
                         >
                           ยกเลิก
@@ -1646,9 +1646,9 @@ export default function TaskDetailPage() {
 
 
               {/* Task Files Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <div className="bg-white rounded-lg shadow-sm p-6 mb-6 dark:bg-gray-800">
                 <div className="mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">ไฟล์งาน</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-200">ไฟล์งาน</h2>
                 </div>
 
                 {/* Drag & Drop Zone - แสดงเฉพาะคนที่ได้รับมอบหมาย และยังไม่ได้ส่งงาน */}
@@ -1668,8 +1668,8 @@ export default function TaskDetailPage() {
                       onDrop={handleDrop}
                       className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 ${
                         isDragging 
-                          ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 
-                          : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:shadow-md'
+                          ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02] dark:border-blue-400 dark:bg-blue-600' 
+                          : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-400 dark:hover:bg-blue-300'
                       }`}
                     >
                       <div className="text-center">
@@ -1693,8 +1693,8 @@ export default function TaskDetailPage() {
 
                         <h3 className={`text-base font-semibold mb-2 transition-colors ${
                           isDragging 
-                            ? 'text-blue-700' 
-                            : 'text-gray-700 group-hover:text-blue-600'
+                            ? 'text-blue-700 dark:text-blue-300' 
+                            : 'text-gray-700 group-hover:text-blue-600 dark:text-gray-300 dark:group-hover:text-blue-600'
                         }`}>
                           {isDragging ? '✨ วางไฟล์ที่นี่' : 'คลิกเพื่อเลือกไฟล์ หรือ ลากไฟล์มาวางที่นี่'}
                         </h3>
@@ -1719,7 +1719,7 @@ export default function TaskDetailPage() {
 
                 {/* Selected Files Preview - Compact View */}
                 {selectedFiles.length > 0 && !showFileManagementModal && (
-                  <div className="border-2 border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 mb-4 shadow-sm">
+                  <div className="border-2 border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 mb-4 shadow-sm ">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
@@ -1829,8 +1829,8 @@ export default function TaskDetailPage() {
 
                 {/* File Management Modal */}
                 {showFileManagementModal && selectedFiles.length > 0 && (
-                  <div className="fixed inset-0 bg-black/60 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+                  <div className="fixed inset-0 bg-black/30 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col dark:bg-gray-700">
                       {/* Modal Header */}
                       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                         <div className="flex items-center space-x-3">
@@ -1840,8 +1840,8 @@ export default function TaskDetailPage() {
                             </svg>
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-gray-900">ไฟล์ที่เลือก</h3>
-                            <p className="text-sm text-gray-500">{selectedFiles.length} ไฟล์ • รวม {(selectedFiles.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(2)} MB</p>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-200">ไฟล์ที่เลือก</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{selectedFiles.length} ไฟล์ • รวม {(selectedFiles.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(2)} MB</p>
                           </div>
                         </div>
                         <button
@@ -1849,10 +1849,10 @@ export default function TaskDetailPage() {
                             setShowFileManagementModal(false);
                             setEditingFileIndex(null);
                           }}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-gray-600"
                           title="ปิด"
                         >
-                          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-6 h-6 text-gray-600 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         </button>
@@ -1862,7 +1862,7 @@ export default function TaskDetailPage() {
                       <div className="flex-1 overflow-y-auto px-6 py-4">
                         <div className="space-y-3">
                           {selectedFiles.map((file, index) => (
-                            <div key={index} className="bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 transition-all">
+                            <div key={index} className="bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 transition-all dark:bg-gray-600">
                               {/* File Header */}
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -1876,14 +1876,14 @@ export default function TaskDetailPage() {
                                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                                         #{index + 1}
                                       </span>
-                                      <span className="text-xs text-gray-500">
+                                      <span className="text-xs text-gray-500 dark:text-gray-200">
                                         {file.type || 'Unknown type'}
                                       </span>
                                     </div>
-                                    <p className="text-sm font-medium text-gray-700 truncate">
+                                    <p className="text-sm font-medium text-gray-700 truncate dark:text-gray-200">
                                       ชื่อไฟล์ต้นฉบับ: {file.name}
                                     </p>
-                                    <p className="text-xs text-gray-500 mt-0.5">
+                                    <p className="text-xs text-gray-500 mt-0.5 dark:text-gray-400">
                                       ขนาด: {(file.size / 1024 / 1024).toFixed(2)} MB
                                     </p>
                                   </div>
@@ -1901,7 +1901,7 @@ export default function TaskDetailPage() {
 
                               {/* File Rename Section */}
                               <div className="space-y-2">
-                                <label className="block text-sm font-semibold text-gray-700">
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
                                   ตั้งชื่อไฟล์ใหม่ (ไม่บังคับ)
                                 </label>
                                 {editingFileIndex === index ? (
@@ -2001,13 +2001,13 @@ export default function TaskDetailPage() {
                       </div>
 
                       {/* Modal Footer */}
-                      <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                      <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl dark:bg-gray-700">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2 text-sm text-gray-600">
-                            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-blue-500 dark:text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span>คลิกปุ่มด้านบนเพื่อตั้งชื่อไฟล์ใหม่</span>
+                            <span className="dark:text-blue-200">คลิกปุ่มด้านบนเพื่อตั้งชื่อไฟล์ใหม่</span>
                           </div>
                           <button
                             onClick={() => {
@@ -2053,7 +2053,7 @@ export default function TaskDetailPage() {
                 <div className="space-y-3">
                   {submissions.filter(s => s.file_urls && s.file_urls.length > 0 && s.is_active).length > 0 && (
                     submissions.filter(s => s.file_urls && s.file_urls.length > 0 && s.is_active).map((submission) => (
-                      <div key={submission.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div key={submission.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors dark:border-gray-600 dark:hover:bg-gray-700 dark:bg-gray-800">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -2062,7 +2062,7 @@ export default function TaskDetailPage() {
                               </svg>
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">
+                              <p className="font-medium text-gray-900 dark:text-gray-200">
                                 งานที่ส่ง ({submission.file_urls?.length || 0} รายการ)
                               </p>
                               <p className="text-sm text-gray-500">
@@ -2092,7 +2092,7 @@ export default function TaskDetailPage() {
                             const isExternalLink = fileUrl.startsWith('http://') || fileUrl.startsWith('https://');
                             
                             return (
-                              <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors group">
+                              <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors group dark:bg-gray-700 dark:hover:bg-gray-600">
                                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                                     isExternalLink ? 'bg-purple-100' : 'bg-blue-100'
@@ -2127,7 +2127,7 @@ export default function TaskDetailPage() {
                                       </>
                                     ) : (
                                       <>
-                                        <p className="text-sm font-medium text-gray-900 truncate" title={fileName}>
+                                        <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-200" title={fileName}>
                                           {fileName}
                                         </p>
                                         <p className="text-xs text-gray-500">
@@ -2178,13 +2178,13 @@ export default function TaskDetailPage() {
 
               {/* Task Comment Section - แสดงเสมอเมื่ออยู่ในโหมดส่งงาน */}
               {user && task.assigned_to_user_ids_number === user.id && (task.task_status === 'not turn in' || task.task_status === 'rejected') && (
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6 dark:bg-gray-800">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
                       <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                       </svg>
-                      <h2 className="text-lg font-semibold text-gray-900">ความเห็น / หมายเหตุ</h2>
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">ความเห็น / หมายเหตุ</h2>
                     </div>
                     {taskComment && (
                       <span className="text-xs text-gray-500">
@@ -2222,21 +2222,21 @@ export default function TaskDetailPage() {
               )}
 
               {/* History Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="bg-white rounded-lg shadow-sm p-6 dark:bg-gray-800">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <h2 className="text-lg font-semibold text-gray-900">ประวัติการส่งงาน</h2>
-                    <span className="text-sm text-gray-500">({submissions.length} รายการ)</span>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">ประวัติการส่งงาน</h2>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">({submissions.length} รายการ)</span>
                   </div>
                   <button
                     onClick={refreshSubmissions}
                     className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                     title="รีเฟรชข้อมูล"
                   >
-                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                   </button>
@@ -2259,7 +2259,7 @@ export default function TaskDetailPage() {
                         key={submission.id} 
                         className={`border rounded-lg p-2.5 transition-all hover:shadow-sm ${
                           submission.is_active 
-                            ? 'bg-white border-green-200 hover:border-green-300' 
+                            ? 'bg-white border-green-200 hover:border-green-300 dark:bg-gray-700 dark:border-green-700 dark:hover:border-green-600' 
                             : 'bg-gray-50 border-gray-200'
                         }`}
                       >
@@ -2280,11 +2280,11 @@ export default function TaskDetailPage() {
                             {/* User name & timestamp in compact format */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center space-x-1.5">
-                                <span className="font-semibold text-gray-900 text-sm truncate">
+                                <span className="font-semibold text-gray-900 text-sm truncate dark:text-gray-200">
                                   {submission.submittedByUser?.username}
                                 </span>
                                 <span className="text-xs text-gray-400">•</span>
-                                <span className="text-xs text-gray-500 truncate">
+                                <span className="text-xs text-gray-500 truncate dark:text-gray-400">
                                   {formatDateTime(submission.submission_date)}
                                 </span>
                               </div>
@@ -2333,7 +2333,7 @@ export default function TaskDetailPage() {
                                 <span>ยกเลิก</span>
                               </span>
                             )}
-                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-gray-500 bg-gray-100 rounded">
+                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-gray-500 bg-gray-100 rounded dark:bg-gray-600 dark:text-gray-300">
                               #{submissions.length - index}
                             </span>
                           </div>
@@ -2567,12 +2567,12 @@ export default function TaskDetailPage() {
               isRightPanelOpen ? 'lg:block opacity-100 translate-x-0' : 'lg:hidden opacity-0 translate-x-full'
             }`}>
               {/* Task Information Card */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">ข้อมูล Task</h3>
+              <div className="bg-white rounded-lg shadow-sm p-6 dark:bg-gray-800">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">ข้อมูล Task</h3>
                 <div className="space-y-3">
                   {/* Status */}
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-600">สถานะ</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">สถานะ</span>
                     <div className={`flex items-center space-x-2 px-3 py-1.5 ${statusConfig.bgColor} border ${statusConfig.borderColor} rounded-lg`}>
                       <div className={`w-2 h-2 rounded-full ${statusConfig.indicatorColor}`}></div>
                       <span className={`text-xs font-medium ${statusConfig.textColor}`}>
@@ -2583,14 +2583,14 @@ export default function TaskDetailPage() {
 
                   {/* Assigned User */}
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-600">ผู้รับผิดชอบ</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">ผู้รับผิดชอบ</span>
                     <div className="flex items-center space-x-2">
                       <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                         <span className="text-blue-600 text-xs font-medium">
                           {assignedUser ? assignedUser.username.charAt(0).toUpperCase() : '?'}
                         </span>
                       </div>
-                      <span className="text-sm text-gray-900 font-medium">
+                      <span className="text-sm text-gray-900 font-medium dark:text-gray-100">
                         {assignedUser ? assignedUser.username : 'ไม่ได้กำหนด'}
                       </span>
                     </div>
@@ -2598,62 +2598,62 @@ export default function TaskDetailPage() {
 
                   {/* Due Date */}
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-600">กำหนดส่ง</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">กำหนดส่ง</span>
                     <div className="flex items-center space-x-2">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <span className="text-sm text-gray-900">{formatDate(task.due_date)}</span>
+                      <span className="text-sm text-gray-900 dark:text-gray-100">{formatDate(task.due_date)}</span>
                     </div>
                   </div>
 
                   {/* Last Updated */}
                   <div className="flex items-center justify-between py-2">
-                    <span className="text-sm text-gray-600">อัปเดตล่าสุด</span>
-                    <span className="text-sm text-gray-900">{formatDate(task.updatedAt)}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">อัปเดตล่าสุด</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100">{formatDate(task.updatedAt)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Task Actions for Assignee */}
               {user && task.assigned_to_user_ids_number === user.id && (
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">การจัดการงาน</h3>
-                  
+                <div className="bg-white rounded-lg shadow-sm p-6 dark:bg-gray-800">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">การจัดการงาน</h3>
+
                   {/* Countdown Timer */}
                   {timeLeft && (
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-black-500 mb-2">เวลาที่เหลือ</label>
                       {timeLeft.isOverdue ? (
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 dark:bg-gray-700 dark:border-gray-600">
                           <div className="flex items-center justify-center space-x-2">
-                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-gray-600 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span className="text-gray-700 font-medium text-sm">เลยกำหนดส่งแล้ว</span>
+                            <span className="text-gray-700 font-medium text-sm dark:text-gray-300">เลยกำหนดส่งแล้ว</span>
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 dark:bg-gray-700 dark:border-gray-600">
                           <div className="flex items-center justify-center space-x-3">
                             <div className="flex items-center space-x-1">
-                              <div className="text-xl font-bold text-gray-900">{timeLeft.days}</div>
-                              <div className="text-xs text-gray-500">วัน</div>
+                              <div className="text-xl font-bold text-gray-900 dark:text-gray-100">{timeLeft.days}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-300">วัน</div>
                             </div>
-                            <div className="text-gray-400">:</div>
+                            <div className="text-gray-400 dark:text-gray-300">:</div>
                             <div className="flex items-center space-x-1">
-                              <div className="text-xl font-bold text-gray-900">{String(timeLeft.hours).padStart(2, '0')}</div>
-                              <div className="text-xs text-gray-500">ชม.</div>
+                              <div className="text-xl font-bold text-gray-900 dark:text-gray-100">{String(timeLeft.hours).padStart(2, '0')}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-300">ชม.</div>
                             </div>
-                            <div className="text-gray-400">:</div>
+                            <div className="text-gray-400 dark:text-gray-300">:</div>
                             <div className="flex items-center space-x-1">
-                              <div className="text-xl font-bold text-gray-900">{String(timeLeft.minutes).padStart(2, '0')}</div>
-                              <div className="text-xs text-gray-500">นาที</div>
+                              <div className="text-xl font-bold text-gray-900 dark:text-gray-100">{String(timeLeft.minutes).padStart(2, '0')}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-300">นาที</div>
                             </div>
-                            <div className="text-gray-400">:</div>
+                            <div className="text-gray-400 dark:text-gray-300">:</div>
                             <div className="flex items-center space-x-1">
-                              <div className="text-xl font-bold text-gray-900">{String(timeLeft.seconds).padStart(2, '0')}</div>
-                              <div className="text-xs text-gray-500">วินาที.</div>
+                              <div className="text-xl font-bold text-gray-900 dark:text-gray-100">{String(timeLeft.seconds).padStart(2, '0')}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-300">วินาที</div>
                             </div>
                           </div>
                         </div>
@@ -2714,9 +2714,9 @@ export default function TaskDetailPage() {
 
               {/* Review Section - Show when task needs review - Only for Leaders */}
               {userRole === 'Leader' && (task.task_status === 'pending_review' || task.task_status === 'turn in') && (
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">ตรวจสอบงาน</h3>
-                  
+                <div className="bg-white rounded-lg shadow-sm p-6 dark:bg-gray-800">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">ตรวจสอบงาน</h3>
+
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <div className="flex items-center space-x-2 mb-2">
                       <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2774,7 +2774,7 @@ export default function TaskDetailPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && task && (
         <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 dark:bg-gray-800">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-red-600 flex items-center space-x-2">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2784,10 +2784,10 @@ export default function TaskDetailPage() {
               </h3>
               <button
                 onClick={handleCloseDeleteModal}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-700 transition-all"
                 disabled={isDeleting}
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -2800,16 +2800,16 @@ export default function TaskDetailPage() {
                 </p>
               </div>
 
-              <p className="text-gray-700 mb-4">
+              <p className="text-gray-700 mb-4 dark:text-gray-300">
                 คุณกำลังจะลบ Task: <strong className="text-gray-900">"{task.task_name}"</strong>
               </p>
 
-              <p className="text-gray-700 mb-4">
+              <p className="text-gray-700 mb-4 dark:text-gray-300">
                 เพื่อยืนยันการลบ กรุณาพิมพ์ชื่อ Task ในช่องด้านล่าง:
               </p>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                   พิมพ์ชื่อ Task: <span className="font-semibold text-red-600">"{task.task_name}"</span>
                 </label>
                 <input
@@ -2834,7 +2834,7 @@ export default function TaskDetailPage() {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={handleCloseDeleteModal}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-lg transition-all"
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-lg transition-all dark:hover:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
                 disabled={isDeleting}
               >
                 ยกเลิก
@@ -2866,7 +2866,7 @@ export default function TaskDetailPage() {
       {/* Review Modal */}
       {showReviewModal && task && reviewAction && (
         <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4 dark:bg-gray-800">
             <div className="flex items-center justify-between mb-6">
               <h3 className={`text-lg font-semibold flex items-center space-x-2 ${
                 reviewAction === 'approve' ? 'text-green-600' : 'text-red-600'
@@ -2912,11 +2912,11 @@ export default function TaskDetailPage() {
               </div>
 
               <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center justify-between dark:text-gray-300">
                   <span>
                     ความคิดเห็น {reviewAction === 'reject' && <span className="text-red-500">*</span>}
                   </span>
-                  <span className="text-xs text-gray-500 font-normal">
+                  <span className="text-xs text-gray-500 font-normal dark:text-gray-400">
                     {reviewComment.length} / 1000 ตัวอักษร
                   </span>
                 </label>
@@ -2948,7 +2948,7 @@ export default function TaskDetailPage() {
                     </div>
                   )}
                 </div>
-                <div className="mt-2 flex items-start space-x-2 text-xs text-gray-500">
+                <div className="mt-2 flex items-start space-x-2 text-xs text-gray-500 dark:text-gray-400">
                   <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -2968,7 +2968,7 @@ export default function TaskDetailPage() {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={handleCloseReviewModal}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-lg transition-all"
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-lg transition-all dark:hover:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
                 disabled={reviewLoading}
               >
                 ยกเลิก
@@ -3010,7 +3010,7 @@ export default function TaskDetailPage() {
       {/* Submit Work Modal - Enhanced */}
       {showSubmitModal && (
         <div className="fixed inset-0 bg-black/60 bg-opacity-50 drop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col dark:bg-gray-800">
             {/* Modal Header */}
             <div className="flex items-center justify-between rounded-t-2xl px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50">
               <div className="flex items-center space-x-3">
@@ -3038,16 +3038,16 @@ export default function TaskDetailPage() {
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto px-8 py-5">
               {/* Task Information */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 dark:bg-gray-700 dark:border-gray-600">
                 <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-gray-600">
+                    <svg className="w-6 h-6 text-blue-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-900 mb-1">Task</p>
-                    <p className="text-base font-semibold text-blue-800">{task.task_name}</p>
+                    <p className="text-sm font-medium text-blue-900 mb-1 dark:text-gray-300">Task</p>
+                    <p className="text-base font-semibold text-blue-800 dark:text-gray-300">{task.task_name}</p>
                   </div>
                 </div>
               </div>
@@ -3072,7 +3072,7 @@ export default function TaskDetailPage() {
                     className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 ${
                       isDragging 
                         ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 
-                        : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:shadow-md'
+                        : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500 dark:hover:bg-gray-700'
                     } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="text-center">
@@ -3097,7 +3097,7 @@ export default function TaskDetailPage() {
                       <h3 className={`text-base font-semibold mb-2 transition-colors ${
                         isDragging 
                           ? 'text-blue-700' 
-                          : 'text-gray-700 group-hover:text-blue-600'
+                          : 'text-gray-700 group-hover:text-blue-600 dark:text-gray-300 dark:group-hover:text-blue-500'
                       }`}>
                         {isDragging ? '✨ วางไฟล์ที่นี่' : 'คลิกเพื่อเลือกไฟล์ หรือ ลากไฟล์มาวางที่นี่'}
                       </h3>
@@ -3124,20 +3124,20 @@ export default function TaskDetailPage() {
               {selectedFiles.length > 0 && (
                 <div className="mb-5">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-base font-semibold text-gray-900 flex items-center space-x-2">
-                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <h4 className="text-base font-semibold text-gray-900 flex items-center space-x-2 dark:text-gray-100">
+                      <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <span>ไฟล์ที่จะส่ง</span>
                     </h4>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                       {selectedFiles.length} ไฟล์ • {(selectedFiles.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(2)} MB
                     </span>
                   </div>
                   
                   <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
                     {selectedFiles.map((file, index) => (
-                      <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                      <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition-colors dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3149,12 +3149,12 @@ export default function TaskDetailPage() {
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                                 #{index + 1}
                               </span>
-                              <span className="text-xs text-gray-500">{file.type || 'Unknown'}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{file.type || 'Unknown'}</span>
                             </div>
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-200">
                               {fileNames[index] || file.name}
                             </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
+                            <p className="text-xs text-gray-500 mt-0.5 dark:text-gray-400">
                               ขนาด: {(file.size / 1024 / 1024).toFixed(2)} MB
                             </p>
                           </div>
@@ -3175,10 +3175,10 @@ export default function TaskDetailPage() {
               {/* Links Section */}
               <div className="mb-5">
                 <h4 className="text-base font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
-                  <span>ลิงก์งาน (ถ้ามี)</span>
+                  <span className='dark:text-gray-200'>ลิงก์งาน (ถ้ามี)</span>
                 </h4>
                 
                 {/* Add Link Input */}
@@ -3277,8 +3277,8 @@ export default function TaskDetailPage() {
               {/* Comments Section */}
               <div className="mb-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-base font-semibold text-gray-900 flex items-center space-x-2">
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <h4 className="text-base font-semibold text-gray-900 flex items-center space-x-2 dark:text-gray-100">
+                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                     </svg>
                     <span>ความเห็น / หมายเหตุ</span>
@@ -3303,14 +3303,14 @@ export default function TaskDetailPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl dark:bg-gray-700 dark:border-gray-600">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-300">
                   {selectedFiles.length > 0 || submissionLinks.length > 0 ? (
                     <span>
                       กำลังส่ง 
                       {selectedFiles.length > 0 && (
-                        <strong className="text-gray-900"> {selectedFiles.length} ไฟล์</strong>
+                        <strong className="text-gray-900 dark:text-gray-100"> {selectedFiles.length} ไฟล์</strong>
                       )}
                       {selectedFiles.length > 0 && submissionLinks.length > 0 && ' และ'}
                       {submissionLinks.length > 0 && (
@@ -3324,7 +3324,7 @@ export default function TaskDetailPage() {
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setShowSubmitModal(false)}
-                    className="px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium hover:bg-gray-200 rounded-lg transition-all"
+                    className="px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium hover:bg-gray-200 rounded-lg transition-all dark:hover:bg-gray-600 dark:text-gray-300 dark:hover:text-gray-100"
                     disabled={submitting}
                   >
                     ยกเลิก

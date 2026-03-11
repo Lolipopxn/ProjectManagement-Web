@@ -120,17 +120,16 @@ const handleSubmit = async (e: React.FormEvent) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 shadow-lg bg-white z-99 flex flex-col items-center justify-center transform animate-in slide-in-from-bottom-4 duration-200 space-y-3">
+    <div className="fixed inset-0 shadow-lg bg-white z-99 flex flex-col items-center justify-center transform animate-in slide-in-from-bottom-4 duration-200 space-y-3 dark:bg-gray-800">
       <div className="flex flex-col md:grid md:grid-cols-2 gap-4 w-full h-full p-6 overflow-y-auto ">
         {/* left */}
         <div className="md:col-span-1 flex flex-col gap-4">
           {/* close */}
           <div className="w-full">
-            <button className="flex flex-row items-center gap-2 hover:bg-gray-200 rounded-full py-2 px-4">
+            <button onClick={resetForm} className="flex flex-row items-center gap-2 hover:bg-gray-200 rounded-full py-2 px-4 dark:hover:bg-gray-700">
               <IoMdArrowRoundBack className="size-4" />
               <span
-                className="cursor-pointer text-base md:text-lg font-medium"
-                onClick={resetForm}
+                className="cursor-pointer text-base md:text-lg font-medium"         
               >
                 กลับ
               </span>
@@ -139,7 +138,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* title */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 ">
             <span className="text-md md:text-2xl font-semibold">เพิ่มการนัดหมาย</span>
-            <p className="text-sm md:text-base text-gray-600">
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
               สามารถนัดหมายการประชุมผ่านฟอร์มนี้
               เเละสามารถเลือกสถานที่นัดหมายจากแผนที่ด้านขวา
             </p>
@@ -172,7 +171,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       type="date"
                       value={beginDate} 
                       onChange={(e) => setBeginDate(e.target.value)}
-                      className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
+                      className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB] dark:bg-gray-700 dark:text-gray-100 dark:outline-gray-600 dark:focus:outline-blue-400"/>
                   </div>
                   
                   <div className="flex gap-2 flex-col flex-1">
@@ -181,7 +180,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     type="time" 
                     value={beginTime}
                     onChange={(e) => setBeginTime(e.target.value)}
-                    className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
+                    className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB] dark:bg-gray-700 dark:text-gray-100 dark:outline-gray-600 dark:focus:outline-blue-400"/>
                   </div>                
                 </div>
 
@@ -193,7 +192,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
                       type="date" 
-                      className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
+                      className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB] dark:bg-gray-700 dark:text-gray-100 dark:outline-gray-600 dark:focus:outline-blue-400"/>
                   </div>
                   
                   <div className="flex gap-2 flex-col flex-1">
@@ -202,7 +201,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     value={dueTime}
                     onChange={(e) => setDueTime(e.target.value)}
                     type="time" 
-                    className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB]"/>
+                    className="ml-1 outline-1 rounded-lg text-sm md:text-base bg-gray-100 outline-gray-300 py-1 px-4 focus:outline-2 focus:outline-[#636CCB] dark:bg-gray-700 dark:text-gray-100 dark:outline-gray-600 dark:focus:outline-blue-400"/>
                   </div>                
                 </div>
              
@@ -235,7 +234,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         {/* right */}
         <div className="md:col-span-1 flex flex-col gap-2 md:border-l border-gray-300 px-4 py-2 w-85 h-85 md:w-full md:h-full">
           {/* Search Input */}
-          <div className=" bg-white py-2">
+          <div className=" bg-white py-2 dark:bg-gray-800">
             <Autocomplete
               onLoad={(ac) => (autoCompleteRef.current = ac)}
               onPlaceChanged={handlePlaceChanged}

@@ -115,17 +115,17 @@ export default function LoginPage() {
           </form>
 
           {/* Others Login */}
-          <hr className="my-6 border-t"/>
+          <hr className="my-6 border-t dark:border-black"/>
           <div className="justify-items-center items-center space-y-5">
             <div className="font-normal text-center">หรือ</div>
             <button onClick={handleGoogleLogin} className="w-full md:w-8/10 bg-white border border-gray-400 gap-3 rounded-[16px] p-3 flex justify-center justify-self-center items-center hover:bg-gray-200">
               <FcGoogle className="w-6 h-6"/>
-              <div className="font-normal text-md">Login with <span className="font-bold">Google</span></div>
+              <div className="font-normal text-md dark:text-black">Login with <span className="font-bold">Google</span></div>
             </button>
           </div>
 
           {/* Footer */}
-          <div className="mt-20 flex justify-center">
+          <div className="mt-20 flex justify-center dark:text-black">
             © 2025 Project Management. All rights reserved.
           </div>
 

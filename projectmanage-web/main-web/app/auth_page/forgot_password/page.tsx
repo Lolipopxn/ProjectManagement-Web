@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
               >
                 Email Address
               </label>
-              <div className="flex items-center border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
+              <div className="flex items-center border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 dark:border-black">
                 <FaEnvelope className="text-gray-400 mr-2" />
                 <input
                   id="email"
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
                   name="email"
                   required
                   placeholder="you@example.com"
-                  className="w-full border-none outline-none"
+                  className="w-full border-none outline-none dark:text-black"
                 />
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
           {/* Footer */}
           <div className="mt-4 text-center text-sm text-gray-600">
             <p>
-              <a href="/login" className="text-blue-600 hover:underline">
+              <a href="/auth_page/login" className="text-blue-600 hover:underline">
                 Back to Login
               </a>
             </p>

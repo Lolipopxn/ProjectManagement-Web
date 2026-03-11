@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
-import { MdSpaceDashboard, MdPerson, MdNotifications } from "react-icons/md";
+import { MdSpaceDashboard, MdPerson, MdNotifications, MdDarkMode } from "react-icons/md";
 import { FaFolder, FaPlus} from "react-icons/fa";
 import { IoIosSettings } from "react-icons/io";
+import ThemeToggle from "../theme-toggle";
 
 interface User {
   id: number;
@@ -142,7 +143,7 @@ export default function UserMenu({ user, onUserUpdate }: UserMenuProps) {
       <div
         role="menu"
         aria-label="User menu"
-        className={`absolute right-0 mt-1 w-auto px-6 py-3 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-150 origin-top-right${
+        className={`absolute right-0 mt-1 w-auto px-6 py-3 bg-white dark:bg-gray-800 dark:border-gray-700 border border-gray-200 rounded-xl shadow-lg transition-all duration-150 origin-top-right${
           open
             ? "opacity-100 scale-100 translate-y-0 visible"
             : "opacity-0 scale-95 -translate-y-1 invisible pointer-events-none"
@@ -150,11 +151,11 @@ export default function UserMenu({ user, onUserUpdate }: UserMenuProps) {
       >
         {user ? (
           <div className="py-2">
-            <div className="px-15 md:px-1 pb-3 pt-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+            <div className="px-15 md:px-1 pb-3 pt-3 border-b dark:bg-gray-800 border-gray-100 bg-gray-50 rounded-t-xl">
               <div className="flex flex-row items-center gap-3">
                 <Avatar name={user.username} />
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-gray-800 truncate">
+                  <div className="text-sm font-semibold text-gray-800 dark:text-white truncate">
                     {user.username}
                   </div>
                   <div className="text-xs text-gray-500 truncate">
@@ -167,58 +168,48 @@ export default function UserMenu({ user, onUserUpdate }: UserMenuProps) {
             <a
               href="/main_pages/profile"
               onClick={() => setOpen(false)}
-              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-700"
             >
-              <MdPerson  className="w-5 h-5 text-gray-700" />
+              <MdPerson  className="w-5 h-5" />
               <div>โปรไฟล์</div>
             </a>
 
             <a
               href="/main_pages/dashboard"
               onClick={() => setOpen(false)}
-              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-700"
             >
-              <MdSpaceDashboard className="w-4 h-4 text-gray-700" />
+              <MdSpaceDashboard className="w-4 h-4" />
               <div>แดชบอร์ด</div>
             </a>
 
             <a
               href="/main_pages/overview"
               onClick={() => setOpen(false)}
-              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-700"
             >
-              <FaFolder className="w-4 h-4 text-gray-700" />
+              <FaFolder className="w-4 h-4" />
               <div>โปรเจคทั้งหมด</div>
             </a>
 
             <a
               href="/main_pages/create-project"
               onClick={() => setOpen(false)}
-              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-700"
             >
-              <FaPlus className="w-4 h-4 text-gray-700" />
+              <FaPlus className="w-4 h-4" />
               <div>สร้างโปรเจคใหม่</div>
             </a>
 
-            <a
-              href="/notifications"
-              onClick={() => setOpen(false)}
-              className="flex flex-row items-center justify-between gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
-            >
+            <div className="flex flex-row items-center justify-between gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-white">
               <div className="flex flex-row justify-center items-center gap-3">
-                <MdNotifications className="w-4 h-4 text-gray-700" />
-                <div>การเเจ้งเตือน</div>
+                <MdDarkMode className="w-4 h-4"/>
+                <div>Dark Mode</div>
               </div>
-            </a>
 
-            <a
-              href="/settings"
-              onClick={() => setOpen(false)}
-              className="flex flex-row items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              <IoIosSettings  className="w-4 h-4 text-gray-700" />
-              <div>ตั้งค่า</div>
-            </a>
+              <ThemeToggle />
+              
+            </div>
 
             <div className="my-1 h-px bg-gray-100" />
 

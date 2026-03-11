@@ -175,7 +175,7 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
   return (
     <GanttProvider range="daily" zoom={150} className="border border-gray-200 shadow-md scale-95 md:scale-100">
 
-      <GanttSidebar className='mb-60 md:mb-30'>
+      <GanttSidebar className='mb-60 md:mb-80'>
         {Object.entries(grouped).map(([group, features]) => (
           <GanttSidebarGroup key={group} name={group}>
             {features.map((feature) => (
@@ -206,7 +206,7 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                           onMove={handleMoveFeature}
                           {...feature}
                         >
-                          <p className="flex-1 truncate text-xs">
+                          <p className="flex-1 truncate text-xs dark:text-black">
                             {feature.name}
                           </p>
                           {feature.owner ? (
@@ -216,18 +216,18 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                                 {feature.owner.name?.slice(0, 2)}
                               </AvatarFallback>
                             </Avatar>
-                          ): <p className="truncate text-xs">{feature.status.nameThai}</p>}
+                          ): <p className="truncate text-xs dark:text-black">{feature.status.nameThai}</p>}
                         </GanttFeatureItem>
                         
                       </button>
                     </ContextMenuTrigger>
                     
-                    <div className='fixed group-hover:fixed group-hover:h-full group-hover:w-100 right-0 top-0 bg-[white] h-0 w-0 z-30 shadow-md'>
+                    <div className='fixed group-hover:fixed group-hover:h-full group-hover:w-100 right-0 top-0 bg-[white] h-0 w-0 z-30 shadow-md dark:bg-gray-700'>
                       <div className='flex group-hover:flex flex-col mt-25 py-1 px-6 space-y-5 divide-gray-500'>
                         <hr></hr>               
                           <div className='grid grid-cols-2 text-sm space-y-5 gap-2 px-5 py-5 rounded-lg '>
                             <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500'>
+                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
                                 <VscGithubProject className='w-4 h-4'/>
                                 <p>ชื่อโปรเจค</p>
                               </div>
@@ -237,7 +237,7 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                             </div> 
 
                             <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500'>
+                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
                                 <BiTask className='w-4 h-4'/>
                                 <p>ชื่องาน</p>
                               </div>
@@ -247,17 +247,17 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                             </div>    
 
                             <div className='col-span-2 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500'>
+                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
                                 <GoProjectRoadmap className='w-4 h-4'/>
                                 <p>คำอธิบาย</p>
                               </div>
                             </div>
-                            <div className='col-span-2 font-normal bg-white py-2 px-4 border-2 border-gray-300 rounded-md overflow-auto h-35'>
+                            <div className='col-span-2 font-normal bg-white py-2 px-4 border-2 border-gray-300 rounded-md overflow-auto h-35 dark:text-gray-300 dark:bg-gray-600 dark:border-gray-500'>
                               <span className=''>{feature.description}</span>
                             </div>    
 
                             <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500'>
+                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
                                 <IoMdTime className='w-4 h-4'/>
                                 <p>เวลา</p>
                               </div>
@@ -267,7 +267,7 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                             </div> 
 
                             <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500'>
+                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
                                 <GrStatusGood className='w-4 h-4'/>
                                 <p>สถานะ</p>
                               </div>
@@ -278,7 +278,7 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                               </div>                             
                             </div>   
                             <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500'>
+                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
                                 <RiGroupLine className='w-4 h-4'/>
                                 <p>ผู้รับผิดชอบ</p>
                               </div>
@@ -297,29 +297,6 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                       </div> 
                     </div>
 
-                    <ContextMenuContent>
-                      <ContextMenuItem
-                        className="flex items-center gap-2"
-                        onClick={() => handleViewFeature(feature.id)}
-                      >
-                        <EyeIcon className="text-muted-foreground" size={16} />
-                        View feature
-                      </ContextMenuItem>
-                      <ContextMenuItem
-                        className="flex items-center gap-2"
-                        onClick={() => handleCopyLink(feature.id)}
-                      >
-                        <LinkIcon className="text-muted-foreground" size={16} />
-                        Copy link
-                      </ContextMenuItem>
-                      <ContextMenuItem
-                        className="flex items-center gap-2 text-destructive"
-                        onClick={() => handleRemoveFeature(feature.id)}
-                      >
-                        <TrashIcon size={16} />
-                        Remove from roadmap
-                      </ContextMenuItem>
-                    </ContextMenuContent>
                   </ContextMenu>
                   
                 </div>

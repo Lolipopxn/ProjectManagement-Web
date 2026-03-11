@@ -54,7 +54,7 @@ export default function MemberPopup(
       }`}
     >
       {/* Members */}
-      <div className="bg-white rounded-lg shadow-sm py-6 px-8 space-y-3 scale-80 md:scale-100">
+      <div className="bg-white rounded-lg shadow-sm py-6 px-8 space-y-3 scale-80 md:scale-100 dark:bg-gray-800">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -73,8 +73,8 @@ export default function MemberPopup(
               </svg>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">สมาชิกทีม</h3>
-              <p className="text-sm text-gray-500">จัดการสมาชิกในโปรเจ็กต์</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">สมาชิกทีม</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">จัดการสมาชิกในโปรเจ็กต์</p>
             </div>
           </div>
           <div>
@@ -177,7 +177,7 @@ export default function MemberPopup(
               return (
                 <div
                   key={member.id}
-                  className="group bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg p-3 transition-all duration-200 hover:shadow-sm"
+                  className="group bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg p-3 transition-all duration-200 hover:shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:border-gray-500"
                 >
                   <div className="flex items-center space-x-3">
                     {/* Avatar */}
@@ -197,7 +197,7 @@ export default function MemberPopup(
                     {/* Member Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-medium text-gray-900 text-sm truncate">
+                        <h4 className="font-medium text-gray-900 text-sm truncate dark:text-gray-100">
                           {member.userInfo?.username ||
                             `User ${member.user_id_in_project}`}
                         </h4>
@@ -209,9 +209,7 @@ export default function MemberPopup(
                           {member.role_in_project}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-3 text-xs text-gray-500">
-                        <span>ID: {member.user_id_in_project}</span>
-                        <span>•</span>
+                      <div className="flex items-center space-x-3 text-xs text-gray-500 dark:text-gray-400">
                         <span>{formatDate(member.join_date)}</span>
                         {member.userInfo?.email && (
                           <>

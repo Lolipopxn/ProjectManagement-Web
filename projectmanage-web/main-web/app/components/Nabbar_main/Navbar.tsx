@@ -8,6 +8,7 @@ import NotificationDropdown from "./NotificationDropdown";
 
 import { MdSpaceDashboard, MdNotifications } from "react-icons/md";
 import { FaFolder, FaPlus } from "react-icons/fa";
+import ThemeToggle from "../theme-toggle";
 
 interface User {
   id: number;
@@ -138,19 +139,19 @@ export default function Navbar() {
 
         {/* Center - Search bar */}
         <div className="hidden md:inline flex-1 max-w-xl md:mx-10 mr-6">
-          <SearchBar />
+          <SearchBar />     
         </div>
 
         {/* Right side - Actions */}
-        <div className="flex flex-row justify-end items-center md:space-x-6">
+        <div className="flex flex-row justify-end items-center md:space-x-4">
           {/* Create project button */}
           {/* <a href="/main_pages/create-project" className="hidden md:flex flex-row justify-center items-center gap-2 p-1 px-2 hover:bg-[#F2AEBB] rounded-lg transition-colors relative">
             <FaPlus size={20} />
             <div className="hidden md:flex">New</div>
-          </a> */}
+          </a> */}       
 
           {/* Notification button with dropdown */}
-          <div className="relative mr-3">
+          <div className="relative mr-4">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
               className="flex p-1 hover:bg-[#6972c3] rounded-lg transition-colors relative"

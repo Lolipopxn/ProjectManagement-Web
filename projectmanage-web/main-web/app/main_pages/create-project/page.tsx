@@ -182,10 +182,10 @@ export default function CreateProjectPage() {
   // แสดง loading ถ้ายังตรวจสอบ auth อยู่
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">กำลังตรวจสอบการเข้าสู่ระบบ...</p>
+          <p className="text-gray-600 dark:text-gray-300">กำลังตรวจสอบการเข้าสู่ระบบ...</p>
         </div>
       </div>
     );
@@ -435,14 +435,14 @@ export default function CreateProjectPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-white flex justify-center">   
+    <div className="min-h-screen w-full bg-white flex justify-center dark:bg-gray-900">   
       <div className='flex-1 max-w-[1900px]'>
         {/* Main Content */}
           <div className="flex flex-col md:flex-row justify-center px-8 py-8">
             <div className='flex-1 md:pl-10 md:pr-20'>
               {/* Header */}
               <div className="mb-2 flex flex-row items-center space-x-6">
-                <div className="flex items-center space-x-2 text-gray-600">
+                <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
                   <button 
                     onClick={() => router.back()}
                     className="hover:text-[#50589C] transition-colors"
@@ -456,7 +456,7 @@ export default function CreateProjectPage() {
               <div className="flex gap-6 flex-col py-2 md:flex-row">
                 {/* Project Information Card - Left Side */}
                 <div className="flex-1">
-                  <div className="bg-white rounded-lg p-2">
+                  <div className="bg-white rounded-lg p-2 dark:bg-gray-900">
                     <div className="mb-6 flex flex-row items-center space-x-4 bg-[#50589C] py-2 pl-5 rounded-full">
                       <MdOutlinePostAdd className='size-7 text-white'/>
                       <h2 className="text-xl font-semibold text-white">เพิ่มโปรเจ็กต์</h2>
@@ -465,7 +465,7 @@ export default function CreateProjectPage() {
                     <form onSubmit={(e) => { e.preventDefault(); setShowConfirm(true);}} className="space-y-6">
                       {/* Project Name */}
                       <div>
-                        <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                           ชื่อโปรเจ็กต์ *
                         </label>
                         <input
@@ -475,14 +475,14 @@ export default function CreateProjectPage() {
                           value={formData.project_name}
                           onChange={handleChange}
                           required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C] dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
                           placeholder="กรอกชื่อโปรเจ็กต์"
                         />
                       </div>
 
                       {/* Description */}
                       <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                           คำอธิบาย *
                         </label>
                         <textarea
@@ -492,7 +492,7 @@ export default function CreateProjectPage() {
                           onChange={handleChange}
                           required
                           rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C] dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
                           placeholder="อธิบายรายละเอียดของโปรเจ็กต์"
                         />
                       </div>
@@ -500,7 +500,7 @@ export default function CreateProjectPage() {
                       {/* Date Range */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
+                          <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                             วันที่เริ่มต้น *
                           </label>
                           <input
@@ -510,11 +510,11 @@ export default function CreateProjectPage() {
                             value={formData.start_date}
                             onChange={handleChange}
                             required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C] dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
                           />
                         </div>
                         <div>
-                          <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
+                          <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                             วันที่สิ้นสุด *
                           </label>
                           <input
@@ -524,7 +524,7 @@ export default function CreateProjectPage() {
                             value={formData.end_date}
                             onChange={handleChange}
                             required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C] dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
                           />
                         </div>
                       </div>
@@ -585,7 +585,7 @@ export default function CreateProjectPage() {
                         <button
                           type="button"
                           onClick={() => router.back()}
-                          className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+                          className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                         >
                           ยกเลิก
                         </button>
@@ -613,15 +613,15 @@ export default function CreateProjectPage() {
 
             {/* Project Members Card - Right Side */}
               <div className="hidden md:flex md:w-1/3">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-900 dark:border-gray-600">
                   <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">สมาชิกโปรเจ็กต์</h2>
-                    <p className="text-sm text-gray-600">เพิ่มสมาชิกเข้าร่วมโปรเจ็กต์ (คุณจะเป็นหัวหน้าโปรเจ็กต์อัตโนมัติ)</p>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2 dark:text-gray-200">สมาชิกโปรเจ็กต์</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">เพิ่มสมาชิกเข้าร่วมโปรเจ็กต์ (คุณจะเป็นหัวหน้าโปรเจ็กต์อัตโนมัติ)</p>
                   </div>
 
                   {/* User Search Dropdown */}
                   <div className="mb-4 relative">
-                    <label htmlFor="user-search" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="user-search" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400">
                       ค้นหาเพื่อเพิ่มสมาชิก
                     </label>
                     <div className="relative">
@@ -635,7 +635,7 @@ export default function CreateProjectPage() {
                         }}
                         onFocus={() => setShowDropdown(true)}
                         placeholder="พิมพ์ชื่อหรืออีเมลเพื่อค้นหาผู้ใช้"
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C]"
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#50589C] focus:border-[#50589C] dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
                       />
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -645,7 +645,7 @@ export default function CreateProjectPage() {
 
                       {/* Dropdown */}
                       {showDropdown && searchTerm && filteredUsers.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto dark:bg-gray-800 dark:border-gray-700">
                           {filteredUsers.map((user) => (
                             <div
                               key={user.id}
@@ -676,7 +676,7 @@ export default function CreateProjectPage() {
 
                       {/* No results message */}
                       {showDropdown && searchTerm && filteredUsers.length === 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
                           <div className="px-4 py-3 text-gray-500 text-center">
                             ไม่พบผู้ใช้ที่ค้นหา
                           </div>
@@ -711,13 +711,13 @@ export default function CreateProjectPage() {
                       <option value="tester">ผู้ทดสอบ</option>
                     </select>
                   </div> */}
-                  <div className='rounded-lg p-3 bg-gray-100 h-90'>                   
+                  <div className='rounded-lg p-3 bg-gray-100 h-90 dark:bg-gray-800'>                   
                     <div className='flex flex-row items-center, justify-between'>
-                      <h3 className="text-md font-medium text-black mb-3">สมาชิก</h3>
-                       <div className='text-black text-md'>{projectMembers.length + 1} คน</div>
+                      <h3 className="text-md font-medium text-black mb-3 dark:text-gray-300">สมาชิก</h3>
+                       <div className='text-black text-md dark:text-gray-300'>{projectMembers.length + 1} คน</div>
                     </div>
                     <div className='h-65'>
-                      <div className={`${currentPage > 1 ? 'hidden' : 'flex'} flex items-center justify-between py-2 px-3 bg-white rounded-md mb-2`}>
+                      <div className={`${currentPage > 1 ? 'hidden' : 'flex'} flex items-center justify-between py-2 px-3 bg-white rounded-md mb-2 dark:bg-gray-900`}>
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-[#636CCB] rounded-full flex items-center justify-center">
                             <svg className="w-5 h-5 text-[#3C467B]" fill="currentColor" viewBox="0 0 20 20">
@@ -725,7 +725,7 @@ export default function CreateProjectPage() {
                             </svg>
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900">{myId?.username}</div>
+                            <div className="font-medium text-gray-900 dark:text-gray-300">{myId?.username}</div>
                               <div className="text-sm text-[#636CCB]">Leader</div>
                             </div>
                           </div>  
@@ -735,7 +735,7 @@ export default function CreateProjectPage() {
                         <div className="mb-6">
                           <div className="space-y-2">
                             {currentMembers.map((member) => (
-                              <div key={member.userId} className="flex items-center justify-between py-2 px-3 bg-white rounded-md">
+                              <div key={member.userId} className="flex items-center justify-between py-2 px-3 bg-white rounded-md dark:bg-gray-900">
                                 <div className="flex items-center space-x-3">
                                   <div className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center">
                                     <svg className="w-5 h-5 text-green-700" fill="currentColor" viewBox="0 0 20 20">
@@ -743,7 +743,7 @@ export default function CreateProjectPage() {
                                     </svg>
                                   </div>
                                   <div>
-                                    <div className="font-medium text-gray-900">{getUserName(member.userId)}</div>
+                                    <div className="font-medium text-gray-900 dark:text-gray-300">{getUserName(member.userId)}</div>
                                     <div className="text-sm text-green-700">{member.roleInProject}</div>
                                   </div>
                                 </div>

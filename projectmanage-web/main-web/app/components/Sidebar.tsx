@@ -182,10 +182,10 @@ export default function Sidebar() {
   }, [projects.length]);
 
   return (
-    <aside className={`${isNavOpen ? 'w-full md:w-64' : 'md:w-18 '} transition-width duration-500 scrollbar-autoHide bg-white border border-gray-200 bottom-0 md:top-13 md:h-screen overflow-y-auto fixed `}>
+    <aside className={`${isNavOpen ? 'w-full md:w-64' : 'md:w-18 '} transition-width duration-500 scrollbar-autoHide bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 bottom-0 md:top-13 md:h-screen overflow-y-auto fixed `}>
       <div className="p-3 md:px-4 md:py-3">
         {/* Breadcrumb */}
-        <div className="hidden md:flex flex-row md:mt-5 justify-between items-center space-x-2 text-sm text-gray-500 mb-6">
+        <div className="hidden md:flex flex-row md:mt-5 justify-between items-center space-x-2 text-sm text-gray-500 dark:text-white mb-6">
           <div className={`${isNavOpen ? 'flex' : 'hidden'} flex flex-row justify-center items-center gap-1`}>
             <svg
               className="w-4 h-4"
@@ -208,7 +208,7 @@ export default function Sidebar() {
             </svg>
             <span>Home</span>
           </div>
-          <button onClick={toggleNav} className="bg-white rounded-[16px]">
+          <button onClick={toggleNav} className="bg-white dark:bg-gray-800 rounded-[16px]">
             <svg
             className={`flex md:flex w-4 h-4 transition-transform ${
               isNavOpen ? "rotate-180" : "rotate-0 ml-3"
@@ -287,11 +287,11 @@ export default function Sidebar() {
         <div className={`${isNavOpen ? 'hidden md:flex flex-col mb-2' : 'hidden'} truncate`}>
           <button
             onClick={() => setMyProjectOpen((v) => !v)}
-            className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
+            className="flex items-center justify-between w-full text-left font-medium text-gray-900 dark:text-white mb-3"
           >
             <span className="flex-1">My Projects</span>
-            <span className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100">
+            <span className="flex items-center gap-2 text-xs text-gray-500 dark:text-white">
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100 dark:bg-gray-700">
                 {totalProjects}
               </span>
               <svg
@@ -317,13 +317,13 @@ export default function Sidebar() {
               {loading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="bg-gray-50 p-3 rounded-lg">
-                      <div className="h-4 w-32 bg-gray-100 rounded mb-2 animate-pulse" />
+                    <div key={i} className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700 ">
+                      <div className="h-4 w-32 bg-gray-100 rounded mb-2 animate-pulse dark:bg-gray-600" />
                       <div className="space-y-2">
                         {[...Array(2)].map((__, j) => (
                           <div
                             key={j}
-                            className="h-6 bg-gray-100 rounded animate-pulse"
+                            className="h-6 bg-gray-100 rounded animate-pulse dark:bg-gray-600"
                           />
                         ))}
                       </div>
@@ -336,22 +336,22 @@ export default function Sidebar() {
                       {paginatedProjects.map((p) => {
                         const href = `/main_pages/projects/${p.documentId ?? p.id}`;
                         return (
-                          <div key={p.documentId ?? p.id} className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[76px]">
+                          <div key={p.documentId ?? p.id} className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[76px] dark:bg-gray-700 dark:hover:bg-gray-600">
                             <Link href={href} className="p-2.5 h-full flex flex-col justify-between">
                               {/* Project Name & Status */}
                               <div className="flex items-start gap-2 mb-1.5">
-                                <span className="font-semibold text-sm text-gray-800 flex-1 line-clamp-1">
+                                <span className="font-semibold text-sm text-gray-800 flex-1 line-clamp-1 dark:text-white">
                                   {p.project_name}
                                 </span>
                                 {p.project_status && (
-                                  <span className="px-1.5 py-0.5 rounded bg-gray-200 text-[10px] uppercase tracking-wide flex-shrink-0">
+                                  <span className="px-1.5 py-0.5 rounded bg-gray-200 text-[10px] uppercase tracking-wide flex-shrink-0 dark:bg-gray-600">
                                     {p.project_status}
                                   </span>
                                 )}
                               </div>
 
                               {/* Date Range */}
-                              <div className="flex items-center gap-1 text-[11px] text-gray-500">
+                              <div className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-white">
                                 <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
@@ -502,11 +502,11 @@ export default function Sidebar() {
         <div className={`${isNavOpen ? 'hidden md:flex flex-col' : 'hidden'} truncate`}>
           <button
             onClick={() => setMyTaskOpen((v) => !v)}
-            className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3"
+            className="flex items-center justify-between w-full text-left font-medium text-gray-900 mb-3 dark:text-white"
           >
             <span>My Tasks</span>
-            <span className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100">
+            <span className="flex items-center gap-2 text-xs text-gray-500 dark:text-white">
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-gray-100 dark:bg-gray-700">
                 {totalTasks}
               </span>
               <svg
@@ -532,13 +532,13 @@ export default function Sidebar() {
               {loading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="bg-gray-50 p-3 rounded-lg">
-                      <div className="h-4 w-32 bg-gray-100 rounded mb-2 animate-pulse" />
+                    <div key={i} className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
+                      <div className="h-4 w-32 bg-gray-100 rounded mb-2 animate-pulse dark:bg-gray-600" />
                       <div className="space-y-2">
                         {[...Array(2)].map((__, j) => (
                           <div
                             key={j}
-                            className="h-6 bg-gray-100 rounded animate-pulse"
+                            className="h-6 bg-gray-100 rounded animate-pulse dark:bg-gray-600"
                           />
                         ))}
                       </div>
@@ -562,18 +562,18 @@ export default function Sidebar() {
                   const projectName = projectInfo?.project_name ?? "งานอื่นๆ";
 
                   return (
-                    <div key={`${task.id}-${index}`} className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[76px]">
+                    <div key={`${task.id}-${index}`} className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[76px] dark:bg-gray-700 dark:hover:bg-gray-700">
                       <Link
                         href={href}
                         className="p-2.5 h-full flex flex-col justify-between"
                       >
                         {/* Task Name & Status */}
                         <div className="flex items-start gap-2 mb-1.5">
-                          <span className="font-semibold text-sm text-gray-800 flex-1 line-clamp-1">
+                          <span className="font-semibold text-sm text-gray-800 flex-1 line-clamp-1 dark:text-white">
                             {task.task_name}
                           </span>
                           {task.task_status && (
-                            <span className="px-1.5 py-0.5 rounded bg-gray-200 text-[10px] uppercase tracking-wide flex-shrink-0">
+                            <span className="px-1.5 py-0.5 rounded bg-gray-200 text-[10px] uppercase tracking-wide flex-shrink-0 dark:bg-gray-600">
                               {task.task_status}
                             </span>
                           )}
@@ -597,7 +597,7 @@ export default function Sidebar() {
                           className={`flex items-center gap-1 text-[11px] ${
                             isOverdue
                               ? "text-red-600 font-semibold"
-                              : "text-gray-500"
+                              : "text-gray-500 dark:text-white"
                           }`}
                         >
                           <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

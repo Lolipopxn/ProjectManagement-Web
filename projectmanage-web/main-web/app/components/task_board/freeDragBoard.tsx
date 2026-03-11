@@ -345,14 +345,14 @@ export default function FreeDragBoard(
       >
         {/* Left Board */}
         <LeftDroppable>
-            <div className="w-full bg-[#F9F8F8] md:pb-10 rounded-lg p-3 space-y-4">
+            <div className="w-full bg-[#F9F8F8] md:pb-10 rounded-lg p-3 space-y-4 dark:bg-gray-800">
                 <div className="flex flex-row justify-between items-center px-3">
                   <div className="flex flex-row gap-2">
                     <h2 className="font-semibold">รายการงาน</h2>
-                    <div className="text-gray-500/90">( {leftBoard.length} )</div>
+                    <div className="text-gray-500/90 dark:text-gray-400">( {leftBoard.length} )</div>
                   </div>
-                  <div onClick={onClickTask} className="p-1 border-dashed hover:bg-gray-100">
-                    <FaPlus  className="text-gray-500/90 size-4" />
+                  <div onClick={onClickTask} className="p-1 border-dashed hover:bg-gray-100 dark:hover:bg-gray-600">
+                    <FaPlus  className="text-gray-500/90 dark:text-gray-400 size-4" />
                   </div>
                     
                 </div>
@@ -374,14 +374,14 @@ export default function FreeDragBoard(
                   <button
                     onClick={() => setCurrentBoard(b)}
                     onContextMenu={(e) => handleRightClick(e, b)}
-                    className={`p-2 hover:bg-gray-100 rounded-lg font-bold max-w-30 overflow-x-clip ${currentBoard === b ? "text-black" : "text-gray-500"}`}
+                    className={`p-2 hover:bg-gray-100 rounded-lg font-bold max-w-30 overflow-x-clip dark:hover:bg-gray-700 ${currentBoard === b ? "text-black dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
                   >
                     {b}
                   </button>
 
                   {/* Right click show popup */}
                   {contextMenu.visible && contextMenu.boardName === b && (
-                    <div className="absolute bg-white rounded shadow p-2 z-50 w-20">
+                    <div className="absolute bg-white rounded shadow p-2 z-50 w-20 ">
                       <button
                         className="text-red-600 hover:text-red-800 flex flex-row justify-center items-center w-full space-x-2"
                         onClick={() => {
@@ -402,8 +402,8 @@ export default function FreeDragBoard(
               ))}
             </div>
 
-            <div onClick={() => setShowAddBoard(!showAddBoard)} className="p-1 bg-white hover:bg-gray-100">
-              <FaPlus className="text-gray-600 size-4 mb-1" />
+            <div onClick={() => setShowAddBoard(!showAddBoard)} className="p-1 bg-white hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-600">
+              <FaPlus className="text-gray-600 size-4 mb-1 dark:text-gray-400" />
             </div>
           </div>
 

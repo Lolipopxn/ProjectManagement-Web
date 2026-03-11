@@ -77,7 +77,7 @@ export function RightDroppable({ children }: any) {
       <div
         ref={setNodeRef}
         style={{ height }}
-        className="relative w-full bg-gray-50 rounded border border-gray-400/80 overflow-x-auto"
+        className="relative w-full bg-gray-50 rounded border border-gray-400/80 overflow-x-auto dark:bg-gray-800 dark:border-gray-600/80"
       >
         {children}
 

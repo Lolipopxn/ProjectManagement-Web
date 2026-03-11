@@ -49,7 +49,7 @@ export default function PreviewFile({ isOpenFile, setOpenFile, setPreviewFile, p
     
             return (
                 <div className="flex flex-col items-center justify-center h-full">
-                    <p className="text-gray-500 mb-2">ไม่รองรับ preview ไฟล์นี้</p>
+                    <p className="text-gray-500 mb-2 dark:text-gray-200">ไม่รองรับ preview ไฟล์นี้</p>
                     <a
                     href={fileUrl}
                     target="_blank"
@@ -66,8 +66,8 @@ export default function PreviewFile({ isOpenFile, setOpenFile, setPreviewFile, p
         <div className={`fixed inset-0 flex justify-center items-center z-50 transition-all delay-75 duration-400
             ${isOpenFile ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none'}
         `}>    
-             <div className='relative flex flex-col w-[95%] h-[95%] mx-auto p-2 bg-white rounded-lg'>
-                <div className='flex flex-row items-center justify-between py-1 px-2 bg-white rounded-t-lg'>
+             <div className='relative flex flex-col w-[95%] h-[95%] mx-auto p-2 bg-white rounded-lg dark:bg-gray-700'>
+                <div className='flex flex-row items-center justify-between py-1 px-2 bg-white rounded-t-lg dark:bg-gray-700'>
                     <div className='flex flex-row gap-2'>
                         <MdCircle className='text-red-400 size-6'/>
                         <MdCircle className='text-green-400 size-6'/>

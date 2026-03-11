@@ -129,9 +129,9 @@ export default function CreateTaskModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white scale-100 md:scale-105 rounded-xl px-4 shadow-2xl w-full max-w-3xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-white scale-100 md:scale-105 rounded-xl px-4 shadow-2xl w-full max-w-3xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300 dark:bg-gray-800">
         {/* Header */}
-        <div className='flex flex-col border-b border-gray-200 '>
+        <div className='flex flex-col border-b border-gray-200 dark:border-gray-600'>
           <div className="flex items-center justify-between p-6">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -140,8 +140,8 @@ export default function CreateTaskModal({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">เพิ่มงานใหม่</h3>
-                <p className="text-sm text-gray-500">เพิ่มงานใหม่ให้กับโปรเจ็กต์</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">เพิ่มงานใหม่</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">เพิ่มงานใหม่ให้กับโปรเจ็กต์</p>
               </div>
             </div>
             <button
@@ -160,13 +160,13 @@ export default function CreateTaskModal({
           <div className='flex flex-row justify-start items-center px-6 gap-4 md:gap-6'>
             <button 
               onClick={() => setChangePage(0)}
-              className={`p-2 bg-white rounded-md text-sm md:text-md ${changePage === 0 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>เนื้อหา</button>
+              className={`p-2 bg-white rounded-md text-sm md:text-md dark:bg-gray-800 ${changePage === 0 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-gray-100 dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100 dark:hover:bg-gray-700`}>เนื้อหา</button>
             <button 
               onClick={() => setChangePage(1)}
-              className={`p-2 bg-white rounded-md text-sm md:text-md ${changePage === 1 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>กำหนดเวลา</button>
+              className={`p-2 bg-white rounded-md text-sm md:text-md dark:bg-gray-800 ${changePage === 1 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-gray-100 dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100 dark:hover:bg-gray-700`}>กำหนดเวลา</button>
             <button 
               onClick={() => setChangePage(2)}
-              className={`p-2 bg-white rounded-md text-sm md:text-md ${changePage === 2 ? 'text-black border-b-2 border-[#50589C] rounded-b-none' : 'text-gray-400'} hover:bg-gray-100`}>หมอบหมายงาน</button>
+              className={`p-2 bg-white rounded-md text-sm md:text-md dark:bg-gray-800 ${changePage === 2 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-gray-100 dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100 dark:hover:bg-gray-700`}>หมอบหมายงาน</button>
           </div>
         </div>
         
@@ -176,14 +176,14 @@ export default function CreateTaskModal({
             <div className='overflow-y-scroll scrollbar-autoHide h-75 px-2'>
               <div className='scale-95 md:scale-100 space-y-3'>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                     ชื่องาน <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={taskName}
                     onChange={(e) => setTaskName(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 dark:focus:ring-blue-400"
                     placeholder="ป้อนชื่อ Task ที่ต้องการสร้าง"
                     required
                     disabled={isLoading}
@@ -191,13 +191,13 @@ export default function CreateTaskModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                     รายละเอียด
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white resize-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white resize-none dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 dark:focus:ring-blue-400"
                     placeholder="อธิบายรายละเอียดของ Task นี้"
                     rows={4}
                     disabled={isLoading}
@@ -233,17 +233,17 @@ export default function CreateTaskModal({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-3 scale-90 md:scale-100">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                     เริ่มงาน
                   </label>
                   <input
                     type="date"
                     value={beginDate}
                     onChange={(e) => setBeginDate(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 dark:focus:ring-blue-400"
                     disabled={isLoading}
                   />
-                  <p className="text-xs text-gray-500 mt-2 flex items-center">
+                  <p className="text-xs text-gray-500 mt-2 flex items-center dark:text-gray-400">
                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -252,30 +252,30 @@ export default function CreateTaskModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                     เวลาเริ่มงาน
                   </label>
                   <input
                     type="time"
                     value={beginTime}
                     onChange={(e) => setBeginTime(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 dark:focus:ring-blue-400"
                     disabled={isLoading}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                     จบงาน
                   </label>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 dark:focus:ring-blue-400"
                     disabled={isLoading}
                   />
-                  <p className="text-xs text-gray-500 mt-2 flex items-center">
+                  <p className="text-xs text-gray-500 mt-2 flex items-center dark:text-gray-400">
                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -284,14 +284,14 @@ export default function CreateTaskModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                     เวลาส่งงาน
                   </label>
                   <input
                     type="time"
                     value={dueTime}
                     onChange={(e) => setDueTime(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 dark:focus:ring-blue-400"
                     disabled={isLoading}
                   />
                 </div>
@@ -302,7 +302,7 @@ export default function CreateTaskModal({
           {changePage === 2 && (
             <div className='overflow-y-scroll scrollbar-autoHide h-75 px-3'>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
                   มอบหมายให้
                 </label>
                 
@@ -310,7 +310,7 @@ export default function CreateTaskModal({
                   <select
                     value={assignedUserId || ''}
                     onChange={(e) => setAssignedUserId(e.target.value ? parseInt(e.target.value) : null)}
-                    className="w-full px-4 py-4 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white appearance-none text-sm"
+                    className="w-full px-4 py-4 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#50589C] transition-all outline-none bg-gray-50 focus:bg-white appearance-none text-sm dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 dark:focus:ring-blue-400"
                     disabled={isLoading}
                   >
                     <option value="" className='rounded-lg'>ไม่มอบหมายให้ใคร</option>
@@ -343,7 +343,7 @@ export default function CreateTaskModal({
                 </div>
                 
                 {/* Helper text */}
-                <p className="text-xs text-gray-500 mt-2 flex items-center">
+                <p className="text-xs text-gray-500 mt-2 flex items-center dark:text-gray-400">
                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -358,7 +358,7 @@ export default function CreateTaskModal({
             <button
               type="button"
               onClick={resetForm}
-              className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-red-300 rounded-full transition-all"
+              className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-red-300 rounded-full transition-all dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-red-400"
               disabled={isLoading}
             >
               ยกเลิก

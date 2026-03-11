@@ -51,7 +51,7 @@ export default function RenderTaskCard({
     <div
       className={`
           border border-gray-200 rounded-lg p-5 md:mb-4
-            hover:shadow-md hover:border-gray-300 hover:bg-gray-100 hover:-translate-1
+            hover:shadow-md hover:border-gray-300 hover:bg-gray-100 hover:-translate-1 dark:hover:bg-gray-800 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:shadow-lg dark:bg-gray-700
             transition-all duration-300
             relative overflow-hidden
             ${task.task_status === "continue" && task.task_type === "normal_task" ? "relative" : ""}
@@ -94,7 +94,7 @@ export default function RenderTaskCard({
               setSelectedTask(task);
               setShowTaskManageModal(true);
             }}
-            className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700 transition-colors"
+            className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700 transition-colors dark:hover:bg-gray-600 dark:text-gray-300 dark:hover:text-gray-100"
             title="จัดการงาน"
           >
             <svg
@@ -134,7 +134,7 @@ export default function RenderTaskCard({
                 : "flex"
             } `}
         >
-          <span className="text-gray-700 text-sm">
+          <span className="text-gray-700 text-sm dark:text-gray-300">
             {getTimeLeft(task.due_date, task.begin_date)}
           </span>
         </div>

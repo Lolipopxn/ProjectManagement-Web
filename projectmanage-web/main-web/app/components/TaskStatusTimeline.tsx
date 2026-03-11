@@ -19,7 +19,7 @@ export const TaskStatusTimeline: React.FC<Props> = ({ currentStatus }) => {
       );
 
   return (
-    <div className="flex items-center py-6 bg-white rounded-xl">
+    <div className="flex items-center py-6 bg-white rounded-xl dark:bg-gray-800">
       {TASK_STATUS_FLOW.map((step, index) => {
         const isActive = index === activeIndex;
         const isInactive = index > activeIndex;
@@ -55,7 +55,7 @@ export const TaskStatusTimeline: React.FC<Props> = ({ currentStatus }) => {
               />
 
               {/* Label */}
-              <div className="absolute top-14 left-1/2 -translate-x-1/2 text-sm tracking-tight text-gray-600 whitespace-nowrap">
+              <div className="absolute top-14 left-1/2 -translate-x-1/2 text-sm tracking-tight text-gray-600 whitespace-nowrap dark:text-gray-400">
                 {isFinalNode && isActive
                     ? currentStatus === 'rejected'
                         ? 'ไม่ผ่าน'
@@ -65,14 +65,14 @@ export const TaskStatusTimeline: React.FC<Props> = ({ currentStatus }) => {
               </div>
 
               {isActive && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-sm font-medium text-gray-900 whitespace-nowrap">
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-sm font-medium text-gray-900 dark:text-gray-200 whitespace-nowrap">
                     ปัจจุบัน 
                 </div>
                 )}
 
                 {/* Tooltip description */}
                 <div className="absolute top-16 left-1/2 -translate-x-1/2 hidden group-hover:block z-20">
-                    <div className="px-3 py-2 text-xs text-white bg-gray-900 rounded shadow whitespace-nowrap">
+                    <div className="px-3 py-2 text-xs text-white bg-gray-900 rounded shadow whitespace-nowrap dark:bg-gray-700">
                         {step.description}
                     </div>
                 </div>

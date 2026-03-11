@@ -33,7 +33,7 @@ export default function ConfirmPopup({
     return (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             {/* Container Popup*/}
-            <div className="bg-white rounded-lg w-lg h-lg p-6 shadow-lg transition-all animate-in fade-in duration-300 scale-85 md:scale-100">
+            <div className="bg-white rounded-lg w-lg h-lg p-6 shadow-lg transition-all animate-in fade-in duration-300 scale-85 md:scale-100 dark:bg-gray-800">
 
                 {/* Confirm State */}
                 {status === "confirm" && (
@@ -53,7 +53,7 @@ export default function ConfirmPopup({
                             </div>
 
                             {/*Description*/}
-                            <p className="text-gray-600 whitespace-normal">
+                            <p className="text-gray-600 whitespace-normal dark:text-gray-400">
                                 {description}
                             </p>
 
@@ -63,7 +63,7 @@ export default function ConfirmPopup({
                         <div className="flex justify-between">
                             <button
                                 onClick={onCancel}
-                                className="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400"
+                                className="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500"
                             >
                                 Cancel
                             </button>
@@ -83,9 +83,9 @@ export default function ConfirmPopup({
                 {status === "loading" && (
                     <div className="flex flex-col items-center space-y-6 p-6">
 
-                        <div className="w-10 h-10 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin"></div>
+                        <div className="w-10 h-10 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin dark:border-gray-600 dark:border-t-green-400"></div>
 
-                        <p className="text-gray-700 text-lg">Processing...</p>
+                        <p className="text-gray-700 text-lg dark:text-gray-300">Processing...</p>
 
                     </div>
                 )}
@@ -95,9 +95,9 @@ export default function ConfirmPopup({
                     <div className="flex flex-col items-center space-y-10 p-6">
 
                         <div className="flex flex-col items-center space-y-4">
-                            <FaCheckCircle className="size-15 text-green-500"/>
+                            <FaCheckCircle className="size-15 text-green-500 dark:text-green-400"/>
 
-                            <p className="text-lg text-green-500">
+                            <p className="text-lg text-green-500 dark:text-green-400">
                                 สำเร็จแล้ว
                             </p>
                         </div>
@@ -108,7 +108,7 @@ export default function ConfirmPopup({
                                     onSuccessClose?.();
                                     onCancel();
                                 }}
-                                className="bg-green-500 text-white px-4 py-2 hover:bg-green-400 w-full"
+                                className="bg-green-500 text-white px-4 py-2 hover:bg-green-400 w-full dark:bg-green-400 dark:hover:bg-green-300"
                             >
                                 ปิด
                             </button>
@@ -123,9 +123,9 @@ export default function ConfirmPopup({
                     <div className="flex flex-col items-center space-y-10 p-6">
 
                         <div className="flex flex-col items-center space-y-4">
-                            <IoIosCloseCircle className="text-red-500 size-15" />
+                            <IoIosCloseCircle className="text-red-500 size-15 dark:text-red-400" />
 
-                            <p className="text-lg text-red-500">
+                            <p className="text-lg text-red-500 dark:text-red-400">
                                 ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง
                             </p>
                         </div>
@@ -134,7 +134,7 @@ export default function ConfirmPopup({
                         <div className="w-full">
                             <button
                                 onClick={onCancel}
-                                className="bg-red-500 text-white px-4 py-2 hover:bg-red-400 w-full"
+                                className="bg-red-500 text-white px-4 py-2 hover:bg-red-400 w-full dark:bg-red-400 dark:hover:bg-red-300"
                             >
                                 Close
                             </button>

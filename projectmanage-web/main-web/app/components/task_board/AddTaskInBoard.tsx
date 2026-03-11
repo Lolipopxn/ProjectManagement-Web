@@ -152,11 +152,11 @@ export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onC
 
   return (
     <div className="fixed inset-0 bg-black/40 z-99 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-md w-150 h-auto shadow relative">
+      <div className="bg-white p-6 rounded-md w-150 h-auto shadow relative dark:bg-gray-800">
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-7 text-gray-500 hover:text-gray-800"
+          className="absolute top-4 right-7 text-gray-500 hover:text-gray-800 dark:text-gray-200 dark:hover:text-gray-400"
         >
           ✕
         </button>
@@ -172,7 +172,7 @@ export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onC
           />
 
           <div className="flex flex-row justify-end gap-2">
-            <button onClick={onClose} disabled={isLoading} className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-400 hover:text-white">
+            <button onClick={onClose} disabled={isLoading} className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-400 hover:text-white dark:bg-gray-600 dark:hover:bg-red-400 dark:hover:text-white">
               ยกเลิก
             </button>
 
@@ -210,15 +210,15 @@ export function PopupDeleteBoard ( {confirmDelete, setConfirmDelete, onDelete, i
 
   return ( 
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 ">
-      <div className="bg-white p-6 flex flex-col rounded-lg shadow-lg w-80 space-y-4">
+      <div className="bg-white p-6 flex flex-col rounded-lg shadow-lg w-80 space-y-4 dark:bg-gray-800">
         <h3 className="font-semibold text-lg ">ยืนยันการลบ</h3>
-        <p className="text-gray-700">
+        <p className="text-gray-700 dark:text-gray-300">
           ต้องการลบกระดาน "<b>{confirmDelete.boardName}</b>" หรือไม่?
         </p>
 
         <div className="flex justify-end gap-3">
           <button
-            className="px-3 py-1 rounded hover:bg-gray-100 "
+            className="px-3 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
             onClick={() => setConfirmDelete({ visible: false, boardName: null })}
             disabled={isLoading}
           >
