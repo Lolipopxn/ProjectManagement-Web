@@ -21,7 +21,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen w-screen  grid grid-cols-1 md:grid-cols-2">
+    <div className="h-screen w-screen  grid grid-cols-1 md:grid-cols-2 overflow-x-hidden ">
       <div className="col-span-1 relative hidden md:block bg-[#ffffff]">
         <div className="relative flex items-center justify-center w-full h-full">
           <div className="absolute opacity-100 z-0 pr-1 w-full h-full bg-[url('/bg-login.jpg')] bg-cover bg-top-left border-t-4 border-white bg-clip-border p-1 rounded-tr-[700px]"></div>
@@ -36,7 +36,7 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full col-span-1 flex items-center justify-center bg-[#3C467B]">
-        <div className="bg-white pt-15 px-12 md:px-20 w-[100%] h-[100%]">
+        <div className="bg-white pt-10 px-12 md:px-20 w-[100%] h-[100%]">
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
             Login
           </h2>
@@ -116,16 +116,20 @@ export default function LoginPage() {
 
           {/* Others Login */}
           <hr className="my-6 border-t dark:border-black"/>
-          <div className="justify-items-center items-center space-y-5">
+          <div className="justify-items-center items-center space-y-4">
             <div className="font-normal text-center">หรือ</div>
             <button onClick={handleGoogleLogin} className="w-full md:w-8/10 bg-white border border-gray-400 gap-3 rounded-[16px] p-3 flex justify-center justify-self-center items-center hover:bg-gray-200">
               <FcGoogle className="w-6 h-6"/>
               <div className="font-normal text-md dark:text-black">Login with <span className="font-bold">Google</span></div>
             </button>
+            <div>
+              <a href="/" className="text-blue-600 hover:underline">Back to Home</a>
+            </div>
+            
           </div>
 
           {/* Footer */}
-          <div className="mt-20 flex justify-center dark:text-black">
+          <div className="mt-10 flex justify-center dark:text-black">
             © 2025 Project Management. All rights reserved.
           </div>
 

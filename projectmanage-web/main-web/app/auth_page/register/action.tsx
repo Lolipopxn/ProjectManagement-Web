@@ -26,6 +26,7 @@ export async function registerUser(formData: FormData) {
   const password = formData.get("password");
   const confirmPassword = formData.get("confirmPassword");
   const agreeToTerms = formData.get("agreeToTerms");
+  
 
   if (!fullname || !email || !password || !confirmPassword) {
     return { error: "Please fill in all required fields." };
@@ -62,7 +63,7 @@ export async function registerUser(formData: FormData) {
     }
 
     const successData = data as RegisterResponse;
-    console.log("Registration successful! User:", successData.user);
+    // console.log("Registration successful! User:", successData.user);
     
   } catch (error) {
     console.error("An error occurred:", error);
