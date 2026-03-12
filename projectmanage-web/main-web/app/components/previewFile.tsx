@@ -44,8 +44,18 @@ export default function PreviewFile({ isOpenFile, setOpenFile, setPreviewFile, p
                     onError={() => setError(true)}
                     />
                 );
-                }
+            }
 
+            if (["doc", "docx"].includes(ext || "")) {
+                return (
+                    <iframe
+                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`}
+                    className="w-full h-full rounded-lg"
+                    title="Word Preview"
+                    onError={() => setError(true)}
+                    />
+                );
+            }
     
             return (
                 <div className="flex flex-col items-center justify-center h-full">

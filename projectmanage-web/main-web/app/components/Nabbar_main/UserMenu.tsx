@@ -143,7 +143,7 @@ export default function UserMenu({ user, onUserUpdate }: UserMenuProps) {
       <div
         role="menu"
         aria-label="User menu"
-        className={`absolute right-0 mt-1 w-auto px-6 py-3 bg-white dark:bg-gray-800 dark:border-gray-700 border border-gray-200 rounded-xl shadow-lg transition-all duration-150 origin-top-right${
+        className={`absolute right-0 mt-1 w-[300px] px-6 py-3 bg-white dark:bg-gray-800 dark:border-gray-700 border border-gray-200 rounded-xl shadow-lg transition-all duration-150 origin-top-right${
           open
             ? "opacity-100 scale-100 translate-y-0 visible"
             : "opacity-0 scale-95 -translate-y-1 invisible pointer-events-none"
@@ -204,7 +204,7 @@ export default function UserMenu({ user, onUserUpdate }: UserMenuProps) {
             <div className="flex flex-row items-center justify-between gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-white">
               <div className="flex flex-row justify-center items-center gap-3">
                 <MdDarkMode className="w-4 h-4"/>
-                <div>Dark Mode</div>
+                <div >Dark Mode</div>
               </div>
 
               <ThemeToggle />

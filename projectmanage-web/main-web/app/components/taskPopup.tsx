@@ -13,7 +13,7 @@ import GoogleMapsProvider from './map/GoogleMapsProvider'
 
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
-import { FaRegEdit, FaPlus, FaTag } from "react-icons/fa";
+import { FaRegEdit, FaPlus, FaTag, FaLink } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { BsArrowReturnRight } from "react-icons/bs";
 import { RiArrowRightSLine } from "react-icons/ri";
@@ -125,7 +125,9 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
         return `${datePart} • ${timePart}`;
     };
 
-
+    const isExternalLink = (url: string) => {
+        return url.startsWith("http://") || url.startsWith("https://");
+    };
 
     const getTimeLeft = (dueDate: string, beginDate: string) => {
         const now = dayjs();
@@ -176,7 +178,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
             หัวหน้า
             </span>
         ),
-        member: (
+        Member: (
             <span className="px-2 py-1 text-sm rounded-full border border-green-700 bg-green-100 text-green-700">
             สมาชิก
             </span>
@@ -626,7 +628,7 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
 
                                 <div className="flex items-center justify-between mt-2">
                                     <span className="text-sm font-medium">
-                                    {getUserRoleInProject(user.id)}
+                                        {getUserRoleInProject(user.id)}
                                     </span>
 
                                     {isOpenEdit && (
@@ -681,47 +683,79 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                         {/* File List */}
                                         <div className="space-y-2 mt-2 flex-1">
                                         {item.file_urls?.map((fileUrl, index) => {
-                                            const fullFileUrl = getFileUrl(fileUrl);
-                                            const fileName = getFileNameFromUrl(fileUrl);
+                                            const isLink = isExternalLink(fileUrl);
+                                            const fullFileUrl = isLink ? fileUrl : getFileUrl(fileUrl);
+                                            const fileName = isLink ? fileUrl.replace(/^https?:\/\//, "") : getFileNameFromUrl(fileUrl);
                                             
                                             return (
-                                            <div key={index} className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-lg hover:bg-gray-100 transition-colors group dark:bg-gray-700">
-                                                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-200" title={fileName}>
-                                                        {fileName}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
-                                                    <a 
-                                                        href={fullFileUrl} 
-                                                        target="_blank" 
+                                                <div key={index}>
+                                                {isLink ? (
+                                                    <div className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-lg hover:bg-gray-100 transition group dark:bg-gray-700 dark:hover:bg-gray-600">
+                                                        
+                                                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                                            <div className="w-8 h-8 bg-blue-200 rounded-lg flex items-center justify-center">
+                                                                <FaLink className='text-blue-700'/>
+                                                            </div>
+
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-blue-900 truncate dark:text-gray-200">
+                                                                    {fileName}
+                                                                </p>
+                                                                <p className="text-xs text-blue-600 truncate dark:text-gray-400">
+                                                                    Link
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <a
+                                                        href={fullFileUrl}
+                                                        target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
-                                                        title="ดาวน์โหลดไฟล์"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                        </svg>
-                                                    </a>
-                                                    <button
-                                                        onClick={() => { setPreviewFile(fullFileUrl); setOpenFile(true); }}
-                                                        className="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
-                                                        title="ดูไฟล์"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                        </svg>
-                                                    </button>
+                                                        className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                                                        >
+                                                        เปิดลิงก์
+                                                        </a>
+                                                    </div>
+                                                    ) : (
+                                                        <div className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-lg hover:bg-gray-100 transition-colors group dark:bg-gray-700 dark:hover:bg-gray-600">
+                                                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                                    </svg>
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-200" title={fileName}>
+                                                                    {fileName}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
+                                                                <a 
+                                                                    href={fullFileUrl} 
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer"
+                                                                    className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
+                                                                    title="ดาวน์โหลดไฟล์"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                                    </svg>
+                                                                </a>
+                                                                <button
+                                                                    onClick={() => { setPreviewFile(fullFileUrl); setOpenFile(true); }}
+                                                                    className="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-1.5"
+                                                                    title="ดูไฟล์"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </div>
                                             );
                                         })}
                                     </div>                                 

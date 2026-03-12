@@ -40,6 +40,7 @@ interface Task {
   project_document_id: string;
   project_id_number: number;
   assigned_to_user_ids_number?: number;
+  assigned_to_user_ids?: any;
   createdAt: string;
   updatedAt: string;
 }
@@ -1652,7 +1653,7 @@ export default function TaskDetailPage() {
                 </div>
 
                 {/* Drag & Drop Zone - แสดงเฉพาะคนที่ได้รับมอบหมาย และยังไม่ได้ส่งงาน */}
-                {user && task.assigned_to_user_ids_number === user.id && (task.task_status === 'not turn in' || task.task_status === 'rejected') && (
+                {user && task.assigned_to_user_ids?.some((u: any) => u.id === user.id) && (task.task_status === 'not turn in' || task.task_status === 'rejected') && (
                   <label className="mb-4 block cursor-pointer group">
                     <input
                       type="file"
@@ -2177,7 +2178,7 @@ export default function TaskDetailPage() {
               </div>
 
               {/* Task Comment Section - แสดงเสมอเมื่ออยู่ในโหมดส่งงาน */}
-              {user && task.assigned_to_user_ids_number === user.id && (task.task_status === 'not turn in' || task.task_status === 'rejected') && (
+              {user && task.assigned_to_user_ids?.some((u: any) => u.id === user.id) && (task.task_status === 'not turn in' || task.task_status === 'rejected') && (
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-6 dark:bg-gray-800">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
@@ -2616,7 +2617,7 @@ export default function TaskDetailPage() {
               </div>
 
               {/* Task Actions for Assignee */}
-              {user && task.assigned_to_user_ids_number === user.id && (
+              {user && task.assigned_to_user_ids?.some((u: any) => u.id === user.id) && (
                 <div className="bg-white rounded-lg shadow-sm p-6 dark:bg-gray-800">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">การจัดการงาน</h3>
 
