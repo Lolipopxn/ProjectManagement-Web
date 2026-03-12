@@ -8,7 +8,7 @@ import Footer from "./footer_landing";
 
 export default function LandingPage() {
     return (
-        <div>
+        <div className="overflow-x-hidden">
             <Navbar></Navbar>
             <Header></Header>
             <HowToPage></HowToPage> 
