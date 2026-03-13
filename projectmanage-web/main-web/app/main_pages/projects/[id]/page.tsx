@@ -2480,6 +2480,7 @@ const progressPercent =
       {popupTask && (
         <TaskPopup 
           projectId={project.id}
+          project={project}
           task={selectedTask} 
           setSelectedTask={setSelectedTask}
           projectMembers={projectMembers}

@@ -10,6 +10,7 @@ import { TaskStatusTimeline } from './TaskStatusTimeline';
 import AssignUserModal from './AssignUserModal';
 import ViewLocationMap from './map/ViewLocationMap';
 import GoogleMapsProvider from './map/GoogleMapsProvider'
+import ApprovePopup from './ApprovePopup';
 
 import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
@@ -77,6 +78,19 @@ interface ProjectMember {
   };
 }
 
+interface Project {
+  id: number;
+  documentId?: string;
+  project_name: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  project_status: string;
+  created_by_user_id: any;
+  created_by_user: number;
+  slug: string;
+}
+
 interface User {
   id: number;
   documentId?: string;
@@ -84,9 +98,10 @@ interface User {
   email: string;
 }
 
-export default function TaskPopup({projectId, task, setSelectedTask, projectMembers, currentUser, userRole, onClose, onSubmit, onRefresh, refreshTaskMembers}
+export default function TaskPopup({projectId, project, task, setSelectedTask, projectMembers, currentUser, userRole, onClose, onSubmit, onRefresh, refreshTaskMembers}
     : {
         projectId: number, 
+        project: Project,
         task: Task | any, 
         setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>,
         projectMembers: ProjectMember[], 
@@ -105,6 +120,9 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
     const [isAssignModalOpen, setAssignModalOpen] = useState(false);
     const [loadingUserId, setLoadingUserId] = useState<number | null>(null);
     const [isOpenEdit, setOpenEdit] = useState(false);
+    const [showApprove, setShowApprove] = useState(false);
+
+    const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
 
     const formatThaiDate = (date?: string) => {
         if (!date) return "-";
@@ -401,11 +419,39 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                 onClick={() => setChangePage(3)}
                                 className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 3 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>{task.task_type === 'normal_task'? "สถานะงาน" :"สถานะ"}</button>   
                         </div>
+
+                        {userRole === 'Leader' && (
+                            <div>
+                                <button 
+                                    onClick={() => setShowApprove(true)}
+                                    disabled={!isTaskOwner() || task.task_status === 'completed'}
+                                    className={`rounded-lg px-6 py-2 scale-85 border
+                                    ${task.task_status === 'pending_review' ? 'bg-green-500 border-green-600 text-white' : 'bg-gray-50 border-gray-400 text-gray-400 cursor-not-allowed dark:bg-gray-700'}
+                                `}>
+                                    <p>อนุมัติ</p>
+                                </button>
+
+                                {showApprove && (
+                                    <ApprovePopup 
+                                        task={task}
+                                        user={currentUser}
+                                        project={project}
+                                        submissions={submission}
+                                        taskDocumentId={task.documentId}
+                                        projectId={projectId}
+                                        setShowReviewModal={setShowApprove}
+                                        reviewAction={'approve'}
+                                        setReviewAction={setReviewAction}
+                                        refreshTask={refreshTask}
+                                    />
+                                )}
+                            </div>
+                        )}             
                         
                         <button 
                             onClick={onSubmit}
                             disabled={!isTaskOwner()}
-                            className={`py-2  px-6 rounded-lg scale-90 ${isTaskOwner() ? 'bg-[#50589C] text-white hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}`}
+                            className={`py-2  px-6 rounded-lg scale-85 ${isTaskOwner() ? 'bg-[#50589C] text-white hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}`}
                         >
                             {task.task_type === 'normal_task' ? 'ส่งงาน' : 'เเนบไฟล์'}
                         </button>
@@ -544,13 +590,16 @@ export default function TaskPopup({projectId, task, setSelectedTask, projectMemb
                                 </div>
                                 
                                 <div className='flex flex-row items-center gap-2'>
-                                    <button onClick={() => {setOpenEdit((prev) => !prev)}} className={`py-2 px-4 text-sm rounded-md text-white transition 
-                                        ${isOpenEdit && 'bg-[#50589C]'}
-                                        ${isTaskOwner() ? 'bg-gray-400 hover:bg-gray-700' : 'bg-gray-300 text-white cursor-not-allowed'}
+                                    <button 
+                                        onClick={() => {setOpenEdit((prev) => !prev)}}
+                                        disabled={!isTaskOwner()}
+                                        className={`py-2 px-4 text-sm rounded-md text-white transition 
+                                            ${isOpenEdit && 'bg-[#50589C]'}
+                                            ${isTaskOwner() ? 'bg-gray-400 hover:bg-gray-700' : 'bg-gray-300 text-white cursor-not-allowed'}
                                     `}>
                                         <FaRegEdit className='size-4' />
                                     </button>
-                                    <button onClick={() => setAssignModalOpen(true)} className={`py-2 px-4 text-sm rounded-md text-white
+                                    <button onClick={() => setAssignModalOpen(true)} disabled={!isTaskOwner()} className={`py-2 px-4 text-sm rounded-md text-white
                                         ${isTaskOwner() ? 'bg-[#696FC7] hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}
                                     `}>
                                         <FaPlus className='size-4' />

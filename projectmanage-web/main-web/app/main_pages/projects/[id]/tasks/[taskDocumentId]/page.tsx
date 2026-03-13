@@ -1653,7 +1653,7 @@ export default function TaskDetailPage() {
                 </div>
 
                 {/* Drag & Drop Zone - แสดงเฉพาะคนที่ได้รับมอบหมาย และยังไม่ได้ส่งงาน */}
-                {user && task.assigned_to_user_ids?.some((u: any) => u.id === user.id) && (task.task_status === 'not turn in' || task.task_status === 'rejected') && (
+                {user && task.assigned_to_user_ids?.some((u: any) => u.id === user.id) && (task.task_status === 'continue' || task.task_status === 'rejected') && (
                   <label className="mb-4 block cursor-pointer group">
                     <input
                       type="file"
