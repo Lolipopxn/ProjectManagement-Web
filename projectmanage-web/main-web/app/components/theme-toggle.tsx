@@ -13,7 +13,7 @@ export default function ThemeToggle() {
 
   if (!mounted) return null;
 
-  const isDark = theme === "dark";
+  const isDark = theme === "light";
 
   return (
     <button
