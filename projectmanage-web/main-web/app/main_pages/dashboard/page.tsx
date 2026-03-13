@@ -85,7 +85,7 @@ export default function DashboardPage() {
           const currentUserId = userResponse.data.user.id;
           
           // ดึงข้อมูล projects และ tasks
-          const projectsResponse = await axios.get('/api/projects');
+          const projectsResponse = await axios.get(`/api/projects`);
           
           if (projectsResponse.data.success && projectsResponse.data.projects) {
             const projectsData: Project[] = projectsResponse.data.projects;

@@ -75,11 +75,11 @@ export async function GET() {
 
         tasks = tasksResponse.data.data || [];
 
-        console.log('Sidebar API - Current User ID:', currentUserId);
-        console.log('Sidebar API - User project member IDs:', userProjectIds);
-        console.log('Sidebar API - Total projects in system:', allProjects.length);
-        console.log('Sidebar API - Filtered projects for user:', projects.length);
-        console.log('Sidebar API - Projects details:', projects.map((p: any) => ({ id: p.id, name: p.project_name, created_by: p.created_by_user })));
+        // console.log('Sidebar API - Current User ID:', currentUserId);
+        // console.log('Sidebar API - User project member IDs:', userProjectIds);
+        // console.log('Sidebar API - Total projects in system:', allProjects.length);
+        // console.log('Sidebar API - Filtered projects for user:', projects.length);
+        // console.log('Sidebar API - Projects details:', projects.map((p: any) => ({ id: p.id, name: p.project_name, created_by: p.created_by_user })));
       }
     } catch (projectError) {
       console.error('Failed to fetch projects for sidebar:', projectError);
