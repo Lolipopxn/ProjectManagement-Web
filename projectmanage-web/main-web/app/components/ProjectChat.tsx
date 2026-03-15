@@ -151,13 +151,12 @@ export default function ProjectChatPopup({
 
   return (
     <div className="fixed -inset-20 z-50 flex items-center justify-center bg-black/30">
-      <div className="w-[96vw] max-w-[100vw] h-[86vh] max-h-[100vh] md:w-[90vw] md:h-[84vh] scale-90 md:scale-100 rounded-2xl overflow-hidden shadow-2xl bg-[#F9F7F7] flex flex-col">
+      <div className="w-[96vw] max-w-[100vw] h-[86vh] max-h-[100vh] md:w-[60vw] md:h-[90vh] scale-90 md:scale-100 rounded-2xl overflow-hidden shadow-2xl bg-[#F9F7F7] flex flex-col">
         {/* header */}
         <div className="flex items-center justify-between px-6 py-3 bg-[#112D4E] text-[#F9F7F7]">
           <div className="font-semibold truncate">Project Chat - {projectName}</div>
           <button
-            onClick={() => {
-              // ปิดแล้วถือว่าอ่านแล้ว: อัปเดต lastSeen (กันข้อความท้าย ๆ หลุด)
+            onClick={() => {           
               const latestTs =
                 messages.length > 0
                   ? new Date(messages[messages.length - 1].createdAt).getTime()
@@ -178,7 +177,7 @@ export default function ProjectChatPopup({
         </div>
 
         {/* messages */}
-        <div ref={listRef} className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+        <div ref={listRef} className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-2">
           {messages.map((m, idx) => {
             const isMe =
               typeof m.isMine === "boolean"
@@ -209,7 +208,7 @@ export default function ProjectChatPopup({
                   >
                     <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
                   </div>
-                  <div className="text-[10px] text-[#112D4E]/70 mt-0.5">
+                  <div className="text-[10px] text-[#112D4E]/70 mt-0.5 ml-2">
                     {(m.author?.username ?? "user") + " · " + dayjs(m.createdAt).format("HH:mm")}
                   </div>
                 </div>
