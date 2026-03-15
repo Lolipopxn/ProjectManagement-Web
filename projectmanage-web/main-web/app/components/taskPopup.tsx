@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, ReactNode } from 'react';
+import React from "react";
 import axios from 'axios'
 import dayjs from "dayjs";
 import "dayjs/locale/th";
@@ -16,9 +17,14 @@ import { IoMdClose } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
 import { FaRegEdit, FaPlus, FaTag, FaLink } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
+import { BiCommentDetail } from "react-icons/bi";
 import { BsArrowReturnRight } from "react-icons/bs";
 import { RiArrowRightSLine } from "react-icons/ri";
+import { IoPersonCircle } from "react-icons/io5";
+import { AiFillFileText } from "react-icons/ai";
+import { MdKeyboardArrowDown, MdCheckCircle, MdCancel, MdSchedule } from "react-icons/md";
 import { rejects } from 'assert';
+import ConfirmPopup from './ComfirmPopup';
 
 interface Task {
   id: number;
@@ -59,6 +65,7 @@ interface Submission {
     username: string;
     email?: string;
   };
+  submitted_by_user_id?: any;
 }
 
 interface ProjectMember {
@@ -121,6 +128,12 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
     const [loadingUserId, setLoadingUserId] = useState<number | null>(null);
     const [isOpenEdit, setOpenEdit] = useState(false);
     const [showApprove, setShowApprove] = useState(false);
+
+    const [openSubmission, setOpenSubmission] = useState(false);
+
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmMessage, setConfirmMessage] = useState('');
+    const [confirmDescription, setConfirmDescription] = useState('');
 
     const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
 
@@ -292,6 +305,24 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
         },
     };
 
+    const statusConfig = {
+        pending: {
+            text: "รอดำเนินการ",
+            color: "text-blue-500",
+            icon: MdSchedule,
+        },
+        approved: {
+            text: "อนุมัติแล้ว",
+            color: "text-green-500",
+            icon: MdCheckCircle,
+        },
+        rejected: {
+            text: "ไม่อนุมัติ",
+            color: "text-red-500",
+            icon: MdCancel,
+        },
+    };
+
 
     const getFileUrl = (fileUrl: string) => {
         if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
@@ -321,6 +352,80 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
         }
     };
 
+    // Handle cancel work submission
+    const handleCancelWorkSubmission = async (done: (status: "success" | "fail") => void) => {
+        if (!task?.documentId || !currentUser) {
+            done("fail");
+            return;
+        } 
+          try {   
+            
+            // find submission on active
+            const activeSubmissions = submission.filter(
+              s => s.is_active && s.submitted_by_user_id_number === currentUser.id
+            );
+      
+            if (activeSubmissions.length === 0) {
+              alert('ไม่พบการส่งงานที่ active');
+              return;
+            }
+      
+            // update submission on active to is_active = false
+            for (const submission of activeSubmissions) {
+              if (!submission.documentId) {
+                console.error('Missing documentId for submission:', submission);
+                continue;
+              }
+      
+              console.log('Setting is_active = false for submission:', submission.documentId);
+              
+              const cancelledAt = new Date().toISOString();
+              await axios.put(`/api/submissions/${submission.documentId}`, {
+                is_active: false,
+                cancelled_at: cancelledAt
+              });
+            }
+      
+            // change status task to "not turn in"
+            const response = await axios.put(`/api/tasks/updateStatus`, {
+              documentId: task.documentId,
+              task_status: 'not turn in',
+              note: 'ยกเลิกการส่งงาน' ,
+            });
+      
+            if (response.data.success) {
+              done("success");
+              setSelectedTask(prev => prev ? { ...prev, task_status: 'not turn in' } : null); 
+              
+              // รีเฟรช submissions
+              await refreshSubmission();
+              
+            } else {
+                done("fail");
+            }
+          } catch (error: any) {
+            console.error('Error canceling submission:', error);
+            done("fail");
+            
+
+            if (error.response) {
+              console.error('Error response:', {
+                status: error.response.status,
+                data: error.response.data,
+                headers: error.response.headers
+              });           
+            } else if (error.request) {
+              console.error('Error request:', error.request);
+            } else {
+              console.error('Error message:', error.message);
+            }
+          } finally {
+            done("success");
+            refreshTask();
+            refreshSubmission();
+        }
+    };
+
     const refreshTask = async () => {
         const res = await axios.get(
             `/api/tasks/${task.documentId}`
@@ -328,6 +433,17 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
 
         if (res.data?.task) {
             setSelectedTask(res.data.task);
+            onRefresh?.();
+        }
+     };
+
+     const refreshSubmission = async () => {
+        const res = await axios.get(
+            `/api/submissions?taskDocumentId=${task.documentId}`
+        );
+
+        if (res.data?.submissions) {
+            setSubmissions(res.data.submissions);
             onRefresh?.();
         }
      };
@@ -419,35 +535,7 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                 onClick={() => setChangePage(3)}
                                 className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 3 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>{task.task_type === 'normal_task'? "สถานะงาน" :"สถานะ"}</button>   
                         </div>
-
-                        {userRole === 'Leader' && (
-                            <div>
-                                <button 
-                                    onClick={() => setShowApprove(true)}
-                                    disabled={!isTaskOwner() || task.task_status === 'completed'}
-                                    className={`rounded-lg px-6 py-2 scale-85 border
-                                    ${task.task_status === 'pending_review' ? 'bg-green-500 border-green-600 text-white' : 'bg-gray-50 border-gray-400 text-gray-400 cursor-not-allowed dark:bg-gray-700'}
-                                `}>
-                                    <p>อนุมัติ</p>
-                                </button>
-
-                                {showApprove && (
-                                    <ApprovePopup 
-                                        task={task}
-                                        user={currentUser}
-                                        project={project}
-                                        submissions={submission}
-                                        taskDocumentId={task.documentId}
-                                        projectId={projectId}
-                                        setShowReviewModal={setShowApprove}
-                                        reviewAction={'approve'}
-                                        setReviewAction={setReviewAction}
-                                        refreshTask={refreshTask}
-                                    />
-                                )}
-                            </div>
-                        )}             
-                        
+                   
                         <button 
                             onClick={onSubmit}
                             disabled={!isTaskOwner()}
@@ -708,13 +796,13 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                         </div>                    
                     )}
                     {changePage === 2 && (
-                    <div className='flex flex-col space-y-3 px-4 md:px-0 text-lg animate-in fade-in slide-in-from-bottom-2 duration-300'>
+                    <div className='flex flex-col space-y-3 px-4 md:px-0 text-lg animate-in fade-in slide-in-from-bottom-2 duration-300 truncate'>
                         <span className="text-sm md:text-base border-b pb-2 border-gray-200">งานที่ส่งแล้ว</span>
 
-                        <div className='px-6 py-4 h-85 w-250 rounded-lg overflow-y-scroll scrollbar-autoHide space-y-4'>
+                        <div className='px-6 py-4 h-85 max-w-full rounded-lg overflow-y-scroll scrollbar-autoHide space-y-4 truncate'>
                             {/* submission list */}
                             {submission.filter(s => s.file_urls && s.file_urls.length > 0 && s.is_active).length > 0 ? (
-                            <div className="flex flex-col space-y-3 w-full h-full">
+                            <div className="flex flex-col space-y-3 w-full h-full truncate overflow-y-auto">
                                 {submission
                                     .filter(s => s.file_urls && s.file_urls.length > 0 && s.is_active)
                                     .map((item, index) => (
@@ -722,13 +810,17 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                     key={item.id ?? index}
                                     className="flex flex-col space-y-2 border border-gray-200 rounded-lg p-4"
                                 >
-                                    <span className="text-sm text-center text-gray-400">
+                                    <span className="text-xs md:text-sm text-center text-gray-400">
                                         ส่งเมื่อ{' '}
                                         {item.submission_date
                                         ? new Date(item.submission_date).toLocaleDateString('th-TH')
                                         : '-'}
+                                        {' '}
+                                        {item.submission_date
+                                        ? new Date(item.submission_date).toLocaleTimeString('th-TH', {hour: "2-digit", minute: "2-digit"}) 
+                                        : '-'}
                                     </span>
-                                    <div className="flex flex-row justify-between items-center">                                
+                                    <div className="flex flex-row justify-between items-center max-w-full">                                
                                         {/* File List */}
                                         <div className="space-y-2 mt-2 flex-1">
                                         {item.file_urls?.map((fileUrl, index) => {
@@ -739,15 +831,15 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                             return (
                                                 <div key={index}>
                                                 {isLink ? (
-                                                    <div className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-lg hover:bg-gray-100 transition group dark:bg-gray-700 dark:hover:bg-gray-600">
+                                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white border border-gray-200 p-3 rounded-lg hover:bg-gray-100 transition group w-max- dark:bg-gray-700 dark:hover:bg-gray-600">
                                                         
                                                         <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                                            <div className="w-8 h-8 bg-blue-200 rounded-lg flex items-center justify-center">
+                                                            <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-200 rounded-lg flex items-center justify-center">
                                                                 <FaLink className='text-blue-700'/>
                                                             </div>
 
                                                             <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium text-blue-900 truncate dark:text-gray-200">
+                                                                <p className="text-xs md:text-sm font-medium text-blue-900 truncate dark:text-gray-200">
                                                                     {fileName}
                                                                 </p>
                                                                 <p className="text-xs text-blue-600 truncate dark:text-gray-400">
@@ -757,29 +849,29 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                                         </div>
 
                                                         <a
-                                                        href={fullFileUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                                                            href={fullFileUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg mt-2 md:mt-0"
                                                         >
-                                                        เปิดลิงก์
+                                                            เปิดลิงก์
                                                         </a>
                                                     </div>
                                                     ) : (
-                                                        <div className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-lg hover:bg-gray-100 transition-colors group dark:bg-gray-700 dark:hover:bg-gray-600">
+                                                        <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white border border-gray-200 p-3 rounded-lg hover:bg-gray-100 transition-colors group dark:bg-gray-700 dark:hover:bg-gray-600">
                                                             <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                                <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                                                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                                     </svg>
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
-                                                                    <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-200" title={fileName}>
+                                                                    <p className="text-xs md:text-sm font-medium text-gray-900 truncate dark:text-gray-200" title={fileName}>
                                                                     {fileName}
                                                                     </p>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
+                                                            <div className="flex items-center space-x-2 flex-shrink-0 ml-3 mt-2 md:mt-0">
                                                                 <a 
                                                                     href={fullFileUrl} 
                                                                     target="_blank" 
@@ -807,17 +899,198 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                                 </div>
                                             );
                                         })}
-                                    </div>                                 
-                                </div>                               
+                                      
+                                        
+                                        <div className='w-full h-full px-4'>
+                                            <div className='text-sm flex flex-col space-y-1'>
+                                                <div onClick={() => setOpenSubmission(!openSubmission)} className='flex flex-row items-center gap-2 mt-2'>
+                                                    <span>เพิ่มเติม</span>
+                                                    <MdKeyboardArrowDown className={`size-4 mt-0.5 transition-transform ${openSubmission ? 'rotate-90' : ''}`}/>
+                                                </div>
+                                                                                     
+                                                <div
+                                                    className={`flex flex-col border w-55 md:w-full px-6 py-4 rounded-lg
+                                                    transition-all duration-300 ease-in-out overflow-hidden
+                                                    ${openSubmission ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0"}
+                                                    ${item.review_status === 'approved' && 'border-green-300'}
+                                                    ${item.review_status === 'rejected' && 'border-red-300'}
+                                                    ${item.review_status === 'pending' && 'border-blue-300'}
+                                                `}>
+                                                    <div className="space-y-6 text-xs md:text-sm">
+
+                                                        <div className='flex flex-row items-center justify-between '>
+                                                            <div className='flex flex-row items-center gap-2 text-gray-500'>
+                                                                <IoPersonCircle className='size-5 mt-0.5'/>
+                                                                <span>ผู้ส่งไฟล์:</span>
+                                                            </div>
+                                                            
+                                                            <p className="font-medium whitespace-pre-wrap break-words">{item.submitted_by_user_id?.username}</p>
+                                                        </div>
+
+                                                        <div>
+                                                            <div className='flex flex-row items-center gap-2 text-gray-500'>
+                                                                <AiFillFileText className='size-5 mt-0.5'/>
+                                                                <span className="text-gray-500">รายละเอียดจากผู้ส่ง:</span>
+                                                            </div>
+                                                            
+                                                            <div className="mt-2 border border-gray-200 bg-gray-50 rounded-md p-3 max-h-40 overflow-y-auto whitespace-pre-wrap break-words dark:bg-gray-700">
+                                                                {item.submission_description || 'ไม่มีการระบุรายละเอียดจากผู้ส่ง'}
+                                                            </div>
+                                                        </div>
+                                                                                                           
+                                                        <div className='flex flex-row justify-between item-center'>
+                                                            <div className='flex flex-row items-center gap-2 text-gray-500'>
+                                                                <MdCheckCircle className='size-4 mt-0.5'/>
+                                                                <span className="text-gray-500">สถานะการอนุมัติ: </span>
+                                                            </div>
+                                                           
+                                                            {item.review_status && statusConfig[item.review_status] && (
+                                                                <div className={`flex flex-row items-center gap-1 font-medium ${statusConfig[item.review_status].color}`}>
+                                                                    <div>{React.createElement(statusConfig[item.review_status].icon, { className: "size-4 mt-0.5" })}</div>
+                                                                    <span>{statusConfig[item.review_status].text}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className='flex flex-row items-center justify-between'>
+                                                            <div className='flex flex-row items-center justify-between gap-2 text-gray-500'>
+                                                                <MdSchedule className='size-5 mt-0.5'/>
+                                                                <span>เวลาอนุมัติ:</span>
+                                                            </div>
+                                                            
+                                                            <div className="flex items-center gap-3 font-medium">                                                         
+                                                                <div className="flex items-center gap-1">
+                                                                    <span>
+                                                                        {item.submission_date
+                                                                        ? new Date(item.submission_date).toLocaleDateString("th-TH")
+                                                                        : "-"}
+                                                                    </span>
+                                                                </div>
+
+                                                                <div className="flex items-center gap-1">
+                                                                    <span>
+                                                                        {item.submission_date
+                                                                        ? new Date(item.submission_date).toLocaleTimeString("th-TH", {
+                                                                            hour: "2-digit",
+                                                                            minute: "2-digit",
+                                                                            })
+                                                                        : "-"}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <div className='flex flex-row items-center gap-2 text-gray-500'>
+                                                                <BiCommentDetail className='size-5 mt-0.5'/>
+                                                                <span>ความคิดเห็น:</span>
+                                                            </div>
+                                                            
+                                                            <div className="mt-2 border border-gray-200 bg-gray-50 rounded-md p-3 max-h-40 overflow-y-auto whitespace-pre-wrap break-words dark:bg-gray-700">
+                                                                {item.comments || "ไม่มีความคิดเห็น"}
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>                           
+                                </div>  
+
+                                {/* Approve Section  */}          
+                                <div className='flex flex-row justify-end items-center p-2 space-x-4 text-sm scale-80 md:scale-100'>  
+                                        {/* cancel action */}
+                                        {isTaskOwner() && (
+                                            <button 
+                                                onClick={() => { setShowConfirm(true), setConfirmMessage('ยกเลิกการส่งงาน'), setConfirmDescription('คุณเเน่ใจใช่หรือไม่ที่จะยกเลิกส่งงานนี้ ?') }} 
+                                                disabled={task.task_status !== 'completed' && task.task_status !== 'rejected'}                   
+                                                className={`px-4 py-2 rounded-lg border
+                                                    ${!['completed','rejected'].includes(task.task_status) ? 'cursor-not-allowed bg-gray-100 border-gray-300 text-gray-400' : 'bg-red-400 border-red-700 text-white hover:bg-red-500'}
+                                                `}
+                                            >
+                                                <span>ยกเลิกส่ง</span>
+                                            </button>
+                                        )}
+                                            
+                                        {/* reject action */}
+                                        {userRole === "Leader" && ( 
+                                            <button 
+                                                onClick={() => {setShowApprove(true), setReviewAction('reject')}} 
+                                                disabled={task.task_status === 'completed' || task.task_status === 'rejected'}                   
+                                                className={`px-4 py-2 rounded-lg border
+                                                    ${['completed','rejected'].includes(task.task_status) ? 'cursor-not-allowed bg-gray-100 border-gray-300 text-gray-400' : 'bg-red-100 border-red-400 text-red-700 hover:bg-red-300'}
+                                                `}
+                                            >
+                                                <span>ไม่อนุมัติ</span>
+                                            </button>
+                                        )}
+                                        {/* Approve action */}
+                                        {userRole === "Leader" && ( 
+                                            <button 
+                                                onClick={() => {setShowApprove(true), setReviewAction('approve')}}
+                                                disabled={task.task_status === 'completed' || task.task_status === 'rejected'}
+                                                className={`px-4 py-2 rounded-lg border
+                                                    ${['completed','rejected'].includes(task.task_status) ? 'cursor-not-allowed bg-gray-100 border-gray-300 text-gray-400' : 'bg-green-100 border-green-400 text-green-700 hover:bg-green-300'}
+                                                `}
+                                            >
+                                                <span>อนุมัติ</span>
+                                            </button>
+                                        )}
+                                </div>                                                                                           
                             </div>
                             ))}
                         </div>
                         ) : (
                         <div className="text-center text-gray-400 text-sm">
-                            ไม่มีงานที่ส่ง
+                            ไม่มีไฟล์งานที่ส่ง
+
+                            {['pending_review', 'completed', 'reject'].includes(task.task_status) && (
+                                <div className='flex flex-row justify-end items-center p-2 space-x-4 mt-6 text-sm scale-80 md:scale-100'>  
+                                        {/* cancel action */}
+                                        {isTaskOwner() && (
+                                            <button 
+                                                onClick={() => { setShowConfirm(true), setConfirmMessage('ยกเลิกการส่งงาน'), setConfirmDescription('คุณเเน่ใจใช่หรือไม่ที่จะยกเลิกส่งงานนี้ ?') }} 
+                                                disabled={task.task_status !== 'completed' && task.task_status !== 'rejected'}                   
+                                                className={`px-4 py-2 rounded-lg border
+                                                    ${!['completed','rejected'].includes(task.task_status) ? 'cursor-not-allowed bg-gray-100 border-gray-300 text-gray-400' : 'bg-red-400 border-red-700 text-white hover:bg-red-500'}
+                                                `}
+                                            >
+                                                <span>ยกเลิกส่ง</span>
+                                            </button>
+                                        )}
+                                            
+                                        {/* reject action */}
+                                        {userRole === "Leader" && ( 
+                                            <button 
+                                                onClick={() => {setShowApprove(true), setReviewAction('reject')}} 
+                                                disabled={task.task_status === 'completed' || task.task_status === 'rejected'}                   
+                                                className={`px-4 py-2 rounded-lg border
+                                                    ${['completed','rejected'].includes(task.task_status) ? 'cursor-not-allowed bg-gray-100 border-gray-300 text-gray-400' : 'bg-red-100 border-red-400 text-red-700 hover:bg-red-300'}
+                                                `}
+                                            >
+                                                <span>ไม่อนุมัติ</span>
+                                            </button>
+                                        )}
+                                        {/* Approve action */}
+                                        {userRole === "Leader" && ( 
+                                            <button 
+                                                onClick={() => {setShowApprove(true), setReviewAction('approve')}}
+                                                disabled={task.task_status === 'completed' || task.task_status === 'rejected'}
+                                                className={`px-4 py-2 rounded-lg border
+                                                    ${['completed','rejected'].includes(task.task_status) ? 'cursor-not-allowed bg-gray-100 border-gray-300 text-gray-400' : 'bg-green-100 border-green-400 text-green-700 hover:bg-green-300'}
+                                                `}
+                                            >
+                                                <span>อนุมัติ</span>
+                                            </button>
+                                        )}
+                                </div>      
+                            )}        
+                                        
                         </div>
                         )}
                         </div>
+                        
                     </div>
                     )}
 
@@ -914,6 +1187,31 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                 loadingUserId={loadingUserId}
                 refreshTaskMembers={refreshTaskMembers}
             />
+
+            {showApprove && (
+                <ApprovePopup 
+                    task={task}
+                    user={currentUser}
+                    project={project}
+                    submissions={submission}
+                    taskDocumentId={task.documentId}
+                    projectId={projectId}
+                    setShowReviewModal={setShowApprove}
+                    reviewAction={reviewAction}
+                    setReviewAction={setReviewAction}
+                    refreshTask={refreshTask}
+                    refreshSubmission={refreshSubmission}
+                />
+            )}  
+
+            {showConfirm && (
+                <ConfirmPopup
+                    message={confirmMessage}
+                    description={confirmDescription}
+                    onCancel={() => setShowConfirm(false)}
+                    onConfirm={(done) => handleCancelWorkSubmission(done)}                               
+                />
+            )}        
 
         </div>
     );

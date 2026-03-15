@@ -88,8 +88,9 @@ interface data {
     projectId: number;
     setShowReviewModal: React.Dispatch<React.SetStateAction<boolean>>,
     reviewAction: 'approve' | 'reject' | null;
-    setReviewAction: React.Dispatch<React.SetStateAction<'approve' | 'reject' | null>>,
-    refreshTask?: () => Promise<void>
+    setReviewAction: React.Dispatch<React.SetStateAction<'approve' | 'reject' | null>>;
+    refreshTask?: () => Promise<void>;
+    refreshSubmission?: () => Promise<void>;
 }
 
 export default function ApprovePopup(
@@ -104,6 +105,7 @@ export default function ApprovePopup(
     reviewAction,
     setReviewAction,
     refreshTask,
+    refreshSubmission,
 }
 :  data ) {
 
@@ -202,6 +204,7 @@ export default function ApprovePopup(
             // Refresh all data
             await new Promise(resolve => setTimeout(resolve, 100));
             refreshTask?.();
+            refreshSubmission?.();
 
           } else {
           }
