@@ -26,7 +26,8 @@ export default function FreeDragBoard(
     projectId, 
     SelectedTask, 
     onOpenPopup, 
-    onReload, 
+    onReload,
+    updateTaskPosition, 
     isReload, 
     isOpen,
     onClickTask,
@@ -34,20 +35,20 @@ export default function FreeDragBoard(
     onSubmit, 
     projectMembers, 
     isLoading, 
-    userRole 
+    userRole,
+    updateBoards,
+    updateCurrentBoards
   }: any) {
 
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isCreateBoard, setIsCreateBoard] = useState(false);
   const router = useRouter();
 
-  const [boards, setBoards] = useState<string[]>(
-    Array.isArray(project.boards) && project.boards.length > 0
-      ? project.boards
-      : ["สิ่งที่ต้องทำ"]
-  );
+  const [boards, setBoards] = useState<string[]>([]);
+  const [currentBoard, setCurrentBoard] = useState("");
+
   const [leftBoard, setLeftBoard] = useState(tasks);
-  const [currentBoard, setCurrentBoard] = useState(project.currentBoard || "สิ่งที่ต้องทำ");
   const [rightBoard, setRightBoard] = useState<Record<
     string,
     Record<string, { x: number; y: number }>
@@ -78,6 +79,13 @@ export default function FreeDragBoard(
   if (!rightBoard[currentBoard]) {
     rightBoard[currentBoard] = {};
   }
+
+  useEffect(() => {
+    if (!boards.length && project?.boards?.length) {
+      setBoards([...project.boards]);
+      setCurrentBoard(project.currentBoard || project.boards[0]);
+    }
+  }, [project]);
 
   const handleRightClick = (e: React.MouseEvent, boardName: string) => {
     e.preventDefault();
@@ -129,18 +137,20 @@ export default function FreeDragBoard(
       return copy;
     });
 
-    setBoards(prev => prev.filter(b => b !== boardName));
+    const newBoards = boards.filter(b => b !== boardName);
 
-    if (currentBoard === boardName) {
-      const newList = boards.filter(b => b !== boardName);
-      if (newList.length > 0) {
-        setCurrentBoard(newList[0]);
-      }
+    setBoards(newBoards);
+    updateBoards(newBoards);
+
+    if (currentBoard === boardName && newBoards.length) {
+      setCurrentBoard(newBoards[0]);
     }
 
     setContextMenu({ visible: false, boardName: "" });
     setConfirmDelete({ visible: false, boardName: null });
-    onReload(true);
+    
+    // onReload(true);
+    setIsCreateBoard(true);
   };
 
   const saveTaskPosition = async (
@@ -186,6 +196,7 @@ export default function FreeDragBoard(
     const leftData: any[] = [];
     const rightData: Record<string, Record<string, { x: number; y: number }>> = {};
 
+
     tasks.forEach((task: any) => {
       if (
         !task.board_name || 
@@ -213,59 +224,60 @@ export default function FreeDragBoard(
 
   //save boards to db when boards change
   useEffect(() => {
-    const updateBoardsToStrapi = setTimeout(async () => {
+    if (!currentBoard || currentBoard === project?.currentBoard) return;
+
+    const updateBoard = async () => {
       try {
-        const Payload: any = {
+        await axios.put("/api/projects/updateBoards", {
           documentId: projectId,
-        };
+          currentBoard
+        });
 
-        if (boards) Payload.boards = boards;
-        if (currentBoard) Payload.currentBoard = currentBoard;
-
-        if(!Payload.boards || !Payload.currentBoard) return;
-
-        await axios.put("/api/projects/updateBoards", Payload);
-        console.log("บันทึกบอร์ดสำเร็จ");
-      } catch (err) {
-        console.error("บันทึกบอร์ดล้มเหลว", err);
-      }
-    }, 500);
-
-    return () => clearTimeout(updateBoardsToStrapi);
-  },[boards, currentBoard]);
-
-  //create board
-  useEffect(() => {
-    if(isReload === true){
-      const createBoardsToStrapi = async () => {
-      try {
-        const Payload: any = {
-          documentId: projectId,
-        };
-
-        if (boards) Payload.boards = boards;
-        if (currentBoard) Payload.currentBoard = currentBoard;
-
-        if(!Payload.boards || !Payload.currentBoard) return;
-
-        await axios.put("/api/projects/updateBoards", Payload);
-        console.log("บันทึกบอร์ดสำเร็จ");
+        updateCurrentBoards(currentBoard);
 
       } catch (err) {
-        console.error("บันทึกบอร์ดล้มเหลว", err);
+        console.error("อัพเดท currentBoard ล้มเหลว", err);
       }
     };
 
-    createBoardsToStrapi();
+    updateBoard();
+
+  }, [currentBoard]);
+
+  //create board
+  useEffect(() => {
+    if(isCreateBoard === true){
+      const createBoardsToStrapi = async () => {
+        try {
+          const Payload: any = {
+            documentId: projectId,
+          };
+
+          if (boards) Payload.boards = boards;
+          if (currentBoard) Payload.currentBoard = currentBoard;
+
+        if(!Payload.boards?.length) return;
+
+          await axios.put("/api/projects/updateBoards", Payload);
+          console.log("บันทึกบอร์ดสำเร็จ");
+
+          updateBoards([...boards]);
+
+        } catch (err) {
+          console.error("บันทึกบอร์ดล้มเหลว", err);
+        }
+      };
+
+      createBoardsToStrapi();
     }
     
-  },[isReload]);
+  },[isCreateBoard]);
 
   useEffect(() => {
-    if (isReload === false) {
+    if (isCreateBoard === false) {
       setShowAddBoard(false);
     }
-  }, [isReload]);
+  }, [isCreateBoard]);
 
   useEffect(() => {
     const closeMenu = () => setContextMenu({ visible: false, boardName: "" });
@@ -316,6 +328,7 @@ export default function FreeDragBoard(
             }
 
             saveTaskPosition(activeTask.documentId, currentBoard, newPos.x, newPos.y, false);
+            updateTaskPosition(activeTask.documentId, currentBoard, newPos.x, newPos.y, false);
           }
 
           if (dropZone === "left") {
@@ -338,6 +351,7 @@ export default function FreeDragBoard(
             });
 
             saveTaskPosition(activeTask.documentId, currentBoard, 0, 0, true);
+            updateTaskPosition(activeTask.documentId, currentBoard, 0, 0, true);
           }
 
           setActiveId(null);
@@ -444,11 +458,12 @@ export default function FreeDragBoard(
           <AddBoardPage 
             boards={boards}
             setBoards={setBoards}
+            updateBoards={updateBoards}
             rightBoard={rightBoard}
             setRightBoard={setRightBoard}
             onClose={() => setShowAddBoard(false)}
-            setIsLoading={onReload}
-            isLoading={isReload}
+            setIsLoading={setIsCreateBoard}
+            isLoading={isCreateBoard}
           />
         )}
         {confirmDelete.visible && (

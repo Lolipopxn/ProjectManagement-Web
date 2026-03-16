@@ -282,26 +282,55 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     //reload project
     if (reload) {
-        const ReloadData = async () => {
-          try {
-            // setLoading(true);
-            setError(null);
+      const ReloadData = async () => {
+        try {
+          setError(null);
 
-            const projectResponse = await axios.get(`/api/projects/${projectId}`);
-            
-            if (projectResponse.data.success && projectResponse.data.project) {
-              setProject(projectResponse.data.project);
-              setReload(false);
-            } else {
-              setError('ไม่พบข้อมูลโปรเจ็กต์');
-              setReload(false);
-            }
+          // load project
+          const projectResponse = await axios.get(`/api/projects/${projectId}`);
+
+          if (projectResponse.data.success && projectResponse.data.project) {
+            setProject(projectResponse.data.project);
           }
-          catch(err) {
-            console.error("ดึงไม่สำเร็จ: ", err)
+
+          // load tasks
+          const tasksRes = await axios.get(
+            `/api/tasks?projectDocumentId=${projectId}`
+          );
+
+          const tasks = tasksRes.data?.tasks ?? [];
+          const currentUserId = user?.id;
+
+          const isMyTask = (task: Task, currentUserId: number) => {
+            return (
+              Array.isArray(task.assigned_to_user_ids) &&
+              task.assigned_to_user_ids.some(
+                (user: any) => user?.id === currentUserId
+              )
+            );
+          };
+
+          if (!currentUserId) {
+            setMyTasks([]);
+            setOtherTasks(tasks);
+          } else {
+            setMyTasks(tasks.filter((t: Task) => isMyTask(t, currentUserId)));
+            setOtherTasks(tasks.filter((t: Task) => !isMyTask(t, currentUserId)));
           }
-      }
-      ReloadData()
+
+          setReload(false);
+          setTasksLoading(false);
+
+        } catch (err) {
+          console.error("ดึงข้อมูลไม่สำเร็จ:", err);
+          setMyTasks([]);
+          setOtherTasks([]);
+          setReload(false);
+          setTasksLoading(false);
+        }
+      };
+
+      ReloadData();
     }
     
     if (reloadTaskMembers) {
@@ -423,6 +452,41 @@ export default function ProjectDetailPage() {
       refreshProjectMembers();
     }
   },[reload, reloadTaskMembers]);
+
+  //for drag board (Update ui task position)
+  const updateTaskPosition = (
+    documentId: string,
+    boardName: string,
+    x: number,
+    y: number,
+    isLeft: boolean
+  ) => {
+    const update = (tasks: Task[]) =>
+      tasks.map((t) =>
+        t.documentId === documentId
+          ? { ...t, board_name: boardName, pos_x: x, pos_y: y, is_left: isLeft }
+          : t
+      );
+
+    setMyTasks((prev) => update(prev));
+    setOtherTasks((prev) => update(prev));
+  };
+
+  //for drag board (Update ui Board)
+  const updateBoards = (newBoards: string[]) => {
+    setProject((prev: any) => ({
+      ...prev,
+      boards: newBoards
+    }));
+  };
+
+  //for drag board (Update ui current Board)
+  const updateCurrentBoards = (newBoards: string[]) => {
+    setProject((prev: any) => ({
+      ...prev,
+      currentBoard: newBoards
+    }));
+  };
 
   // Create task function
   const handleCreateTask = async (taskData: any) => {
@@ -2448,6 +2512,7 @@ const progressPercent =
               projectId={projectId}
               SelectedTask={(task: Task) => setSelectedTask(task)}
               onOpenPopup={() => setPopupTask(true)}
+              updateTaskPosition={updateTaskPosition}
               onReload={setReload}
               isReload={reload}
               isOpen={showCreateTaskModal}
@@ -2457,6 +2522,8 @@ const progressPercent =
               projectMembers={projectMembers}
               isLoading={createTaskLoading}
               userRole={userRole}
+              updateBoards={updateBoards}
+              updateCurrentBoards={updateCurrentBoards}
             />
           </div>
         )}
@@ -2489,7 +2556,7 @@ const progressPercent =
           onClose={() => {setSelectedTask(null); setPopupTask(false)}} 
           onSubmit={() => {router.push(`/main_pages/projects/${projectId}/tasks/${selectedTask?.documentId}`);}}
           onRefresh={() => setReloadTaskMembers(true)}
-          refreshTaskMembers={reloadTaskMembers}
+          refreshTaskMembers={reloadTaskMembers}       
         />
       )}
       

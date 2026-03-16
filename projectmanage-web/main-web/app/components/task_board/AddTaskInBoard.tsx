@@ -134,20 +134,25 @@ export function AddTaskPage({ user, project, projectId, onClose }: {user:number 
 }
 
 //Add Board UI to Right Board
-export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onClose, setIsLoading , isLoading }: any) {
+export function AddBoardPage({ boards, setBoards, rightBoard, setRightBoard, onClose, setIsLoading , isLoading, updateBoards }: any) {
   const [name, setName] = useState("");
 
   const handleAddBoard = () => {
-    setIsLoading(true);
     if (!name.trim()) return;
 
-    if (!boards.includes(name)) {
-      setBoards((prev: any) => [...prev, name]);
-      setRightBoard((prev: any) => ({
-        ...prev,
-        [name]: {} 
-      }));
-    }
+    setIsLoading(true);
+
+    const newBoards = [...boards, name];
+
+    setBoards(newBoards);      // update local state
+    updateBoards(newBoards);   // update parent
+
+    setRightBoard((prev : any) => ({
+      ...prev,
+      [name]: {}
+    }));
+
+    onClose();
   };
 
   return (

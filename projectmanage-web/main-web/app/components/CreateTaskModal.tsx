@@ -128,7 +128,7 @@ export default function CreateTaskModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white scale-100 md:scale-105 rounded-xl px-4 shadow-2xl w-full max-w-3xl mx-auto transform transition-all animate-in slide-in-from-bottom-4 duration-300 dark:bg-gray-800">
         {/* Header */}
         <div className='flex flex-col border-b border-gray-200 dark:border-gray-600'>
