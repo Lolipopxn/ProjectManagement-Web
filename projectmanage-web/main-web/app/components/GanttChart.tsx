@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   GanttCreateMarkerTrigger,
@@ -13,19 +13,19 @@ import {
   GanttSidebarItem,
   GanttTimeline,
   GanttToday,
-} from '@/components/ui/shadcn-io/gantt';
+} from "@/components/ui/shadcn-io/gantt";
 
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from '@/components/ui/context-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { EyeIcon, LinkIcon, TrashIcon } from 'lucide-react';
+} from "@/components/ui/context-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { EyeIcon, LinkIcon, TrashIcon } from "lucide-react";
 
-import groupBy from 'lodash.groupby';
-import { useEffect, useState } from 'react';
+import groupBy from "lodash.groupby";
+import { useEffect, useState } from "react";
 
 import { VscGithubProject } from "react-icons/vsc";
 import { BiTask } from "react-icons/bi";
@@ -35,7 +35,6 @@ import { GrStatusGood } from "react-icons/gr";
 import { RiGroupLine } from "react-icons/ri";
 
 import { useRouter } from "next/navigation";
-
 
 interface Task {
   id: number;
@@ -81,10 +80,17 @@ function mapTaskToFeature(task: Task) {
     name: task.task_name ?? "Untitled",
     startAt: new Date(task.begin_date),
     endAt: new Date(task.due_date),
-    group: { name: task.project_id?.project_name ?? "ไม่มี", projectId: task.project_id?.documentId},
+    group: {
+      name: task.project_id?.project_name ?? "ไม่มี",
+      projectId: task.project_id?.documentId,
+    },
     description: task.description ?? "",
     color: getStatusColor(task.task_status),
-    member_name: { name: task.assigned_to_user_ids?.length ? task.assigned_to_user_ids.map(u => u.username).join(',') : "ไม่มี" },
+    member_name: {
+      name: task.assigned_to_user_ids?.length
+        ? task.assigned_to_user_ids.map((u) => u.username).join(",")
+        : "ไม่มี",
+    },
     status: {
       name: task.task_status,
       nameThai: getTextStatus(task.task_status),
@@ -92,6 +98,22 @@ function mapTaskToFeature(task: Task) {
     },
   };
 }
+
+type RangeType = "daily" | "weekly" | "monthly" | "quarterly";
+
+const rangeZoomMap: Record<RangeType, number> = {
+  daily: 150,
+  weekly: 200,
+  monthly: 400,
+  quarterly: 100,
+};
+
+const rangeLabelTH: Record<RangeType, string> = {
+  daily: "วัน",
+  weekly: "สัปดาห์",
+  monthly: "เดือน",
+  quarterly: "ปี",
+};
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -127,8 +149,9 @@ function getTextStatus(status: string) {
   }
 }
 
-export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
+export default function GanttChartPage({ tasks }: { tasks: Task[] }) {
   const [features, setFeatures] = useState<any[]>([]);
+  const [range, setRange] = useState<RangeType>("daily");
 
   const router = useRouter();
 
@@ -145,7 +168,9 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
   const grouped = groupBy(features, (f) => f.group.name || "Unknown");
 
   const handleViewFeature = (feature: any) =>
-    router.push(`/main_pages/projects/${feature.group.projectId}/tasks/${feature.docId}`);
+    router.push(
+      `/main_pages/projects/${feature.group.projectId}/tasks/${feature.docId}`,
+    );
 
   const handleCopyLink = (id: string) => console.log(`Copy link: ${id}`);
 
@@ -164,8 +189,8 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
     }
     setFeatures((prev) =>
       prev.map((feature) =>
-        feature.id === id ? { ...feature, startAt, endAt } : feature
-      )
+        feature.id === id ? { ...feature, startAt, endAt } : feature,
+      ),
     );
     // console.log(`Move feature: ${id} from ${startAt} to ${endAt}`);
   };
@@ -173,120 +198,160 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
     console.log(`Add feature: ${date.toISOString()}`);
 
   return (
-    <GanttProvider range="daily" zoom={150} className="border border-gray-200 shadow-md scale-95 md:scale-100">
+    <div className="flex flex-col overflow-y-visible">
+      <div className="flex justify-end gap-2 mb-4">
+        {(["daily", "weekly", "monthly", "quarterly"] as RangeType[]).map(
+          (r) => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={`
+                px-3 py-1 rounded-md border-2 text-sm transition-all duration-200 
 
-      <GanttSidebar className='mb-60 md:mb-80'>
-        {Object.entries(grouped).map(([group, features]) => (
-          <GanttSidebarGroup key={group} name={group}>
-            {features.map((feature) => (
-              <GanttSidebarItem
-                feature={feature}
-                key={feature.id}
-                // onSelectItem={handleViewFeature}
-              />
-            ))}
-          </GanttSidebarGroup>
-        ))}
-      </GanttSidebar>
-      <GanttTimeline>
-        <GanttHeader />
-        <GanttFeatureList>
+                active:translate-0
+                active:shadow-[2px_2px_0_rgba(0,0,0,0.25)]
+              ${
+                range === r
+                  ? "bg-[#636CCB] text-white border-[#50589C] translate-0 shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                  : "bg-white hover:bg-gray-100 shadow-[3px_3px_0_rgba(0,0,0,0.25)] hover:-translate-1 hover:shadow-[5px_5px_0_rgba(0,0,0,0.25)]"
+              }
+            `}
+            >
+              {rangeLabelTH[r]}
+            </button>
+          ),
+        )}
+      </div>
+      <GanttProvider
+        range={range}
+        zoom={rangeZoomMap[range]}
+        className="border border-gray-200 shadow-md "
+      >
+        <GanttSidebar className="mb-60 md:mb-70">
           {Object.entries(grouped).map(([group, features]) => (
-            <GanttFeatureListGroup key={group}>
+            <GanttSidebarGroup key={group} name={group}>
               {features.map((feature) => (
-                <div className="flex group" key={feature.id}>
-                  <ContextMenu>
-                    <ContextMenuTrigger asChild>
-                      <button
-                        // onClick={() => handleViewFeature(feature)}
-                        type="button" 
-                        className='group'
-                      >
-                        <GanttFeatureItem
-                          onMove={handleMoveFeature}
-                          {...feature}
+                <GanttSidebarItem
+                  feature={feature}
+                  key={feature.id}
+                  // onSelectItem={handleViewFeature}
+                />
+              ))}
+            </GanttSidebarGroup>
+          ))}
+        </GanttSidebar>
+        <GanttTimeline>
+          <GanttHeader />
+          <GanttFeatureList>
+            {Object.entries(grouped).map(([group, features]) => (
+              <GanttFeatureListGroup key={group}>
+                {features.map((feature) => (
+                  <div className="flex group" key={feature.id}>
+                    <ContextMenu>
+                      <ContextMenuTrigger asChild>
+                        <button
+                          // onClick={() => handleViewFeature(feature)}
+                          type="button"
+                          className="group"
                         >
-                          <p className="flex-1 truncate text-xs dark:text-black">
-                            {feature.name}
-                          </p>
-                          {feature.owner ? (
-                            <Avatar className="h-4 w-4">
-                              <AvatarImage src={feature.owner.image} />
-                              <AvatarFallback>
-                                {feature.owner.name?.slice(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                          ): <p className="truncate text-xs dark:text-black">{feature.status.nameThai}</p>}
-                        </GanttFeatureItem>
-                        
-                      </button>
-                    </ContextMenuTrigger>
-                    
-                    <div className='fixed group-hover:fixed group-hover:h-full group-hover:w-100 right-0 top-0 bg-[white] h-0 w-0 z-30 shadow-md dark:bg-gray-700'>
-                      <div className='flex group-hover:flex flex-col mt-25 py-1 px-6 space-y-5 divide-gray-500'>
-                        <hr></hr>               
-                          <div className='grid grid-cols-2 text-sm space-y-5 gap-2 px-5 py-5 rounded-lg '>
-                            <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
-                                <VscGithubProject className='w-4 h-4'/>
+                          <GanttFeatureItem
+                            onMove={handleMoveFeature}
+                            {...feature}
+                          >
+                            <p className="flex-1 truncate text-xs dark:text-black">
+                              {feature.name}
+                            </p>
+                            {feature.owner ? (
+                              <Avatar className="h-4 w-4">
+                                <AvatarImage src={feature.owner.image} />
+                                <AvatarFallback>
+                                  {feature.owner.name?.slice(0, 2)}
+                                </AvatarFallback>
+                              </Avatar>
+                            ) : (
+                              <p className="truncate text-xs dark:text-black">
+                                {feature.status.nameThai}
+                              </p>
+                            )}
+                          </GanttFeatureItem>
+                        </button>
+                      </ContextMenuTrigger>
+
+                      <div className="fixed group-hover:fixed group-hover:h-full group-hover:w-100 right-0 top-0 bg-[white] h-0 w-0 z-30 shadow-md dark:bg-gray-700">
+                        <div className="flex group-hover:flex flex-col mt-25 py-1 px-6 space-y-5 divide-gray-500">
+                          <hr></hr>
+                          <div className="grid grid-cols-2 text-sm space-y-5 gap-2 px-5 py-5 rounded-lg ">
+                            <div className="col-span-1 font-bold">
+                              <div className="flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300">
+                                <VscGithubProject className="w-4 h-4" />
                                 <p>ชื่อโปรเจค</p>
                               </div>
                             </div>
-                            <div className='col-span-1 font-normal'>
-                              <p className=''>{feature.group.name}</p>
-                            </div> 
+                            <div className="col-span-1 font-normal">
+                              <p className="">{feature.group.name}</p>
+                            </div>
 
-                            <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
-                                <BiTask className='w-4 h-4'/>
+                            <div className="col-span-1 font-bold">
+                              <div className="flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300">
+                                <BiTask className="w-4 h-4" />
                                 <p>ชื่องาน</p>
                               </div>
                             </div>
-                            <div className='col-span-1 font-normal'>
-                              <p className=''>{feature.name}</p>
-                            </div>    
+                            <div className="col-span-1 font-normal">
+                              <p className="">{feature.name}</p>
+                            </div>
 
-                            <div className='col-span-2 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
-                                <GoProjectRoadmap className='w-4 h-4'/>
+                            <div className="col-span-2 font-bold">
+                              <div className="flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300">
+                                <GoProjectRoadmap className="w-4 h-4" />
                                 <p>คำอธิบาย</p>
                               </div>
                             </div>
-                            <div className='col-span-2 font-normal bg-white py-2 px-4 border-2 border-gray-300 rounded-md overflow-auto h-35 dark:text-gray-300 dark:bg-gray-600 dark:border-gray-500'>
-                              <span className=''>{feature.description}</span>
-                            </div>    
+                            <div className="col-span-2 font-normal bg-gray-200 py-2 px-4 border-2 border-gray-300 rounded-md overflow-auto h-35 dark:text-gray-300 dark:bg-gray-600 dark:border-gray-500">
+                              <span className="">{feature.description}</span>
+                            </div>
 
-                            <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
-                                <IoMdTime className='w-4 h-4'/>
+                            <div className="col-span-1 font-bold">
+                              <div className="flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300">
+                                <IoMdTime className="w-4 h-4" />
                                 <p>เวลา</p>
                               </div>
                             </div>
-                            <div className='col-span-1 font-normal'>
-                              <p>{new Date(feature.startAt).toLocaleDateString()}  -  {new Date (feature.endAt).toLocaleDateString()}</p>
-                            </div> 
+                            <div className="col-span-1 font-normal">
+                              <p>
+                                {new Date(feature.startAt).toLocaleDateString()}{" "}
+                                - {new Date(feature.endAt).toLocaleDateString()}
+                              </p>
+                            </div>
 
-                            <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
-                                <GrStatusGood className='w-4 h-4'/>
+                            <div className="col-span-1 font-bold">
+                              <div className="flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300">
+                                <GrStatusGood className="w-4 h-4" />
                                 <p>สถานะ</p>
                               </div>
                             </div>
-                            <div className='col-span-1 font-normal'>
-                              <div className='flex py-1 px-2 w-full justify-center items-center rounded-[25px]' style={{ backgroundColor: feature.status.color }}>
-                                <p style={{ color: 'black' }}>{feature.status.nameThai}</p>
-                              </div>                             
-                            </div>   
-                            <div className='col-span-1 font-bold'>
-                              <div className='flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300'>
-                                <RiGroupLine className='w-4 h-4'/>
+                            <div className="col-span-1 font-normal">
+                              <div
+                                className="flex py-1 px-2 w-full justify-center items-center rounded-[25px]"
+                                style={{
+                                  backgroundColor: feature.status.color,
+                                }}
+                              >
+                                <p style={{ color: "black" }}>
+                                  {feature.status.nameThai}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="col-span-1 font-bold">
+                              <div className="flex flex-row gap-3 items-center text-gray-500 dark:text-gray-300">
+                                <RiGroupLine className="w-4 h-4" />
                                 <p>ผู้รับผิดชอบ</p>
                               </div>
                             </div>
-                            <div className='col-span-1 font-normal'>
-                              <p className=''>{feature.member_name.name}</p>
-                            </div>                                   
-                            
+                            <div className="col-span-1 font-normal">
+                              <p className="">{feature.member_name.name}</p>
+                            </div>
+
                             {/* <div className='col-span-2 space-y-2'>
                               <p>คำอธิบาย</p>
                               <p>สถานะ</p>
@@ -294,19 +359,18 @@ export default function GanttChartPage({ tasks } : { tasks: Task[] }) {
                               <p>{feature.status.name}</p>
                             </div> */}
                           </div>
-                      </div> 
-                    </div>
-
-                  </ContextMenu>
-                  
-                </div>
-              ))}
-            </GanttFeatureListGroup>
-          ))}
-        </GanttFeatureList>
-        <GanttToday />
-        <GanttCreateMarkerTrigger onCreateMarker={handleCreateMarker} />
-      </GanttTimeline>
-    </GanttProvider>
+                        </div>
+                      </div>
+                    </ContextMenu>
+                  </div>
+                ))}
+              </GanttFeatureListGroup>
+            ))}
+          </GanttFeatureList>
+          <GanttToday />
+          <GanttCreateMarkerTrigger onCreateMarker={handleCreateMarker} />
+        </GanttTimeline>
+      </GanttProvider>
+    </div>
   );
-};
+}
