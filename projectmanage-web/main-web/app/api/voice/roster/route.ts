@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
               uid: String(uid),
               username,
               muted: sessionAttrs.muted || false,
+              deaf:sessionAttrs.deaf || false,
               joinedAt: sessionAttrs.joinedAt || sessionAttrs.createdAt,
             };
           } catch (sessionError) {
@@ -89,6 +90,7 @@ export async function GET(request: NextRequest) {
               uid: String(session.id || 'unknown'),
               username: `User ${session.id || 'unknown'}`,
               muted: false,
+              deaf: false,
               joinedAt: new Date().toISOString(),
             };
           }

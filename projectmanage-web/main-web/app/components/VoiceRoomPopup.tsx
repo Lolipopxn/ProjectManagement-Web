@@ -27,11 +27,13 @@ type Peer = {
   muted?: boolean; // track publish state
   speaking?: boolean; // UI speaking indicator
   volume?: number; // 0..100 for UI
+  deaf?: boolean;
 };
 
 interface VoiceRoomPopupProps {
   isOpen: boolean; // Drawer visible state
   onClose: () => void; // Close only UI (do not leave room)
+  onOpen?: () => void;
   slug: string; // Room slug for token/roster
 }
 
@@ -76,6 +78,7 @@ function safeLocalStorage<T>(
 export default function VoiceRoomPopup({
   isOpen,
   onClose,
+  onOpen,
   slug,
 }: VoiceRoomPopupProps) {
   /** ===== Core states ===== */
@@ -216,6 +219,7 @@ export default function VoiceRoomPopup({
         uid: String(u.uid),
         username: u.username,
         muted: !!u.muted,
+        deaf: !!u.deaf,
       }));
       setLobbyRoster(list);
       setLobbyRosterEnabled(true);
@@ -375,6 +379,19 @@ export default function VoiceRoomPopup({
       } catch (e) {
         /* no-op */
       }
+    },
+    [slug]
+  );
+
+  const patchDeafSession = useCallback(
+    async (agoraUid: string, deafVal: boolean) => {
+      try {
+        await fetch("/api/voice/session", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ slug, agoraUid, deaf: deafVal }),
+        });
+      } catch {}
     },
     [slug]
   );
@@ -596,14 +613,17 @@ export default function VoiceRoomPopup({
   const toggleDeaf = useCallback(async () => {
     const next = !deaf;
     setDeaf(next);
-    // Apply to remote tracks
+
+    if (myUid) {
+      await patchDeafSession(myUid, next);
+    }
+
     for (const [, track] of remoteTracksRef.current.entries()) {
       try {
         track.setVolume(next ? 0 : 100);
-        if (!next) track.play?.();
       } catch {}
     }
-  }, [deaf]);
+  }, [deaf, myUid, patchDeafSession]);
 
   const handlePTTDown = useCallback(async () => {
     if (pttHeldRef.current) return;
@@ -620,6 +640,25 @@ export default function VoiceRoomPopup({
       await micRef.current.setEnabled(false);
     }
   }, [muted]);
+
+  function VoiceFloatingButton({
+    onOpen,
+  }: {
+    onOpen: () => void;
+  }) {
+    return (
+      <button
+        onClick={onOpen}
+        className="fixed bottom-6 right-6 z-[60] flex items-center gap-2 rounded-full bg-[#3F72AF] px-4 py-2 text-white shadow-lg hover:scale-105 transition"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-4.08A7 7 0 0 0 19 11h-2Z" />
+        </svg>
+
+        <span className="text-sm font-medium">Voice</span>
+      </button>
+    );
+  }
 
   // New: global keyboard shortcuts (J join, M mute, D deafen, Space PTT, Esc close)
   useEffect(() => {
@@ -702,7 +741,7 @@ export default function VoiceRoomPopup({
       <aside
         className={classNames(
           // palette: bg -> #F9F7F7
-          "fixed inset-y-0 right-0 z-50 h-full w-[28%] min-w-[340px] max-w-[560px] bg-[#F9F7F7] shadow-xl transition-transform duration-300 ease-out",
+          "fixed inset-y-0 right-0 z-50 h-full w-[28%] min-w-[340px] max-w-[560px] bg-[#F9F7F7] dark:bg-gray-800 shadow-xl transition-transform duration-300 ease-out",
           isOpen ? "translate-x-0" : "translate-x-full",
           "pointer-events-auto"
         )}
@@ -738,8 +777,7 @@ export default function VoiceRoomPopup({
                   Lobby
                 </span>
               )}
-              {/* slug + count */}
-              <span className="ml-2 text-xs text-[#112D4E]/70">#{slug}</span>
+              {/*count */}
               <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-[#DBE2EF] px-2 py-0.5 text-xs text-[#112D4E]">
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
                   <path d="M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0Zm-9 7a6 6 0 1 1 12 0v1H7v-1Z" />
@@ -752,7 +790,7 @@ export default function VoiceRoomPopup({
               {/* Close UI (keep session) */}
               <button
                 onClick={handleClose}
-                className="rounded-full p-1 hover:bg-[#DBE2EF] focus:outline-none focus:ring-2 focus:ring-[#3F72AF] focus:ring-offset-2"
+                className="rounded-full p-1 hover:bg-[#DBE2EF] focus:outline-none focus:ring-2 focus:ring-[#3F72AF] focus:ring-offset-2 dark:text-black"
                 aria-label="Close"
                 type="button"
                 title="Close (Esc)"
@@ -769,14 +807,14 @@ export default function VoiceRoomPopup({
             {!joined ? (
               <>
                 {/* ===== LOBBY ===== */}
-                <div className="rounded-lg border border-[#DBE2EF] p-4 bg-[#F9F7F7]">
-                  <h3 className="mb-3 text-sm font-semibold text-[#112D4E]">Audio setup</h3>
+                <div className="rounded-lg border border-[#DBE2EF] p-4 bg-[#F9F7F7] dark:bg-gray-700">
+                  <h3 className="mb-3 text-sm font-semibold text-[#112D4E] dark:text-white">Audio setup</h3>
 
                   {/* Mic selector */}
-                  <label className="mb-2 block text-xs font-medium text-[#112D4E]/80">Microphone</label>
+                  <label className="mb-2 block text-xs font-medium text-[#112D4E]/80 dark:text-white">Microphone</label>
                   <div className="flex items-center gap-2">
                     <select
-                      className="w-full rounded border border-[#DBE2EF] px-2 py-1.5 text-sm bg-[#F9F7F7]"
+                      className="w-full rounded border border-[#DBE2EF] px-2 py-1.5 text-sm bg-[#F9F7F7] dark:bg-gray-700"
                       value={selectedMicId || ""}
                       onChange={(e) => setSelectedMicId(e.target.value || undefined)}
                     >
@@ -789,14 +827,14 @@ export default function VoiceRoomPopup({
                     </select>
                     <button
                       onClick={() => startMicTest(selectedMicId)}
-                      className="rounded border border-[#DBE2EF] px-2 py-1.5 text-sm hover:bg-[#DBE2EF]"
+                      className="rounded border border-[#DBE2EF] px-2 py-1.5 text-sm hover:bg-[#DBE2EF] dark:hover:bg-gray-600"
                       type="button"
                     >
                       Test
                     </button>
                     <button
                       onClick={() => stopMicTest()}
-                      className="rounded border border-[#DBE2EF] px-2 py-1.5 text-sm hover:bg-[#DBE2EF]"
+                      className="rounded border border-[#DBE2EF] px-2 py-1.5 text-sm hover:bg-[#DBE2EF] dark:hover:bg-gray-600"
                       type="button"
                     >
                       Stop
@@ -817,7 +855,7 @@ export default function VoiceRoomPopup({
                       onClick={() => setMuted((m) => !m)}
                       className={classNames(
                         "inline-flex items-center gap-1 rounded border border-[#DBE2EF] px-2 py-1.5 text-sm",
-                        muted ? "bg-[#3F72AF] text-white" : "hover:bg-[#DBE2EF]"
+                        muted ? "bg-[#3F72AF] text-white" : "hover:bg-[#DBE2EF] dark:hover:bg-gray-600"
                       )}
                       type="button"
                       title="Mute on join"
@@ -829,9 +867,9 @@ export default function VoiceRoomPopup({
 
                 {/* Lobby roster (optional) */}
                 {lobbyRosterEnabled && (
-                  <div className="rounded-lg border border-[#DBE2EF] p-4 bg-[#F9F7F7]">
+                  <div className="rounded-lg border border-[#DBE2EF] p-4 bg-[#F9F7F7] dark:bg-gray-700">
                     <div className="mb-3 flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-[#112D4E]">People in room</h3>
+                      <h3 className="text-sm font-semibold text-[#112D4E] dark:text-white">People in room</h3>
                       <button
                         onClick={pollRoster}
                         className="rounded border border-[#DBE2EF] px-2 py-1 text-xs hover:bg-[#DBE2EF]"
@@ -879,7 +917,7 @@ export default function VoiceRoomPopup({
                         })}
                       </div>
                     ) : (
-                      <p className="text-sm text-[#112D4E]/70">
+                      <p className="text-sm text-[#112D4E]/70 dark:text-gray-400">
                         ยังไม่มีใคร หรือปิด roster API
                       </p>
                     )}
@@ -905,15 +943,15 @@ export default function VoiceRoomPopup({
                     )}
                   </button>
                   <div className="flex items-center gap-2">
-                    <kbd className="rounded bg-[#DBE2EF] px-1.5 py-0.5 text-xs">J</kbd>
-                    <span className="text-xs text-[#112D4E]/70">Join</span>
+                    <kbd className="rounded bg-[#DBE2EF] px-1.5 py-0.5 text-xs dark:bg-gray-600">J</kbd>
+                    <span className="text-xs text-[#112D4E]/70 dark:text-white">Join</span>
                   </div>
                 </div>
               </>
             ) : (
               <>
                 {/* ===== STAGE ===== */}
-                <div className="rounded-xl border border-[#DBE2EF] bg-gradient-to-br from-[#DBE2EF] to-[#F9F7F7] p-4">
+                <div className="rounded-xl border border-[#DBE2EF] bg-gradient-to-br from-[#DBE2EF] to-[#F9F7F7] p-4 dark:from-gray-700 dark:to-gray-700">
                   <div className="flex flex-wrap gap-4">
                     {/* Myself */}
                     <UserBubble
@@ -942,6 +980,7 @@ export default function VoiceRoomPopup({
                             initial={initial}
                             muted={isMuted}
                             speaking={p.speaking}
+                            deaf={p.deaf}
                           />
                         );
                       })}
@@ -974,32 +1013,17 @@ export default function VoiceRoomPopup({
                       onClick={toggleDeaf}
                       className={classNames(
                         "h-10 w-10 rounded-full border border-[#DBE2EF] shadow flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[#3F72AF] focus:ring-offset-2",
-                        deaf ? "bg-[#3F72AF] text-white" : "bg-[#F9F7F7] hover:bg-[#DBE2EF] text-[#112D4E]"
+                        !deaf ? "bg-[#3F72AF] text-white" : "bg-[#DBE2EF] hover:bg-[#DBE2EF] text-[#112D4E]"
                       )}
                       title={deaf ? "Undeafen (D)" : "Deafen (D)"}
                       type="button"
                     >
-                      <HeadphonesIcon size={18} />
+                      {deaf ? <HeadphonesOffIcon/> : <HeadphonesIcon size={12} /> }
                     </button>
                   </div>
 
                   {/* Right: PTT + Leave */}
                   <div className="flex items-center gap-2">
-                    <button
-                      onMouseDown={handlePTTDown}
-                      onMouseUp={handlePTTUp}
-                      onMouseLeave={handlePTTUp}
-                      disabled={!joined}
-                      className={classNames(
-                        "rounded-lg px-3 py-2 text-sm border border-[#DBE2EF] focus:outline-none focus:ring-2 focus:ring-[#3F72AF] focus:ring-offset-2",
-                        joined ? "hover:bg-[#DBE2EF]" : "opacity-50 cursor-not-allowed"
-                      )}
-                      type="button"
-                      title="Hold to talk (Space)"
-                    >
-                      Push-to-talk
-                    </button>
-
                     <button
                       onClick={() => { if (myUid) void handleLeave(myUid); }}
                       disabled={!joined && !joining}
@@ -1017,6 +1041,10 @@ export default function VoiceRoomPopup({
           </div>
         </div>
       </aside>
+
+      {joined && !isOpen && (
+        <VoiceFloatingButton onOpen={onOpen!} />
+      )}
     </>,
     document.body
   );
@@ -1045,6 +1073,18 @@ function HeadphonesIcon({ size = 12 }: { size?: number }) {
   );
 }
 
+function HeadphonesOffIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
+      {/* headphone */}
+      <path d="M12 3a9 9 0 0 0-9 9v6a3 3 0 0 0 3 3h1v-8H6a7 7 0 0 1 14 0h-1v8h1a3 3 0 0 0 3-3v-6a9 9 0 0 0-9-9Z" />
+
+      {/* slash */}
+      <path d="M4.3 20.7a1 1 0 0 1 0-1.4l14-14a1 1 0 1 1 1.4 1.4l-14 14a1 1 0 0 1-1.4 0Z" />
+    </svg>
+  );
+}
+
 function UserBubble({
   uid,
   name,
@@ -1052,7 +1092,7 @@ function UserBubble({
   muted,
   speaking,
   self = false,
-  deaf, // new: show deafen state on self
+  deaf,
 }: {
   uid: string;
   name: string;
@@ -1091,20 +1131,20 @@ function UserBubble({
         >
           {muted ? <MicOffIcon size={12} /> : <MicOnIcon size={12} />}
         </span>
-        {self && (
-          <span
-            className={classNames(
-              "flex h-5 w-5 items-center justify-center rounded-full border border-white",
-              deaf ? "bg-[#DBE2EF] text-[#3F72AF]" : "bg-[#3F72AF] text-white"
-            )}
-            title={deaf ? "Deafened" : "Listening"}
-          >
-            <HeadphonesIcon size={12} />
-          </span>
-        )}
+        <span
+          className={classNames(
+            "flex h-5 w-5 items-center justify-center rounded-full border border-white",
+            deaf
+              ? "bg-[#DBE2EF] text-[#3F72AF]"
+              : "bg-[#3F72AF] text-white"
+          )}
+          title={deaf ? "Deafened" : "Listening"}
+        >
+          {deaf ? <HeadphonesOffIcon/> : <HeadphonesIcon size={12} /> }
+        </span>
       </div>
 
-      <span className="mt-1 max-w-[7rem] truncate text-xs text-[#112D4E]">
+      <span className="mt-1 max-w-[7rem] truncate text-xs text-[#112D4E] dark:text-white">
         {name}
       </span>
     </div>

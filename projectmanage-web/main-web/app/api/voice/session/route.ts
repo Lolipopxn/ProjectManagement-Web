@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   try {
     const token = await getAuthToken();
     const body = await req.json();
-    const { slug, agoraUid, muted = false } = body || {};
+    const { slug, agoraUid, muted = false, deaf = false } = body || {};
 
     if (!slug || !agoraUid) {
       return NextResponse.json({ error: "slug and agoraUid required" }, { status: 400 });
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       const r = await strapiFetch(`/api/voice-sessions/${docId}`, token, {
         method: "PUT",
         body: JSON.stringify({
-          data: { muted: !!muted, joinedAt: existing?.attributes?.joinedAt ?? nowIso, active: true },
+          data: { muted: !!muted, deaf: !!deaf, joinedAt: existing?.attributes?.joinedAt ?? nowIso, active: true },
         }),
       });
       const js = await r.json();
@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
         project: projectId,
         agoraUid: String(agoraUid),
         muted: !!muted,
+        deaf: !!deaf,
         active: true,
         joinedAt: nowIso,
       },
@@ -204,9 +205,9 @@ export async function PATCH(req: NextRequest) {
   try {
     const token = await getAuthToken();
     const body = await req.json();
-    const { slug, agoraUid, muted } = body || {};
-    if (!slug || !agoraUid || typeof muted !== "boolean") {
-      return NextResponse.json({ error: "slug, agoraUid, muted required" }, { status: 400 });
+    const { slug, agoraUid, muted, deaf } = body || {};
+    if (!slug || !agoraUid) {
+      return NextResponse.json({ error: "slug, agoraUid, muted, deaf required" }, { status: 400 });
     }
 
     const projectId = await getProjectIdBySlug(slug, token);
@@ -225,10 +226,18 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Missing documentId on session" }, { status: 500 });
     }
 
-    const r = await strapiFetch(`/api/voice-sessions/${docId}`, token, {
+    const updateData: any = {}
+
+    if (typeof muted === "boolean") updateData.muted = muted
+    if (typeof deaf === "boolean") updateData.deaf = deaf
+
+   const r = await strapiFetch(`/api/voice-sessions/${docId}`, token, {
       method: "PUT",
-      body: JSON.stringify({ data: { muted: !!muted } }),
+      body: JSON.stringify({
+        data: updateData
+      }),
     });
+    
     if (!r.ok) return NextResponse.json({ error: "Mute update failed" }, { status: 500 });
     const js = await r.json();
     return NextResponse.json({ ok: true, data: js?.data });
