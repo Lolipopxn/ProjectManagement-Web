@@ -505,6 +505,16 @@ export default function VoiceRoomPopup({
       }
 
       setJoined(true);
+
+      localStorage.setItem(
+        "voice:active",
+        JSON.stringify({
+          slug,
+          muted,
+          deaf
+        })
+      );
+
       fetchMe()
         .then((u) => u && setMe(u))
         .catch(() => {});
@@ -584,6 +594,8 @@ export default function VoiceRoomPopup({
         clearInterval(speakingTimerRef.current as any);
         speakingTimerRef.current = null;
       }
+
+      localStorage.removeItem("voice:active");
     }
   }, [deregisterSessionKeepalive]);
 
@@ -659,6 +671,22 @@ export default function VoiceRoomPopup({
       </button>
     );
   }
+
+  const didRestoreRef = useRef(false);
+
+  useEffect(() => {
+    if (didRestoreRef.current) return;
+    didRestoreRef.current = true;
+
+    const saved = localStorage.getItem("voice:active");
+    if (!saved) return;
+
+    const data = JSON.parse(saved);
+
+    if (data.slug === slug) {
+      handleJoin();
+    }
+  }, [slug, handleJoin]);
 
   // New: global keyboard shortcuts (J join, M mute, D deafen, Space PTT, Esc close)
   useEffect(() => {
