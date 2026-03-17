@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
         p => p.project_status === "completed"
       ).length,
       pendingProjects: userOwnProjects.filter(
-        p => p.project_status === "pending" || p.project_status === "planning"
+        p => p.project_status === "on-hold" || p.project_status === "planning"
       ).length,
     };
 

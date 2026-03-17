@@ -18,7 +18,7 @@ import GoogleMapsProvider from '@/app/components/map/GoogleMapsProvider';
 import MemberPopup from '@/app/components/MemberPopup';
 import RenderTaskCard from '@/app/components/RenderTaskCard';
 
-import { AiFillReconciliation, AiFillEnvironment, AiFillFileText } from "react-icons/ai";
+import { AiFillReconciliation, AiFillEnvironment, AiFillFileText, AiFillCrown } from "react-icons/ai";
 import { IoMdClose, IoMdPerson } from "react-icons/io";
 import { FaTimes } from "react-icons/fa";
 import { CgSandClock } from "react-icons/cg";
@@ -127,6 +127,8 @@ export default function ProjectDetailPage() {
   const [toggleMember, setToggleMember] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
   const [reloadTaskMembers, setReloadTaskMembers] = useState(false);
+  const [openStatusDropdown, setOpenStatusDropdown] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [reload, setReload] = useState(false);
   const [projectLoading, setProjectLoading] = useState(false);
@@ -620,6 +622,46 @@ export default function ProjectDetailPage() {
     }
   };
 
+  //update status project only
+  const handleChangeProjectStatus = async (newStatus: string) => {
+    if (!project) return;
+
+    try {
+      setUpdatingStatus(true);
+
+      const res = await axios.put(
+        `/api/projects/${project.documentId || projectId}`,
+        {
+          project_status: newStatus,
+        }
+      );
+
+      if (res.data.success) {
+        // update UI ทันที
+        setProject((prev: any) => ({
+          ...prev,
+          project_status: newStatus,
+        }));
+      }
+    } catch (err) {
+      console.error("Update status failed:", err);
+    } finally {
+      setUpdatingStatus(false);
+      setOpenStatusDropdown(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".status-dropdown")) {
+        setOpenStatusDropdown(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
   // Function to refresh project members data
   const refreshProjectMembers = async () => {
     if (!project?.id) return;
@@ -1024,6 +1066,28 @@ const progressPercent =
   };
 
   type TaskFilter = keyof typeof filterLabelMap;
+
+  const statusProjectConfigMap: Record<
+    string,
+    { label: string; bg: string }
+  > = {
+    active: {
+      label: "ดำเนินการ",
+      bg: "bg-blue-100 text-blue-700",
+    },
+    completed: {
+      label: "เสร็จสิ้น",
+      bg: "bg-green-100 text-green-700",
+    },
+    'on-hold': {
+      label: "หยุดพัก",
+      bg: "bg-yellow-100 text-yellow-700",
+    },
+    cancelled: {
+      label: "ยกเลิก",
+      bg: "bg-red-100 text-red-700",
+    },
+  };
 
   const today = new Date();
 
@@ -2077,14 +2141,92 @@ const progressPercent =
                       <div className="text-2xl mb-1 font-medium text-gray-900 dark:text-gray-300 max-w-50 trunacte">{project.project_name}</div>
                       <span className={`flex px-2 py-1 rounded-full text-xs font-medium ${
                         userRole === 'Leader' 
-                          ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-                          : 'bg-green-100 text-green-700 border border-green-200'
+                          ? 'bg-yellow-100 text-yellow-600 border border-yellow-200' 
+                          : 'bg-green-100 text-green-600 border border-green-200'
                       }`}>
-                        {userRole}
+                        <div className="flex flex-row items-center gap-1">
+                          {userRole === 'Leader' ? (
+                            <AiFillCrown className='size-4'/>
+                          ) : (
+                            <IoMdPerson className='size-4'/>
+                          )}
+                          {userRole}
+                        </div>                
                       </span>
-                      <span className={`hidden md:flex px-2 py-1 rounded-full text-xs font-medium ${statusConfig.statusBg}`}>
-                        {project.project_status}
-                      </span>
+                      <div className="relative status-dropdown">
+                        <button
+                          onClick={() => setOpenStatusDropdown((prev) => !prev)}
+                          className={`
+                            hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
+                            transition-all duration-200
+                            hover:scale-105 hover:shadow-sm
+                            ${statusProjectConfigMap[project.project_status]?.bg}
+                          `}
+                        >
+                          <span>
+                            {statusProjectConfigMap[project.project_status]?.label || "-"}
+                          </span>
+
+                          <svg
+                            className={`w-3 h-3 transition-transform duration-300 ${
+                              openStatusDropdown ? "rotate-180" : ""
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+
+                        {/* Dropdown */}
+                        <div
+                          className={`
+                            absolute right-0 mt-2 w-44 bg-white border border-gray-300 rounded-xl shadow-[3px_3px_0_rgba(0,0,0,0.15)] z-50
+                            dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-400
+                            overflow-hidden
+                            transform transition-all duration-300 ease-out origin-top
+                            ${openStatusDropdown
+                              ? "opacity-100 scale-100 translate-y-0"
+                              : "opacity-0 scale-95 -translate-y-2 pointer-events-none"}
+                          `}
+                        >
+                          {Object.entries(statusProjectConfigMap).map(([key, value], index) => {
+                            const isActive = project.project_status === key;
+
+                            return (
+                              <button
+                                key={key}
+                                onClick={() => handleChangeProjectStatus(key)}
+                                className={`
+                                  w-full flex items-center justify-between px-4 py-2.5 text-sm
+                                  transition-all duration-200 ease-out origin-top
+                                  ${
+                                    isActive
+                                      ? "bg-[#636CCB]/10 text-[#636CCB] font-medium"
+                                      : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                                  }
+                                  ${openStatusDropdown ? "translate-y-0 opacity-100 scale-100" : "-translate-y-4 opacity-0 sclae-80"}
+                                `}
+                              >
+                                <span>{value.label}</span>
+
+                                {/* Active check */}
+                                {isActive && (
+                                  <svg
+                                    className="w-4 h-4 text-[#636CCB]"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   {/* Date begin - end */}
@@ -2229,8 +2371,8 @@ const progressPercent =
                   </div>
                   
                   <div className="grid grid-cols-1 max-h-[calc(90vh-240px)] px-2 py-2 mb-6 overflow-y-auto gap-2 ">
-                    {filteredTasks.filter(task => task.task_type === 'location_task').length > 0 ? (
-                      filteredTasks
+                    {[...myTasks, ...otherTasks].filter(task => task.task_type === 'location_task').length > 0 ? (
+                      [...myTasks, ...otherTasks]
                         .filter((task) => {
                             if(task.task_type === 'normal_task') {
                               return false
@@ -2238,6 +2380,9 @@ const progressPercent =
 
                             return true;
                         })
+                        .sort((a, b) => {
+                            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                          })
                         .map(task => renderTaskCard(task))
                     ) : (
                       <div className="col-span-full text-center py-8 text-gray-500">
