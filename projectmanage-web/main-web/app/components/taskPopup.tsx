@@ -352,6 +352,10 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
         }
     };
 
+    const isFileUrl = (url: string) => {
+        return /\.(pdf|docx?|xlsx?|pptx?|png|jpg|jpeg|gif|zip)(\?|$)/i.test(url);
+    };
+
     // Handle cancel work submission
     const handleCancelWorkSubmission = async (done: (status: "success" | "fail") => void) => {
         if (!task?.documentId || !currentUser) {
@@ -826,9 +830,13 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                         {/* File List */}
                                         <div className="space-y-2 mt-2 flex-1">
                                         {item.file_urls?.map((fileUrl, index) => {
-                                            const isLink = isExternalLink(fileUrl);
-                                            const fullFileUrl = isLink ? fileUrl : getFileUrl(fileUrl);
-                                            const fileName = isLink ? fileUrl.replace(/^https?:\/\//, "") : getFileNameFromUrl(fileUrl);
+                                            const isLink = isExternalLink(fileUrl) && !isFileUrl(fileUrl);
+                                            const isFile = isFileUrl(fileUrl);
+
+                                            const fullFileUrl = getFileUrl(fileUrl);
+                                            const fileName = isFile
+                                                ? getFileNameFromUrl(fileUrl)
+                                                : fileUrl.replace(/^https?:\/\//, "");
                                             
                                             return (
                                                 <div key={index}>
