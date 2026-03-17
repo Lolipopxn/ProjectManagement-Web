@@ -617,7 +617,7 @@ export default function TaskDetailPage() {
       // รวมวันที่และเวลา
       let combinedDueDate = editForm.dueDate;
       if (editForm.dueTime) {
-        combinedDueDate = `${editForm.dueDate}T${editForm.dueTime}:00.000Z`;
+        combinedDueDate = new Date(`${editForm.dueDate}T${editForm.dueTime}:00`).toISOString();
       }
       
       const response = await axios.put(`/api/tasks/${task.documentId}`, {
@@ -2091,14 +2091,15 @@ export default function TaskDetailPage() {
                             const fullFileUrl = getFileUrl(fileUrl);
                             const fileName = getFileNameFromUrl(fileUrl);
                             const isExternalLink = fileUrl.startsWith('http://') || fileUrl.startsWith('https://');
+                            const isFile = /\.(pdf|docx?|xlsx?|pptx?|png|jpg|jpeg|gif|zip)$/i.test(fileUrl);
                             
                             return (
                               <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors group dark:bg-gray-700 dark:hover:bg-gray-600">
                                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                    isExternalLink ? 'bg-purple-100' : 'bg-blue-100'
+                                    isExternalLink && !isFile ? 'bg-purple-100' : 'bg-blue-100'
                                   }`}>
-                                    {isExternalLink ? (
+                                    {isExternalLink && !isFile ? (
                                       <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                       </svg>
@@ -2109,7 +2110,7 @@ export default function TaskDetailPage() {
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    {isExternalLink ? (
+                                    {isExternalLink && !isFile ? (
                                       <>
                                         <div className="flex items-center space-x-2 mb-1">
                                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
@@ -2139,7 +2140,7 @@ export default function TaskDetailPage() {
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
-                                  {isExternalLink ? (
+                                  {isExternalLink && !isFile ? (
                                     <a 
                                       href={fullFileUrl} 
                                       target="_blank" 

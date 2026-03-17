@@ -494,14 +494,19 @@ export default function ProjectDetailPage() {
       setCreateTaskLoading(true);
       
       // รวมวันที่และเวลา
-      let combinedDueDate = taskData.dueDate;
-      let combineBeginDate = taskData.beginDate;
+      let combineBeginDate
+      let combinedDueDate
+
       if (taskData.dueTime) {
-        combinedDueDate = `${taskData.dueDate}T${taskData.dueTime}:00.000Z`;
+        combinedDueDate = new Date(
+          `${taskData.dueDate}T${taskData.dueTime}:00`
+        ).toISOString();
       }
 
       if (taskData.beginTime) {
-        combineBeginDate = `${taskData.beginDate}T${taskData.beginTime}:00.000Z`;
+        combineBeginDate = new Date(
+          `${taskData.beginDate}T${taskData.beginTime}:00`
+        ).toISOString();
       }
       
       const response = await axios.post('/api/tasks/create', {
@@ -554,14 +559,19 @@ export default function ProjectDetailPage() {
     try {
       setCreateTaskLoading(true);
       
-      let combinedDueDate = taskData.dueDate;
-      let combineBeginDate = taskData.beginDate;
+      let combineBeginDate
+      let combinedDueDate
+
       if (taskData.dueTime) {
-        combinedDueDate = `${taskData.dueDate}T${taskData.dueTime}:00.000Z`;
+        combinedDueDate = new Date(
+          `${taskData.dueDate}T${taskData.dueTime}:00`
+        ).toISOString();
       }
 
       if (taskData.beginTime) {
-        combineBeginDate = `${taskData.beginDate}T${taskData.beginTime}:00.000Z`;
+        combineBeginDate = new Date(
+          `${taskData.beginDate}T${taskData.beginTime}:00`
+        ).toISOString();
       }
       
       const response = await axios.post('/api/tasks/createLocation', {
