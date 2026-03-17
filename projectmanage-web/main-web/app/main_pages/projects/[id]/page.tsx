@@ -2138,7 +2138,23 @@ const progressPercent =
                   </div>
                   <div>
                     <div className="flex items-center space-x-3 md:space-x-2">
-                      <div className="text-2xl mb-1 font-medium text-gray-900 dark:text-gray-300 max-w-50 trunacte">{project.project_name}</div>
+                      <div className="relative group max-w-50 md:max-w-100">
+                        <div className="text-2xl mb-1 font-medium text-gray-900 dark:text-gray-300 truncate">
+                          {project.project_name}
+                        </div>
+
+                        {/* Tooltip */}
+                        <div className="
+                          absolute left-0 top-full mt-2
+                          bg-gray-500 text-white text-sm px-3 py-1 rounded-lg
+                          opacity-0 group-hover:opacity-100
+                          transition-all duration-200
+                          whitespace-nowrap z-50
+                          pointer-events-none
+                        ">
+                          {project.project_name}
+                        </div>
+                      </div>
                       <span className={`flex px-2 py-1 rounded-full text-xs font-medium ${
                         userRole === 'Leader' 
                           ? 'bg-yellow-100 text-yellow-600 border border-yellow-200' 
