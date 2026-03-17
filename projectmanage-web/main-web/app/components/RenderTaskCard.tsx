@@ -50,13 +50,15 @@ export default function RenderTaskCard({
   return (
     <div
       className={`
-          border border-gray-200 rounded-lg p-5 md:mb-4
-            hover:shadow-md hover:border-gray-300 hover:bg-gray-100 hover:-translate-1 dark:hover:bg-gray-800 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:shadow-lg dark:bg-gray-700
+          border border-gray-200 rounded-lg p-5 md:mb-4 shadow-[0px_0px_0_rgba(0,0,0,0)]
+            hover:shadow-[4px_4px_0_rgba(0,0,0,0.25)] hover:border-gray-300 hover:bg-gray-50 hover:-translate-1
+            dark:hover:bg-gray-800 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:shadow-lg dark:bg-gray-700
             transition-all duration-300
             relative overflow-hidden
-            ${task.task_status === "continue" && task.task_type === "normal_task" ? "relative" : ""}
-            ${task.task_status === "completed" && task.task_type === "normal_task"  && "bg-green-50 border-2 border-green-300 hover:bg-green-100 hover:border-green-200"}
-            ${task.task_status === "rejected" && task.task_type === "normal_task" && "bg-rose-50 border-2 border-rose-200 hover:bg-rose-100 hover:border-rose-200"}
+            ${task.task_status === "continue" && task.task_type === "normal_task" ? "relative hover:bg-blue-50 shadow-blue-300" : ""}
+             ${task.task_status === "not turn in" && task.task_type === "normal_task"  && "border-2 border-yellow-400 hover:bg-yellow-50 hover:border-yellow-100 shadow-yellow-300"}
+            ${task.task_status === "completed" && task.task_type === "normal_task"  && "border-2 border-green-300 hover:bg-green-50 hover:border-green-100 shadow-green-300"}
+            ${task.task_status === "rejected" && task.task_type === "normal_task" && " border-2 border-rose-300 hover:bg-rose-50 hover:border-rose-100 shadow-rose-300"}
 
             ${task.task_status === "completed" && task.task_type === "location_task"  && "bg-gray-50 border-1 border-gray-300 hover:bg-gray-100 hover:border-gray-200"}
         }`}

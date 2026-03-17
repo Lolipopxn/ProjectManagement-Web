@@ -333,9 +333,9 @@ export default function OverviewPage() {
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                             project.project_status === "active"
-                              ? "bg-green-50 text-green-700 border border-green-200"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
                               : project.project_status === "completed"
-                                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                ? "bg-green-50 text-green-700 border border-green-200"
                                 : "bg-yellow-50 text-yellow-700 border border-yellow-200"
                           }`}
                         >

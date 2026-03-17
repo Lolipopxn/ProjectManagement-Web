@@ -2156,10 +2156,11 @@ const progressPercent =
                       <div className="relative status-dropdown">
                         <button
                           onClick={() => setOpenStatusDropdown((prev) => !prev)}
+                          disabled={userRole === 'Member'}
                           className={`
-                            hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
+                            hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium disabled:cursor-not-allowed
                             transition-all duration-200
-                            hover:scale-105 hover:shadow-sm
+                            hover:scale-105 hover:shadow-sm                
                             ${statusProjectConfigMap[project.project_status]?.bg}
                           `}
                         >

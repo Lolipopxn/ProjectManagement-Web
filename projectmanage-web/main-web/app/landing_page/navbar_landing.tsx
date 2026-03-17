@@ -23,7 +23,7 @@ export default function Nav() {
                     <ul className={`${!isOpen ? 'hidden transition-all transition-discrete opacity-0' : 'flex' } flex flex-col md:flex md:opacity-100 md:mx-10 md:gap-5 md:flex-row`}>
                         <li className="my-2 hover:text-[#6E8CFB]"><a href="#header">Overview</a></li>
                         <li className="my-2 hover:text-[#6E8CFB]"><a  href="#howto">How to Use ?</a></li>
-                        <li className="my-2 hover:text-[#6E8CFB]"><a href="#demo">Demo</a></li>
+                        {/* <li className="my-2 hover:text-[#6E8CFB]"><a href="#demo">Demo</a></li> */}
                         <li className="my-2 hover:text-[#6E8CFB]"><a href="#footer">F&Q</a></li>
                     </ul>
                 </div>

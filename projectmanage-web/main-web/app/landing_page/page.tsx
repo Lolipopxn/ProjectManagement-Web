@@ -12,7 +12,7 @@ export default function LandingPage() {
             <Navbar></Navbar>
             <Header></Header>
             <HowToPage></HowToPage> 
-            <Demo></Demo>
+            {/* <Demo></Demo> */}
             <Footer></Footer>
         </div> 
     );
