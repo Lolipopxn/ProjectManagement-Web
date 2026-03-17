@@ -366,7 +366,6 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
             );
       
             if (activeSubmissions.length === 0) {
-              alert('ไม่พบการส่งงานที่ active');
               return;
             }
       
@@ -526,14 +525,17 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
 
                             <button 
                                 onClick={() => setChangePage(1)}
-                                className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 1 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>ผู้ได้รับหมอบหมาย</button>
+                                className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 1 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>{task.task_type === 'normal_task'? "ผู้ได้รับหมอบหมาย" :"เพิ่มสิทธ์จัดการประกาศ"}</button>
                             
                             <button 
                                 onClick={() => setChangePage(2)}
                                 className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 2 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>{task.task_type === 'normal_task'? "งานที่ส่งเเล้ว" :"ไฟล์ที่เกี่ยวข้อง"}</button>
+                            
+                            {task.task_type === 'normal_task' && (
                             <button 
                                 onClick={() => setChangePage(3)}
                                 className={`p-2 bg-white rounded-md dark:bg-gray-800 ${changePage === 3 ? 'text-black border-b-2 border-[#50589C] rounded-b-none dark:text-white dark:border-blue-400' : 'text-gray-400'} hover:bg-gray-100`}>{task.task_type === 'normal_task'? "สถานะงาน" :"สถานะ"}</button>   
+                            )}
                         </div>
                    
                         <button 
@@ -591,7 +593,7 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                     
                                 </div>
 
-                                <div className="px-2 py-4 h-85 overflow-y-scroll scrollbar-autoHide whitespace-pre-wrap text-gray-700 leading-relaxed dark:text-gray-300">
+                                <div className="px-2 py-4 h-85 w-80 md:w-160 overflow-y-scroll scrollbar-autoHide break-words whitespace-pre-wrap text-gray-700 leading-relaxed dark:text-gray-300">
                                     {task.description}
                                 </div>
                             </div>
@@ -1094,7 +1096,7 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                     </div>
                     )}
 
-                    {changePage === 3 && (
+                    {changePage === 3 && task.task_type === 'normal_task' && (
                     <div className='flex flex-col items-center space-y-6 text-lg h-full w-full animate-in fade-in slide-in-from-bottom-2 duration-300'>
                         <div className='w-80 h-100 md:w-full md:h-full p-2 overflow-x-scroll overflow-y-clip md:overflow-visible'>
                             <div className='flex flex-col items-center justify-center gap-4 md:mt-6 scale-80 md:scale-100 '>

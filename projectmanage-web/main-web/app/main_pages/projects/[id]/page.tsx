@@ -24,6 +24,7 @@ import { FaTimes } from "react-icons/fa";
 import { CgSandClock } from "react-icons/cg";
 import { FcSurvey, FcOk, FcHighPriority, FcSearch, FcProcess } from "react-icons/fc";
 import { GrAnnounce } from "react-icons/gr";
+import RenderAnnouncementCard from '@/app/components/RenderAnnouncementCard';
 
 
 // Interface สำหรับ project data
@@ -1114,16 +1115,29 @@ const progressPercent =
     const assigneeInfo = getAssigneeInfo();
 
     return (
-      <RenderTaskCard 
-        key={task.id}
-        task={task}
-        setSelectedTask={setSelectedTask}
-        setPopupTask={setPopupTask}
-        userRole={userRole}
-        setShowTaskManageModal={setShowTaskManageModal}
-        getTaskStatusConfig={getTaskStatusConfig}
-        getTimeLeft={getTimeLeft}
-      />
+      <div key={task.id}>
+        {task.task_type === 'normal_task' && (
+          <RenderTaskCard 
+            task={task}
+            setSelectedTask={setSelectedTask}
+            setPopupTask={setPopupTask}
+            userRole={userRole}
+            setShowTaskManageModal={setShowTaskManageModal}
+            getTaskStatusConfig={getTaskStatusConfig}
+            getTimeLeft={getTimeLeft}
+          />
+        )}
+
+        {task.task_type ==='location_task' && (
+          <RenderAnnouncementCard 
+            task={task}
+            setSelectedTask={setSelectedTask}
+            setPopupTask={setPopupTask}
+            userRole={userRole}
+            setShowTaskManageModal={setShowTaskManageModal}
+          />
+        )}
+      </div>
     );
   };
 
@@ -1987,7 +2001,7 @@ const progressPercent =
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-gray-900 font-medium dark:text-gray-200">{project.project_name}</span>
+              <span className="text-gray-900 font-medium dark:text-gray-200 max-w-30 truncate">{project.project_name}</span>
             </div>
 
             {/*Other option*/}
@@ -2060,7 +2074,7 @@ const progressPercent =
                   </div>
                   <div>
                     <div className="flex items-center space-x-3 md:space-x-2">
-                      <div className="text-2xl mb-1 font-medium text-gray-900 dark:text-gray-300">{project.project_name}</div>
+                      <div className="text-2xl mb-1 font-medium text-gray-900 dark:text-gray-300 max-w-50 trunacte">{project.project_name}</div>
                       <span className={`flex px-2 py-1 rounded-full text-xs font-medium ${
                         userRole === 'Leader' 
                           ? 'bg-purple-100 text-purple-700 border border-purple-200' 
@@ -2097,27 +2111,27 @@ const progressPercent =
               <div className='flex flex-row justify-center space-x-2 text-sm md:text-md'>
                 {/* Announcement button */}        
                 <div className={`flex justify-center items-center ${ToggleView === 0 ? 'text-black border-b-2 dark:border-gray-300 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-                  <button onClick={() => setToggleView(0)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
+                  <button onClick={() => {setToggleView(0), setOpenOptions(false)}} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
                     Announcement
                   </button>
                 </div>
                 {/* overview button */}        
                 <div className={`flex justify-center items-center ${ToggleView === 1 ? 'text-black border-b-2 dark:border-gray-300 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-                  <button onClick={() => setToggleView(1)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
+                  <button onClick={() => {setToggleView(1), setOpenOptions(false)}} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
                     Overview
                   </button>
                 </div>
 
                 {/* Board button */}        
                 <div className={`flex justify-center items-center ${ToggleView === 2 ? 'text-black border-b-2 dark:border-gray-300 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-                  <button onClick={() => setToggleView(2)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
+                  <button onClick={() => {setToggleView(2), setOpenOptions(false)}} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
                     Board
                   </button>
                 </div>
 
                 {/* GanttChart button */}        
                 <div className={`flex justify-center items-center ${ToggleView === 3 ? 'text-black border-b-2 dark:border-gray-300 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-                  <button onClick={() => setToggleView(3)} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
+                  <button onClick={() => {setToggleView(3), setOpenOptions(false)}} className={`bg-white py-1 px-2 font-medium rounded-sm hover:bg-gray-100 ring-gray-500 dark:bg-gray-900 dark:hover:bg-gray-600`}>
                     Timeline
                   </button>
                 </div>
@@ -2150,12 +2164,12 @@ const progressPercent =
                       <div className='relative'>
                         <button 
                           onClick={() => {setOpenOptions(prev => !prev) }}
-                          className="flex items-center space-x-1 md:space-x-2 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white py-2 md:py-1 px-2 md:px-3 md:py-2 rounded-lg font-medium transition-colors"
+                          className="flex items-center space-x-1 md:space-x-2 bg-[#6E8CFB] hover:bg-[#6E8CFB]/80 text-white py-2 md:py-2 px-2 md:px-3 rounded-lg font-medium transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                           </svg>
-                          <span className='text-sm'>เพิ่มงาน</span>
+                          <span className='text-sm'>เพิ่มประกาศ</span>
                         </button>
 
                         {/* Options */}
@@ -2515,7 +2529,7 @@ const progressPercent =
           </div>)}
 
         {ToggleView === 2 && !tasksLoading && (
-          <div>
+          <div className="grid grid-cols-1 gap-6">
             <FreeDragBoard 
               tasks={[...myTasks, ...otherTasks]} 
               project={project}

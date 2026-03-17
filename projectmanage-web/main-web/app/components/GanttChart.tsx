@@ -227,7 +227,7 @@ export default function GanttChartPage({ tasks }: { tasks: Task[] }) {
         zoom={rangeZoomMap[range]}
         className="border border-gray-200 shadow-md "
       >
-        <GanttSidebar className="mb-60 md:mb-70">
+        <GanttSidebar className="h-120 md:h-100">
           {Object.entries(grouped).map(([group, features]) => (
             <GanttSidebarGroup key={group} name={group}>
               {features.map((feature) => (

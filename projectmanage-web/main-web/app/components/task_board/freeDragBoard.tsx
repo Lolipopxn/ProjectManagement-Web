@@ -381,14 +381,14 @@ export default function FreeDragBoard(
 
         {/* Right Board */}
         <div className="w-full flex flex-col gap-3">
-          <div className="flex flex-row justify-start items-center space-x-3">        
-            <div className="flex flex-row space-x-5 px-4 max-w-full">
+          <div className="flex flex-row justify-start items-center space-x-3 px-4 md:px-0">        
+            <div className="flex flex-row space-x-5 px-4 max-w-full overflow-auto">
               {boards.map((b) => (
                 <div key={b} className="space-y-1 relative">
                   <button
                     onClick={() => setCurrentBoard(b)}
                     onContextMenu={(e) => handleRightClick(e, b)}
-                    className={`p-2 hover:bg-gray-100 rounded-lg font-bold max-w-30 overflow-x-clip dark:hover:bg-gray-700 ${currentBoard === b ? "text-black dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
+                    className={`p-2 hover:bg-gray-100 rounded-lg font-bold max-w-30 truncate overflow-x-clip dark:hover:bg-gray-700 ${currentBoard === b ? "text-black dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
                   >
                     {b}
                   </button>

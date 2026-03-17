@@ -1474,14 +1474,14 @@ export default function TaskDetailPage() {
             </svg>
             <a 
               href={`/main_pages/projects/${projectId}`} 
-              className="hover:text-blue-600"
+              className="hover:text-blue-600 max-w-30 truncate"
             >
               {project?.project_name || 'Project'}
             </a>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <span className="text-gray-900 font-medium dark:text-gray-300">{task.task_name}</span>
+            <span className="text-gray-900 font-medium dark:text-gray-300 max-w-30 truncate">{task.task_name}</span>
           </div>
 
           <div className={`grid grid-cols-1 gap-6 transition-all duration-300 ${isRightPanelOpen ? 'lg:grid-cols-3' : 'lg:grid-cols-1'}`}>
@@ -1491,7 +1491,7 @@ export default function TaskDetailPage() {
               {!isEditing ? (
                 // Display Mode - Title with description (no box)
                 <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-3 dark:text-gray-200">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-3 dark:text-gray-200 max-w-full break-words whitespace-pre-warp ">
                     {task.task_name}
                   </h1>
                   <div className="flex items-center space-x-4 text-sm text-gray-500 mb-6 dark:text-gray-300">
@@ -1502,7 +1502,7 @@ export default function TaskDetailPage() {
                   </div>
                   {task.description && (
                     <div className="prose max-w-none">
-                      <p className="text-gray-700 text-base leading-relaxed whitespace-pre-wrapb dark:text-gray-300">
+                      <p className="text-gray-700 text-base leading-relaxed whitespace-pre-wrapb dark:text-gray-300 max-w-full break-words whitespace-pre-warp">
                         {task.description}
                       </p>
                     </div>
