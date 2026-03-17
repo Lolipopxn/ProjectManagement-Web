@@ -287,7 +287,7 @@ export default function GanttChartPage({ tasks }: { tasks: Task[] }) {
                                 <p>ชื่อโปรเจค</p>
                               </div>
                             </div>
-                            <div className="col-span-1 font-normal">
+                            <div className="col-span-1 font-normal max-w-60 whitespace-pre-wrap break-words">
                               <p className="">{feature.group.name}</p>
                             </div>
 
@@ -297,7 +297,7 @@ export default function GanttChartPage({ tasks }: { tasks: Task[] }) {
                                 <p>ชื่องาน</p>
                               </div>
                             </div>
-                            <div className="col-span-1 font-normal">
+                            <div className="col-span-1 font-normal max-w-60 whitespace-pre-wrap break-words">
                               <p className="">{feature.name}</p>
                             </div>
 
