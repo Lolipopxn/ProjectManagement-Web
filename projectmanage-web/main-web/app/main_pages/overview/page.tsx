@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import ProjectCard from '../../components/ProjectCard';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import ProjectCard from "../../components/ProjectCard";
+
+import { AiFillCrown } from "react-icons/ai";
 
 import { useSidebarStore } from "@/hooks/sidebar";
-import Link from 'next/link';
+import Link from "next/link";
+
 
 // Interface สำหรับ project data
 interface Project {
@@ -57,22 +60,22 @@ export default function OverviewPage() {
         setLoading(true);
         setError(null);
 
-        console.log('Fetching overview data from API...');
-        const response = await axios.get('/api/overview');
-        
+        console.log("Fetching overview data from API...");
+        const response = await axios.get("/api/overview");
+
         // console.log('Overview API response:', response.data);
         // console.log('User own projects count:', response.data?.userOwnProjects?.length);
         // console.log('User own projects data:', response.data?.userOwnProjects);
-        
+
         setOverviewData(response.data);
       } catch (error: any) {
         // console.error('Failed to fetch overview data:', error);
         // console.error('Error response:', error.response?.data);
-        
+
         if (error.response?.status === 401) {
-          setError('กรุณาเข้าสู่ระบบ');
+          setError("กรุณาเข้าสู่ระบบ");
         } else {
-          setError('ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+          setError("ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
         }
       } finally {
         setLoading(false);
@@ -100,9 +103,11 @@ export default function OverviewPage() {
       <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center dark:bg-gray-800">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4 dark:text-white">
-            {error || 'กรุณาเข้าสู่ระบบ'}
+            {error || "กรุณาเข้าสู่ระบบ"}
           </h2>
-          <p className="text-gray-600 mb-6 dark:text-gray-400">คุณต้องเข้าสู่ระบบเพื่อดูข้อมูลโปรเจ็กต์</p>
+          <p className="text-gray-600 mb-6 dark:text-gray-400">
+            คุณต้องเข้าสู่ระบบเพื่อดูข้อมูลโปรเจ็กต์
+          </p>
           <Link
             href="/auth_page/login"
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
@@ -123,13 +128,38 @@ export default function OverviewPage() {
     totalProjects: 0,
     activeProjects: 0,
     completedProjects: 0,
-    pendingProjects: 0
+    pendingProjects: 0,
   };
+
+  const total = safeStats.totalProjects || 1;
+
+  const statItems = [
+    {
+      label: "ทั้งหมด",
+      value: safeStats.totalProjects,
+      color: "bg-gray-500",
+    },
+    {
+      label: "กำลังทำ",
+      value: safeStats.activeProjects,
+      color: "bg-blue-500",
+    },
+    {
+      label: "เสร็จแล้ว",
+      value: safeStats.completedProjects,
+      color: "bg-green-500",
+    },
+    {
+      label: "รอดำเนินการ",
+      value: safeStats.pendingProjects,
+      color: "bg-purple-500",
+    },
+  ];
 
   return (
     <div className=" bg-white min-h-screen w-full dark:bg-gray-900">
       {/* Navbar */}
-      
+
       <div className="flex flex-row justify-center items-start">
         {/* Main Content */}
         <div className={`flex-1 p-6 max-w-[1900px]`}>
@@ -138,19 +168,46 @@ export default function OverviewPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2 text-gray-600 dark:text-white">
                 <span>Project Overview</span>
-                <button onClick={() => {setToggle(x => !x)} }>
-                  <svg className={`w-4 h-4 ${isToggle ? 'rotate-0' : 'rotate-90'} transition-all duration-300`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <button
+                  onClick={() => {
+                    setToggle((x) => !x);
+                  }}
+                >
+                  <svg
+                    className={`w-4 h-4 ${isToggle ? "rotate-0" : "rotate-90"} transition-all duration-300`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
               </div>
-              <Link 
+              <Link
                 href="/main_pages/create-project"
-                className="bg-blue-500 hover:bg-blue-600 shadow-md shadow-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 dark:shadow-gray-700"
+                className="
+                bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 dark:shadow-gray-700
+                shadow-[3px_3px_2px_rgba(0,0,0,0.25)] shadow-blue-300
+                "
                 prefetch
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
                 <span>New Project</span>
               </Link>
@@ -158,34 +215,51 @@ export default function OverviewPage() {
 
             {/* Project Stats Cards */}
             {isToggle && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-3 dark:bg-gray-800 dark:border-gray-700">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{safeStats.totalProjects}</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">โปรเจ็กต์ทั้งหมด</div>
-                  </div>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-3 dark:bg-gray-800 dark:border-gray-700">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{safeStats.activeProjects}</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">กำลังดำเนินการ</div>
-                  </div>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-3 dark:bg-gray-800 dark:border-gray-700">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{safeStats.completedProjects}</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">เสร็จสิ้น</div>
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/*Progress Cards */}
+                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                  {statItems.map((item, index) => {
+                    const percent = Math.round((item.value / total) * 100);
 
-                <div className="bg-white border border-gray-200 rounded-lg p-3 dark:bg-gray-800 dark:border-gray-700">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-600">{safeStats.pendingProjects}</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">รอดำเนินการ</div>
-                  </div>
-                </div>
+                    return (
+                      <div
+                        key={index}                       
+                      >
+                        <div className="p-5 rounded-2xl bg-gradient-to-br from-white to-gray-50 gap-2 flex flex-col
+                          dark:from-gray-800 dark:to-gray-900 transition-all duration-300 border border-gray-200 dark:border-gray-700
+                          shadow-[0_3px_0_rgba(0,0,0,0.25)] 
+                          hover:shadow-[0_6px_0_rgba(0,0,0,0.25)]
+                          hover:-translate-y-1  
+
+                          dark:shadow-gray-700
+                          "
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                              {item.label}
+                            </span>
+                            <div className="flex flex-row items-center gap-1">
+                              <div className="text-xs font-semibold text-gray-700">
+                                {item.value}
+                              </div>
+                              <span className="flex flex-row text-xs font-semibold text-gray-400">
+                                ({percent}%)
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Progress bar */}
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div
+                              className={`${item.color} h-2 rounded-full transition-all duration-500`}
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>            
               </div>
             )}
           </div>
@@ -195,57 +269,81 @@ export default function OverviewPage() {
             {/* Projects as Leader Section */}
             <div>
               <div className="flex flex-col justify-start items-start mb-6 gap-2">
-                <div className="flex flex-row justify-between items-center w-full">           
-                  <div className='flex flex-row items-center justify-start w-full gap-3'>
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center dark:bg-gray-700">
-                      <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                      </svg>
+                <div className="flex flex-row justify-between items-center w-full">
+                  <div className="flex flex-row items-center justify-start w-full gap-3">
+                    <div className="w-11 h-11 bg-yellow-200 border rounded-lg flex items-center justify-center shadow-[4px_3px_0_rgba(0,0,0,0.25)] shadow-yellow-400 border-yellow-200">
+                      <AiFillCrown className="size-8 text-yellow-500 drop-shadow-[3px_3px_1px_rgba(0,0,0,0.25)] drop-shadow-yellow-600"/>
                     </div>
                     <div>
-                      <h2 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">โปรเจกต์ที่เป็นเจ้าของ</h2>
-                      <p className="text-gray-600 text-sm md:text-[16px] dark:text-gray-400">โปรเจกต์ที่คุณเป็นผู้สร้างและดูแล</p>    
+                      <h2 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                        โปรเจกต์ที่เป็นเจ้าของ
+                      </h2>
+                      <p className="text-gray-600 text-sm md:text-[16px] dark:text-gray-400">
+                        โปรเจกต์ที่คุณเป็นผู้สร้างและดูแล
+                      </p>
                     </div>
                   </div>
                   <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium md:w-25 text-center dark:bg-gray-600 dark:text-gray-300">
-                    {safeUserProjects.filter(project => 
-                      project.created_by_user_id === user?.id || project.created_by_user === user?.id
-                    ).length} <div className='hidden md:inline'>โปรเจกต์</div>
+                    {
+                      safeUserProjects.filter(
+                        (project) =>
+                          project.created_by_user_id === user?.id ||
+                          project.created_by_user === user?.id,
+                      ).length
+                    }{" "}
+                    <div className="hidden md:inline">โปรเจกต์</div>
                   </div>
-                </div>       
+                </div>
               </div>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                 {safeUserProjects
-                  .filter(project => 
-                    project.created_by_user_id === user?.id || project.created_by_user === user?.id
+                  .filter(
+                    (project) =>
+                      project.created_by_user_id === user?.id ||
+                      project.created_by_user === user?.id,
                   )
                   .map((project: Project) => (
-                    <Link 
-                      key={project.id} 
+                    <Link
+                      key={project.id}
                       href={`/main_pages/projects/${project.documentId || project.id}`}
-                      className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 p-6 cursor-pointer dark:bg-gray-800 dark:border-gray-700"
+                      className="block bg-white rounded-lg hover:shadow-[3px_3px_0_rgba(0,0,0,0.25)] transition-all duration-200 border border-gray-300 p-6 cursor-pointer dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-600"
                       prefetch
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-2">
                           <div className="bg-purple-100 text-purple-700 border border-purple-200 px-2 py-1 rounded text-xs font-medium flex items-center space-x-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                              />
                             </svg>
                             <span>Leader</span>
                           </div>
                         </div>
-                        
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          project.project_status === 'active' 
-                            ? 'bg-green-50 text-green-700 border border-green-200'
-                            : project.project_status === 'completed'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                        }`}>
-                          {project.project_status === 'active' ? 'กำลังดำเนินการ' :
-                           project.project_status === 'completed' ? 'เสร็จสิ้น' : 'รอดำเนินการ'}
+
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            project.project_status === "active"
+                              ? "bg-green-50 text-green-700 border border-green-200"
+                              : project.project_status === "completed"
+                                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                          }`}
+                        >
+                          {project.project_status === "active"
+                            ? "กำลังดำเนินการ"
+                            : project.project_status === "completed"
+                              ? "เสร็จสิ้น"
+                              : "รอดำเนินการ"}
                         </span>
                       </div>
 
@@ -255,44 +353,98 @@ export default function OverviewPage() {
                       <p className="text-gray-600 text-sm mb-4 line-clamp-2 dark:text-gray-300">
                         {project.description}
                       </p>
-                      
+
                       <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-3 dark:text-gray-300">
                         <div className="flex items-center space-x-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                           </svg>
-                          <span>{new Date(project.start_date).toLocaleDateString('th-TH')}</span>
+                          <span>
+                            {new Date(project.start_date).toLocaleDateString(
+                              "th-TH",
+                            )}
+                          </span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
-                          <span>{new Date(project.end_date).toLocaleDateString('th-TH')}</span>
+                          <span>
+                            {new Date(project.end_date).toLocaleDateString(
+                              "th-TH",
+                            )}
+                          </span>
                         </div>
                       </div>
                     </Link>
                   ))}
-                
+
                 {/* Empty state for Leader projects */}
-                {safeUserProjects.filter(project => 
-                  project.created_by_user_id === user?.id || project.created_by_user === user?.id
+                {safeUserProjects.filter(
+                  (project) =>
+                    project.created_by_user_id === user?.id ||
+                    project.created_by_user === user?.id,
                 ).length === 0 && (
                   <div className="col-span-full">
                     <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8 text-center dark:bg-gray-800 dark:border-gray-700">
                       <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center dark:bg-gray-700">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        <svg
+                          className="w-8 h-8 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                          />
                         </svg>
                       </div>
-                      <p className="text-gray-700 text-lg font-semibold mb-2 dark:text-gray-400">ยังไม่มีโปรเจกต์ที่เป็น Leader</p>
-                      <p className="text-gray-500 text-sm mb-4">สร้างโปรเจกต์ใหม่เพื่อเริ่มเป็นผู้นำทีม</p>
-                      <Link 
+                      <p className="text-gray-700 text-lg font-semibold mb-2 dark:text-gray-400">
+                        ยังไม่มีโปรเจกต์ที่เป็น Leader
+                      </p>
+                      <p className="text-gray-500 text-sm mb-4">
+                        สร้างโปรเจกต์ใหม่เพื่อเริ่มเป็นผู้นำทีม
+                      </p>
+                      <Link
                         href="/main_pages/create-project"
                         className="inline-flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 shadow-md shadow-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                         prefetch
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4v16m8-8H4"
+                          />
                         </svg>
                         <span>สร้างโปรเจกต์ใหม่</span>
                       </Link>
@@ -305,57 +457,93 @@ export default function OverviewPage() {
             {/* Projects as Member Section */}
             <div>
               <div className="flex flex-col justify-start items-start mb-6 gap-2">
-                <div className="flex flex-row justify-between items-center w-full">           
-                  <div className='flex flex-row items-center justify-start w-full gap-3'>
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center dark:bg-gray-700">
-                      <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <div className="flex flex-row justify-between items-center w-full">
+                  <div className="flex flex-row items-center justify-start w-full gap-3">
+                    <div className="w-11 h-11 bg-green-200 border rounded-lg flex items-center justify-center shadow-[4px_3px_0_rgba(0,0,0,0.25)] shadow-green-400 border-green-200">
+                      <svg
+                        className="w-7 h-7 text-green-400 drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)] drop-shadow-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">โปรเจกต์ที่เป็นสมาชิก</h2>
-                      <p className="text-gray-600 text-sm md:text-[16px] dark:text-gray-400">โปรเจกต์ที่คุณเข้าร่วมในฐานะสมาชิก</p>    
+                      <h2 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                        โปรเจกต์ที่เป็นสมาชิก
+                      </h2>
+                      <p className="text-gray-600 text-sm md:text-[16px] dark:text-gray-400">
+                        โปรเจกต์ที่คุณเข้าร่วมในฐานะสมาชิก
+                      </p>
                     </div>
                   </div>
                   <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium md:w-25 dark:bg-gray-600 dark:text-gray-300">
-                    {safeUserProjects.filter(project => 
-                      project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
-                    ).length} <div className='hidden md:inline'>โปรเจกต์</div>
+                    {
+                      safeUserProjects.filter(
+                        (project) =>
+                          project.created_by_user_id !== user?.id &&
+                          project.created_by_user !== user?.id,
+                      ).length
+                    }{" "}
+                    <div className="hidden md:inline">โปรเจกต์</div>
                   </div>
-                </div>       
+                </div>
               </div>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                 {safeUserProjects
-                  .filter(project => 
-                    project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
+                  .filter(
+                    (project) =>
+                      project.created_by_user_id !== user?.id &&
+                      project.created_by_user !== user?.id,
                   )
                   .map((project: Project) => (
-                    <Link 
-                      key={project.id} 
+                    <Link
+                      key={project.id}
                       href={`/main_pages/projects/${project.documentId || project.id}`}
-                      className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 p-6 cursor-pointer dark:bg-gray-800 dark:border-gray-700"
+                      className="block bg-white rounded-lg hover:shadow-[3px_3px_0_rgba(0,0,0,0.25)] transition-all duration-200 border border-gray-300 p-6 cursor-pointer dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-600"
                       prefetch
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-2">
                           <div className="bg-blue-100 text-blue-700 border border-blue-200 px-2 py-1 rounded text-xs font-medium flex items-center space-x-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
                             </svg>
                             <span>Member</span>
                           </div>
                         </div>
-                        
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          project.project_status === 'active' 
-                            ? 'bg-green-50 text-green-700 border border-green-200'
-                            : project.project_status === 'completed'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                        }`}>
-                          {project.project_status === 'active' ? 'กำลังดำเนินการ' :
-                           project.project_status === 'completed' ? 'เสร็จสิ้น' : 'รอดำเนินการ'}
+
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            project.project_status === "active"
+                              ? "bg-green-50 text-green-700 border border-green-200"
+                              : project.project_status === "completed"
+                                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                          }`}
+                        >
+                          {project.project_status === "active"
+                            ? "กำลังดำเนินการ"
+                            : project.project_status === "completed"
+                              ? "เสร็จสิ้น"
+                              : "รอดำเนินการ"}
                         </span>
                       </div>
 
@@ -365,37 +553,81 @@ export default function OverviewPage() {
                       <p className="text-gray-600 text-sm mb-4 line-clamp-2 dark:text-gray-300">
                         {project.description}
                       </p>
-                      
+
                       <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-3 dark:text-gray-300">
                         <div className="flex items-center space-x-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                           </svg>
-                          <span>{new Date(project.start_date).toLocaleDateString('th-TH')}</span>
+                          <span>
+                            {new Date(project.start_date).toLocaleDateString(
+                              "th-TH",
+                            )}
+                          </span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
-                          <span>{new Date(project.end_date).toLocaleDateString('th-TH')}</span>
+                          <span>
+                            {new Date(project.end_date).toLocaleDateString(
+                              "th-TH",
+                            )}
+                          </span>
                         </div>
                       </div>
                     </Link>
                   ))}
-                
+
                 {/* Empty state for Member projects */}
-                {safeUserProjects.filter(project => 
-                  project.created_by_user_id !== user?.id && project.created_by_user !== user?.id
+                {safeUserProjects.filter(
+                  (project) =>
+                    project.created_by_user_id !== user?.id &&
+                    project.created_by_user !== user?.id,
                 ).length === 0 && (
                   <div className="col-span-full">
                     <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8 text-center dark:bg-gray-800 dark:border-gray-700">
                       <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center dark:bg-gray-700">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <svg
+                          className="w-8 h-8 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
                         </svg>
                       </div>
-                      <p className="text-gray-700 text-lg font-semibold mb-2 dark:text-gray-400">ยังไม่เป็นสมาชิกในโปรเจกต์ใด</p>
-                      <p className="text-gray-500 text-sm mb-4">รอการเชิญจาก Leader หรือติดต่อเพื่อขอเข้าร่วมโปรเจกต์</p>
+                      <p className="text-gray-700 text-lg font-semibold mb-2 dark:text-gray-400">
+                        ยังไม่เป็นสมาชิกในโปรเจกต์ใด
+                      </p>
+                      <p className="text-gray-500 text-sm mb-4">
+                        รอการเชิญจาก Leader หรือติดต่อเพื่อขอเข้าร่วมโปรเจกต์
+                      </p>
                     </div>
                   </div>
                 )}
@@ -403,9 +635,7 @@ export default function OverviewPage() {
             </div>
 
             {/* Empty state for all projects */}
-            {safeUserProjects.length === 0 && (
-              null
-            )}
+            {safeUserProjects.length === 0 && null}
           </div>
         </div>
       </div>

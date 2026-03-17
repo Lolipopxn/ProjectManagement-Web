@@ -213,7 +213,7 @@ export default function GanttChartPage({ tasks }: { tasks: Task[] }) {
               ${
                 range === r
                   ? "bg-[#636CCB] text-white border-[#50589C] translate-0 shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                  : "bg-white hover:bg-gray-100 shadow-[3px_3px_0_rgba(0,0,0,0.25)] hover:-translate-1 hover:shadow-[5px_5px_0_rgba(0,0,0,0.25)]"
+                  : "bg-white hover:bg-gray-100 shadow-[3px_3px_0_rgba(0,0,0,0.25)] hover:-translate-1 hover:shadow-[5px_5px_0_rgba(0,0,0,0.25)]  dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600"
               }
             `}
             >

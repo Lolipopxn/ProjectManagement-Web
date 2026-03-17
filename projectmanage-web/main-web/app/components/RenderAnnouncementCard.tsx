@@ -37,7 +37,7 @@ export default function RenderAnnouncementCard({
   return (
     <div
       className="
-        border-2 border-gray-300 rounded-xl p-5
+        border-2 border-gray-200 rounded-xl p-5
         hover:shadow-[4px_4px_0_rgba(0,0,0,0.25)] hover:bg-gray-50 hover:-translate-y-0.5
         dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600
         transition-all duration-300 cursor-pointer truncate
