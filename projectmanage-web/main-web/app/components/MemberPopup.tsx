@@ -28,6 +28,7 @@ interface props {
     removeMemberLoading: string | number | null;
     formatDate: (dateString : string) => string;
     handleRemoveMember: (member: ProjectMember, memberName: string) => void;
+    handleChangeRole: (member: ProjectMember, newRole: string) => void;
 }
 
 export default function MemberPopup(
@@ -41,7 +42,8 @@ export default function MemberPopup(
         userRole,
         removeMemberLoading,
         formatDate,
-        handleRemoveMember
+        handleRemoveMember,
+        handleChangeRole
 
     } : props) {
         
@@ -83,6 +85,7 @@ export default function MemberPopup(
             </button>
           </div>
         </div>
+
 
         <div className="flex items-center justify-between space-x-3">
           <span className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 text-sm px-3 py-2 rounded-full font-medium border border-blue-300">
@@ -224,6 +227,50 @@ export default function MemberPopup(
 
                     {/* Actions */}
                     <div className="flex items-center space-x-2">
+                      {userRole === "Leader" && (
+                        <div className="relative">
+                          <select
+                            value={member.role_in_project}
+                            onChange={(e) =>
+                              handleChangeRole(member, e.target.value)
+                            }
+                            disabled={isRemoving}
+                            className={`
+                              appearance-none
+                              text-xs font-medium
+                              px-3 py-1.5 pr-8
+                              rounded-full
+                              border
+                              transition-all duration-200 ease-in-out
+                              cursor-pointer
+                             dark:bg-gray-700
+                              ${
+                                member.role_in_project === "Leader"
+                                  ? "border-purple-300 text-purple-700 bg-purple-50 dark:bg-gray-400 dark:text-purple-400"
+                                  : "border-gray-200 text-gray-700 dark:text-gray-200"
+                              }
+                              hover:shadow-sm hover:scale-[1.03]
+                              focus:outline-none focus:ring-2 focus:ring-blue-400 focus:scale-[1.03]
+                              disabled:opacity-50 disabled:cursor-not-allowed
+                            `}
+                          >
+                            <option value="Member">Member</option>
+                            <option value="Leader">Leader</option>
+                          </select>
+
+                          {/* arrow */}
+                          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+                            <svg
+                              className="w-3 h-3 text-gray-400 transition-transform duration-200 group-focus:rotate-180"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
                       {userRole === "Leader" && (
                         <button
                           onClick={() =>

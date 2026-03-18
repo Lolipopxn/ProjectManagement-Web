@@ -282,7 +282,7 @@ export default function NotificationDropdown({
       </div>
 
       {/* Footer */}
-      {userNotifications.length > 0 && (
+      {/* {userNotifications.length > 0 && (
         <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
           <a
             href="/main_pages/notifications"
@@ -292,7 +292,7 @@ export default function NotificationDropdown({
             ดูการแจ้งเตือนทั้งหมด →
           </a>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

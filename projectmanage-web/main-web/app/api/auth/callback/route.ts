@@ -4,9 +4,8 @@ import { cookies } from "next/headers";
 const config = {
   maxAge: 60 * 60 * 24 * 7, // 1 week
   path: "/",
-  domain: process.env.HOST ?? "localhost",
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: true,
 };
 
 const frontendUrl = process.env.NEXT_PUBLIC_APP_ORIGIN;

@@ -20,7 +20,7 @@ import RenderTaskCard from '@/app/components/RenderTaskCard';
 
 import { AiFillReconciliation, AiFillEnvironment, AiFillFileText, AiFillCrown } from "react-icons/ai";
 import { IoMdClose, IoMdPerson } from "react-icons/io";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaSearch  } from "react-icons/fa";
 import { CgSandClock } from "react-icons/cg";
 import { FcSurvey, FcOk, FcHighPriority, FcSearch, FcProcess } from "react-icons/fc";
 import { GrAnnounce } from "react-icons/gr";
@@ -940,6 +940,45 @@ export default function ProjectDetailPage() {
     }
   };
 
+  const handleChangeRole = async (
+    member: ProjectMember,
+    newRole: string
+  ) => {
+
+    if (
+      member.role_in_project === "Leader" &&
+      newRole === "Member"
+    ) {
+      const leaders = projectMembers.filter(
+        (m) => m.role_in_project === "Leader"
+      );
+
+      if (leaders.length <= 1) {
+        alert("ต้องมี Leader อย่างน้อย 1 คน");
+        return;
+      }
+    }
+
+    try {
+      const memberId = member.documentId || member.id;
+
+      setRemoveMemberLoading(memberId); // reuse loading
+
+      const response = await axios.put('/api/project-members', {
+        memberId,
+        role_in_project: newRole,
+      });
+
+      if (response.data.success) {
+        await refreshProjectMembers();
+      }
+    } catch (error) {
+      console.error('Error updating role:', error);
+    } finally {
+      setRemoveMemberLoading(null);
+    }
+  };
+
   // Remove member function
   const handleRemoveMember = async (member: ProjectMember, memberName: string) => {
     // console.log('=== REMOVE MEMBER DEBUG ===');
@@ -947,9 +986,20 @@ export default function ProjectDetailPage() {
     // console.log('Member name:', memberName);
     // console.log('Project ID:', projectId);
     
-    if (!confirm(`คุณแน่ใจหรือไม่ที่จะนำ ${memberName} ออกจากโปรเจ็กต์นี้?`)) {
-      console.log('User cancelled deletion');
-      return;
+    // if (!confirm(`คุณแน่ใจหรือไม่ที่จะนำ ${memberName} ออกจากโปรเจ็กต์นี้?`)) {
+    //   console.log('User cancelled deletion');
+    //   return;
+    // }
+
+    if (member.role_in_project === "Leader") {
+      const leaders = projectMembers.filter(
+        (m) => m.role_in_project === "Leader"
+      );
+
+      if (leaders.length <= 1) {
+        alert("ไม่สามารถลบ Leader คนสุดท้ายได้");
+        return;
+      }
     }
 
     try {
@@ -1815,6 +1865,8 @@ const progressPercent =
     const [role, setRole] = useState('Member');
     const [availableUsers, setAvailableUsers] = useState<User[]>([]);
     const [usersLoading, setUsersLoading] = useState(false);
+    const [search, setSearch] = useState('');
+    const [searched, setSearched] = useState(false);
 
     // Load available users when modal opens
     useEffect(() => {
@@ -1840,6 +1892,41 @@ const progressPercent =
         fetchUsers();
       }
     }, [showAddMemberModal, projectMembers]);
+
+    useEffect(() => {
+      if (!search.trim()) {
+        setAvailableUsers([]);
+        setSearched(false);
+        return;
+      }
+
+      const delay = setTimeout(async () => {
+        try {
+          setUsersLoading(true);
+          setSearched(true);
+
+          const response = await axios.get(`/api/users?search=${search}`);
+
+          if (response.data.success && response.data.users) {
+            const memberUserIds = projectMembers.map(
+              (member) => member.user_id_in_project
+            );
+
+            const filtered = response.data.users.filter(
+              (user: User) => !memberUserIds.includes(user.id)
+            );
+
+            setAvailableUsers(filtered);
+          }
+        } catch (error) {
+          console.error('Error fetching users:', error);
+        } finally {
+          setUsersLoading(false);
+        }
+      }, 400); // debounce 400ms
+
+      return () => clearTimeout(delay);
+    }, [search, projectMembers]);
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
@@ -1899,80 +1986,74 @@ const progressPercent =
           
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300">
-                เลือกผู้ใช้ <span className="text-red-500">*</span>
-              </label>
-              {usersLoading ? (
-                <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-300">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mr-3"></div>
-                  <div>
-                    <p className="text-sm font-medium">กำลังโหลดรายชื่อผู้ใช้...</p>
-                    <p className="text-xs text-gray-400">กรุณารอสักครู่</p>
-                  </div>
-                </div>
-              ) : availableUsers.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 dark:bg-gray-700 dark:border-gray-400">
-                  <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 dark:bg-gray-600">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-semibold text-gray-700 mb-2 dark:text-gray-300">ไม่มีผู้ใช้ที่สามารถเพิ่มได้</h3>
-                    <p className="text-sm text-gray-500 max-w-sm dark:text-gray-400">
-                      ผู้ใช้ทั้งหมดเป็นสมาชิกของโปรเจ็กต์นี้แล้ว หรืออาจไม่มีผู้ใช้อื่นในระบบ
+            {/* 🔍 SEARCH */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium dark:text-gray-300">
+              ค้นหาผู้ใช้
+            </label>
+
+            <div className="relative">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="พิมพ์ชื่อหรือ email..."
+                className="w-full px-4 py-3 border rounded-xl text-sm
+                focus:ring-2 focus:ring-green-500 outline-none
+                bg-gray-50 focus:bg-white
+                dark:bg-gray-700 dark:text-gray-300"
+              />
+
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {usersLoading ? (
+                  <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <FaSearch className='size-4 text-gray-400'/>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* RESULT */}
+          <div className="space-y-2">
+
+            {!search ? (
+              <div className=" flex flex-row items-center justify-center gap-2 text-center text-gray-400 py-6 text-sm">
+                <FaSearch className='size-4 text-gray-400'/> 
+                <span>พิมพ์เพื่อค้นหาผู้ใช้ก่อน</span>
+              </div>
+            ) : usersLoading ? (
+              <div className="text-center py-6 text-sm text-gray-500">
+                กำลังค้นหา...
+              </div>
+            ) : availableUsers.length === 0 ? (
+              <div className="text-center py-6 text-sm text-gray-400">
+                ไม่พบผู้ใช้
+              </div>
+            ) : (
+              <div className="max-h-48 overflow-y-auto space-y-2">
+                {availableUsers.map((user) => (
+                  <div
+                    key={user.id}
+                    onClick={() => setUserId(user.id)}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all
+                      ${
+                        userId === user.id
+                          ? 'border-green-500 bg-green-50 dark:text-black'
+                          : 'border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 '
+                      }`}
+                  >
+                    <p className="text-sm font-medium">
+                      {user.username}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {user.email}
                     </p>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="relative">
-                    <select
-                      value={userId || ''}
-                      onChange={(e) => setUserId(e.target.value ? parseInt(e.target.value) : null)}
-                      className="w-full px-4 py-4 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none bg-gray-50 focus:bg-white appearance-none text-sm dark:bg-gray-700 dark:border-gray-400 dark:text-gray-300"
-                      required
-                      disabled={addMemberLoading}
-                    >
-                      <option value="" className="py-2">เลือกผู้ใช้ที่ต้องการเพิ่ม</option>
-                      {availableUsers.map((user) => (
-                        <option 
-                          key={user.id} 
-                          value={user.id}
-                          className="py-3"
-                        >
-                          👤 {user.username} • {user.email}
-                        </option>
-                      ))}
-                    </select>
-                    
-                    {/* Custom dropdown arrow */}
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                  
-                  {/* User count info */}
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <div className="flex items-center">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      มีผู้ใช้ที่สามารถเพิ่มได้ {availableUsers.length} คน
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                      </svg>
-                      สมาชิกปัจจุบัน {projectMembers.length} คน
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
+          </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
@@ -2794,6 +2875,7 @@ const progressPercent =
           removeMemberLoading={removeMemberLoading}
           formatDate={formatDate}
           handleRemoveMember={handleRemoveMember}
+          handleChangeRole={handleChangeRole}
         />
       )}
 
