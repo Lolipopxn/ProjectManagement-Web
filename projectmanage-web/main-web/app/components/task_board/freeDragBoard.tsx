@@ -1,6 +1,6 @@
 "use client";
 
-import { DndContext, DragOverlay } from "@dnd-kit/core";
+import { DndContext, DragOverlay, useSensor,useSensors ,PointerSensor, } from "@dnd-kit/core";
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { LeftDraggable, RightDraggable } from "./draggableTask";
@@ -180,6 +180,14 @@ export default function FreeDragBoard(
     }
   };
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
+
   useEffect(() => {
       const checkAuth = async () => {
         try {
@@ -294,6 +302,7 @@ export default function FreeDragBoard(
   return (
     <div className="flex gap-4 flex-col md:flex-row">
       <DndContext
+        sensors={sensors}
         onDragStart={({ active }) => {
           setActiveId(active.id as string);
         }}

@@ -260,19 +260,7 @@ export default function GanttChartPage({ tasks }: { tasks: Task[] }) {
                           >
                             <p className="flex-1 truncate text-xs dark:text-black">
                               {feature.name}
-                            </p>
-                            {feature.owner ? (
-                              <Avatar className="h-4 w-4">
-                                <AvatarImage src={feature.owner.image} />
-                                <AvatarFallback>
-                                  {feature.owner.name?.slice(0, 2)}
-                                </AvatarFallback>
-                              </Avatar>
-                            ) : (
-                              <p className="truncate text-xs dark:text-black">
-                                {feature.status.nameThai}
-                              </p>
-                            )}
+                            </p>                          
                           </GanttFeatureItem>
                         </button>
                       </ContextMenuTrigger>

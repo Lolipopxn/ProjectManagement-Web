@@ -18,6 +18,10 @@ export default function TaskCard({ task, overlay = false }: any) {
   const getTimeLeft = (dueDate: string) => {
       const now = dayjs();
       const due = dayjs(dueDate);
+
+      if (task.task_status === 'completed') {
+        return <div className="bg-green-100 py-1 px-2 rounded-full text-xs text-green-800">เสร็จสิ้น</div>;
+      }
   
       if (due.isBefore(now)) {
         return <div className="bg-red-100 py-1 px-2 rounded-full text-xs text-red-800">เลยกำหนด</div>;

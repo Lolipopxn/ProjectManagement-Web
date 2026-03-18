@@ -106,24 +106,18 @@ export function RightDraggable({ task, position, onClickTask, onOpenPopup }: any
     <div
       ref={setNodeRef}
       style={style}
-      className={`reactive bg-white rounded shadow group
+      {...listeners}
+      {...attributes}
+      className={`reactive bg-white rounded shadow group cursor-grab active:cursor-grabbing
         ${isDragging ? "opacity-50" : ""}`}
       onClick={(e) => {
         e.stopPropagation();
+        if (isDragging) return;
         onClickTask();
         onOpenPopup();
       }}
     >
-      {/* Drag handle */}
-      <LuExpand 
-        {...listeners}
-        {...attributes}
-        className="hidden absolute top-3 right-3 size-3 cursor-grab active:cursor-grabbing select-none group-hover:flex focus:outline-none focus:ring-0 dark:text-black"
-        onClick={(e) => e.stopPropagation()}
-      />
-
       <TaskCard task={task} />
-
     </div>
   );
 }

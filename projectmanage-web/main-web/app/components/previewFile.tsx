@@ -37,12 +37,14 @@ export default function PreviewFile({ isOpenFile, setOpenFile, setPreviewFile, p
     
             if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext || "")) {
                 return (
-                    <img
-                    src={fileUrl}
-                    alt="preview"
-                    className="max-w-full max-h-full mx-auto"
-                    onError={() => setError(true)}
-                    />
+                    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                        <img
+                            src={fileUrl}
+                            alt="preview"
+                            className="max-w-full max-h-full object-contain"
+                            onError={() => setError(true)}
+                        />
+                    </div>
                 );
             }
 

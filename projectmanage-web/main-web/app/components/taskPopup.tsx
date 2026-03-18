@@ -217,9 +217,13 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
     };
 
     const isTaskOwner = () => {
-        if (!task?.assigned_to_user_ids || !currentUser && userRole === 'Member') return false;
+        const role = userRole?.toLowerCase();
 
-        if(userRole === 'Leader') return true;
+        if (!task?.assigned_to_user_ids || (!currentUser && role === "member")) {
+            return false;
+        }
+
+        if (role === "leader") return true;
 
         return task.assigned_to_user_ids.some(
             (u: any) => u.id === currentUser?.id
@@ -689,7 +693,7 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                         disabled={!isTaskOwner()}
                                         className={`py-2 px-4 text-sm rounded-md text-white transition 
                                             ${isOpenEdit && 'bg-[#50589C]'}
-                                            ${isTaskOwner() ? 'bg-gray-400 hover:bg-gray-700' : 'bg-gray-300 text-white cursor-not-allowed'}
+                                            ${isTaskOwner() ? 'bg-[#50589C] hover:bg-gray-700' : 'bg-gray-300 text-white cursor-not-allowed'}
                                     `}>
                                         <FaRegEdit className='size-4' />
                                     </button>

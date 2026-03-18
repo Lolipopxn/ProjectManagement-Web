@@ -2253,7 +2253,7 @@ const progressPercent =
                       <div className="relative status-dropdown">
                         <button
                           onClick={() => setOpenStatusDropdown((prev) => !prev)}
-                          disabled={userRole === 'Member'}
+                          disabled={userRole?.toLowerCase() === 'member'}
                           className={`
                             hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium disabled:cursor-not-allowed
                             transition-all duration-200
