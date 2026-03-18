@@ -59,19 +59,22 @@ export async function GET(request: NextRequest) {
     const projectMembers: ProjectMember[] = projectMembersResponse.data.data || [];
 
     const roleMap = new Map<number, string>();
+
     projectMembers.forEach(m => {
-      roleMap.set(m.project_id_number, m.role_in_project);
+      roleMap.set(
+        Number(m.project_id_number),
+        m.role_in_project?.toLowerCase() || "member"
+      );
     });
 
-    const userProjectIds = projectMembers.map(m => m.project_id_number);
+    const userProjectIds = projectMembers.map(m => Number(m.project_id_number));
 
     const userOwnProjects = allProjects
-      .filter(p => userProjectIds.includes(p.id))
-      .map(project => ({
-        ...project,
-        userRole: roleMap.get(project.id) || "member",
-        created_by_user_info: project.created_by_user || null,
-      }));
+    .filter(p => userProjectIds.includes(Number(p.id)))
+    .map(project => ({
+      ...project,
+      userRole: roleMap.get(Number(project.id)) || "member",
+    }));
 
     const stats = {
       totalProjects: userOwnProjects.length,

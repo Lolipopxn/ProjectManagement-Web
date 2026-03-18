@@ -197,7 +197,7 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
 
     const getUserRoleInProject = (userId: number) => {
         const member = projectMembers.find(
-            (m) => m.user_id_in_project === userId
+            (m) => Number(m.user_id_in_project) === Number(userId)
         );
 
         return ROLE_LABELS[member?.role_in_project as string] ?? '-';
@@ -219,14 +219,13 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
     const isTaskOwner = () => {
         const role = userRole?.toLowerCase();
 
-        if (!task?.assigned_to_user_ids || (!currentUser && role === "member")) {
-            return false;
-        }
+        if (!task?.assigned_to_user_ids) return false;
+        if (!currentUser) return false;
 
         if (role === "leader") return true;
 
         return task.assigned_to_user_ids.some(
-            (u: any) => u.id === currentUser?.id
+            (u: any) => Number(u.id) === Number(currentUser.id)
         );
     };
 
@@ -586,13 +585,14 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                         <button
                                             key={task.task_status}
                                             onClick={ANNOUNCEMENT_BUTTON[task.task_status].onClick}
-                                            disabled={ANNOUNCEMENT_BUTTON[task.task_status].disabled}
+                                            disabled={(ANNOUNCEMENT_BUTTON[task.task_status].disabled || userRole === 'Member')}
                                             className={`
                                                 py-1 px-3 rounded-md
                                                 transition duration-300
                                                 animate-in fade-in slide-in-from-bottom-2
                                                 ${ANNOUNCEMENT_BUTTON[task.task_status].className}
                                                 ${ANNOUNCEMENT_BUTTON[task.task_status].disabled ? 'cursor-not-allowed' : ''}
+                                                ${userRole === 'Member' && 'cursor-not-allowed bg-gray-400 hover:bg-gray-400'}
                                             `}
                                         >
                                             {ANNOUNCEMENT_BUTTON[task.task_status].label}
@@ -649,8 +649,13 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                         <span className="text-gray-500 dark:text-gray-200">สถานะงาน:</span>
                                         <span
                                             key={task.task_status}
-                                            className="font-medium text-sm inline-block
-                                                        animate-in fade-in slide-in-from-left-2 duration-300"
+                                            className={`font-medium text-sm  inline-block animate-in fade-in slide-in-from-left-2 py-1 px-3 rounded-full duration-300
+                                                ${task.task_status === "not turn in" && "bg-yellow-100 text-yellow-600"}
+                                                ${task.task_status === "completed" && "bg-green-100 text-green-600"}
+                                                ${task.task_status === "pending_review" && "bg-purple-100 text-purple-600"}
+                                                ${task.task_status === "continue" && "bg-blue-100 text-blue-600"}
+                                                ${task.task_status === "rejected" && "bg-red-100 text-red-600"}
+                                            `}
                                         >
                                             {task.task_status === "not turn in" && "ยังไม่ส่ง"}
                                             {task.task_status === "completed" && "ส่งเเล้ว"}
@@ -690,15 +695,15 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                 <div className='flex flex-row items-center gap-2'>
                                     <button 
                                         onClick={() => {setOpenEdit((prev) => !prev)}}
-                                        disabled={!isTaskOwner()}
+                                        disabled={userRole?.toLowerCase() === 'member'}
                                         className={`py-2 px-4 text-sm rounded-md text-white transition 
                                             ${isOpenEdit && 'bg-[#50589C]'}
-                                            ${isTaskOwner() ? 'bg-[#50589C] hover:bg-gray-700' : 'bg-gray-300 text-white cursor-not-allowed'}
+                                            ${userRole?.toLowerCase() === 'leader' ? 'bg-[#50589C] hover:bg-gray-700' : 'bg-gray-300 text-white cursor-not-allowed'}
                                     `}>
                                         <FaRegEdit className='size-4' />
                                     </button>
-                                    <button onClick={() => setAssignModalOpen(true)} disabled={!isTaskOwner()} className={`py-2 px-4 text-sm rounded-md text-white
-                                        ${isTaskOwner() ? 'bg-[#696FC7] hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}
+                                    <button onClick={() => setAssignModalOpen(true)} disabled={userRole?.toLowerCase() === 'member'} className={`py-2 px-4 text-sm rounded-md text-white
+                                        ${userRole?.toLowerCase() === 'leader' ? 'bg-[#696FC7] hover:bg-[#50589C]/90 cursor-pointer' : 'bg-gray-300 text-white cursor-not-allowed'}
                                     `}>
                                         <FaPlus className='size-4' />
                                     </button>
@@ -1017,11 +1022,8 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                         {/* cancel action */}
                                         {isTaskOwner() && (
                                             <button 
-                                                onClick={() => { setShowConfirm(true), setConfirmMessage('ยกเลิกการส่งงาน'), setConfirmDescription('คุณเเน่ใจใช่หรือไม่ที่จะยกเลิกส่งงานนี้ ?') }} 
-                                                disabled={task.task_status !== 'completed' && task.task_status !== 'rejected'}                   
-                                                className={`px-4 py-2 rounded-lg border
-                                                    ${!['completed','rejected'].includes(task.task_status) ? 'cursor-not-allowed bg-gray-100 border-gray-300 text-gray-400' : 'bg-red-400 border-red-700 text-white hover:bg-red-500'}
-                                                `}
+                                                onClick={() => { setShowConfirm(true), setConfirmMessage('ยกเลิกการส่งงาน'), setConfirmDescription('คุณเเน่ใจใช่หรือไม่ที่จะยกเลิกส่งงานนี้ ?') }}                  
+                                                className={`px-4 py-2 rounded-lg border bg-red-400 border-red-700 text-white hover:bg-red-500 `}
                                             >
                                                 <span>ยกเลิกส่ง</span>
                                             </button>
@@ -1064,10 +1066,9 @@ export default function TaskPopup({projectId, project, task, setSelectedTask, pr
                                         {/* cancel action */}
                                         {isTaskOwner() && (
                                             <button 
-                                                onClick={() => { setShowConfirm(true), setConfirmMessage('ยกเลิกการส่งงาน'), setConfirmDescription('คุณเเน่ใจใช่หรือไม่ที่จะยกเลิกส่งงานนี้ ?') }} 
-                                                disabled={task.task_status !== 'completed' && task.task_status !== 'rejected'}                   
+                                                onClick={() => { setShowConfirm(true), setConfirmMessage('ยกเลิกการส่งงาน'), setConfirmDescription('คุณเเน่ใจใช่หรือไม่ที่จะยกเลิกส่งงานนี้ ?') }}                  
                                                 className={`px-4 py-2 rounded-lg border
-                                                    ${!['completed','rejected'].includes(task.task_status) ? 'cursor-not-allowed bg-gray-100 border-gray-300 text-gray-400' : 'bg-red-400 border-red-700 text-white hover:bg-red-500'}
+                                                    'bg-red-400 border-red-700 text-white hover:bg-red-500'}
                                                 `}
                                             >
                                                 <span>ยกเลิกส่ง</span>

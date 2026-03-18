@@ -287,8 +287,7 @@ export default function OverviewPage() {
                     {
                       safeUserProjects.filter(
                         (project) =>
-                          project.created_by_user_id === user?.id ||
-                          project.created_by_user === user?.id,
+                          project.userRole === "leader"
                       ).length
                     }{" "}
                     <div className="hidden md:inline">โปรเจกต์</div>
@@ -300,8 +299,7 @@ export default function OverviewPage() {
                 {safeUserProjects
                   .filter(
                     (project) =>
-                      project.created_by_user_id === user?.id ||
-                      project.created_by_user === user?.id,
+                      project.userRole === "leader"
                   )
                   .map((project: Project) => (
                     <Link
@@ -402,8 +400,7 @@ export default function OverviewPage() {
                 {/* Empty state for Leader projects */}
                 {safeUserProjects.filter(
                   (project) =>
-                    project.created_by_user_id === user?.id ||
-                    project.created_by_user === user?.id,
+                    project.userRole === "leader"
                 ).length === 0 && (
                   <div className="col-span-full">
                     <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8 text-center dark:bg-gray-800 dark:border-gray-700">
@@ -487,8 +484,7 @@ export default function OverviewPage() {
                     {
                       safeUserProjects.filter(
                         (project) =>
-                          project.created_by_user_id !== user?.id &&
-                          project.created_by_user !== user?.id,
+                          project.userRole === "member"
                       ).length
                     }{" "}
                     <div className="hidden md:inline">โปรเจกต์</div>
@@ -500,8 +496,7 @@ export default function OverviewPage() {
                 {safeUserProjects
                   .filter(
                     (project) =>
-                      project.created_by_user_id !== user?.id &&
-                      project.created_by_user !== user?.id,
+                      project.userRole === "member"
                   )
                   .map((project: Project) => (
                     <Link
@@ -602,8 +597,7 @@ export default function OverviewPage() {
                 {/* Empty state for Member projects */}
                 {safeUserProjects.filter(
                   (project) =>
-                    project.created_by_user_id !== user?.id &&
-                    project.created_by_user !== user?.id,
+                    project.userRole === "member"
                 ).length === 0 && (
                   <div className="col-span-full">
                     <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8 text-center dark:bg-gray-800 dark:border-gray-700">

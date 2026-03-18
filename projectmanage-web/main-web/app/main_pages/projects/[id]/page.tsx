@@ -208,20 +208,14 @@ export default function ProjectDetailPage() {
         }
 
         if (currentUser) {
-          const isLeader =
-            project.created_by_user_id === currentUser.id ||
-            project.created_by_user === currentUser.id;
+          const member = membersWithUserInfo.find(
+            (m) =>
+              Number(m.userInfo?.id ?? m.user_id_in_project) === Number(currentUser.id)
+          );
 
-          if (isLeader) {
-            setUserRole("Leader");
-          } else {
-            const member = membersWithUserInfo.find(
-              (m) =>
-                (m.userInfo?.id ?? m.user_id_in_project) === currentUser.id
-            );
+          const role = member?.role_in_project || "Member";
 
-            setUserRole(member?.role_in_project ?? "Member");
-          }
+          setUserRole(role);
         }
 
         try {
@@ -397,20 +391,14 @@ export default function ProjectDetailPage() {
         }
 
         if (currentUser) {
-          const isLeader =
-            project.created_by_user_id === currentUser.id ||
-            project.created_by_user === currentUser.id;
+          const member = membersWithUserInfo.find(
+            (m) =>
+              Number(m.userInfo?.id ?? m.user_id_in_project) === Number(currentUser.id)
+          );
 
-          if (isLeader) {
-            setUserRole("Leader");
-          } else {
-            const member = membersWithUserInfo.find(
-              (m) =>
-                (m.userInfo?.id ?? m.user_id_in_project) === currentUser.id
-            );
+          const role = member?.role_in_project || "Member";
 
-            setUserRole(member?.role_in_project ?? "Member");
-          }
+          setUserRole(role);
         }
 
         try {
@@ -700,24 +688,14 @@ export default function ProjectDetailPage() {
         if (user && project) {
           const currentUserId = user.id;
           
-          // ตรวจสอบว่าผู้ใช้เป็นผู้สร้างโปรเจ็กต์หรือไม่
-          const isProjectCreator = project.created_by_user_id === currentUserId || 
-                                 project.created_by_user === currentUserId;
-          
-          if (isProjectCreator) {
-            setUserRole('Leader');
-          } else {
-            // หาบทบาทจาก project members
-            const userMembership = membersWithUserInfo.find(member => 
-              (member.userInfo?.id || member.user_id_in_project) === currentUserId
-            );
-            
-            if (userMembership) {
-              setUserRole(userMembership.role_in_project);
-            } else {
-              setUserRole('Member'); // default role
-            }
-          }
+          const member = membersWithUserInfo.find(
+            (m) =>
+              Number(m.userInfo?.id ?? m.user_id_in_project) === Number(currentUserId)
+          );
+
+          const role = member?.role_in_project || "Member";
+
+          setUserRole(role);
         }
       }
     } catch (error) {

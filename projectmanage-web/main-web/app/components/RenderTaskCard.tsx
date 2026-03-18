@@ -59,6 +59,7 @@ export default function RenderTaskCard({
              ${task.task_status === "not turn in" && task.task_type === "normal_task"  && "border-2 border-yellow-400 hover:bg-yellow-50 hover:border-yellow-100 shadow-yellow-300"}
             ${task.task_status === "completed" && task.task_type === "normal_task"  && "border-2 border-green-300 hover:bg-green-50 hover:border-green-100 shadow-green-300"}
             ${task.task_status === "rejected" && task.task_type === "normal_task" && " border-2 border-rose-300 hover:bg-rose-50 hover:border-rose-100 shadow-rose-300"}
+            ${task.task_status === "pending_review" && task.task_type === "normal_task" && " border-2 border-purple-300 hover:bg-purple-50 hover:border-purple-100 shadow-purple-300"}
 
             ${task.task_status === "completed" && task.task_type === "location_task"  && "bg-gray-50 border-1 border-gray-300 hover:bg-gray-100 hover:border-gray-200"}
         }`}
