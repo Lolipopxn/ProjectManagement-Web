@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       end_date: projectData.end_date,
       project_status: projectData.project_status,
       created_by_user: currentUser.id, // ใส่ user ID ของผู้สร้างลงในฟิลด์ใหม่
+      boards:["สิ่งที่ต้องทำ"],
       slug: projectData.slug,
       // เพิ่ม relation สำหรับ created_by_user_id
       created_by_user_id: { connect: [currentUser.documentId] }

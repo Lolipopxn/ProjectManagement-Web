@@ -103,6 +103,11 @@ export default function FreeDragBoard(
 
   //delete board in project
   const handleDeleteBoard = async (boardName: string) => {
+    
+    if (boards.length <= 1) {
+      alert("ต้องมีอย่างน้อย 1 บอร์ด");
+      return;
+    }
     const tasksInDeletedBoard = rightBoard[boardName]
       ? Object.keys(rightBoard[boardName])
       : [];
@@ -384,7 +389,7 @@ export default function FreeDragBoard(
           <div className="flex flex-row justify-start items-center space-x-3 px-4 md:px-0">        
             <div className="flex flex-row space-x-5 px-4 max-w-full overflow-auto">
               {boards.map((b) => (
-                <div key={b} className="space-y-1 relative">
+                <div key={b} className="space-y-1 ">
                   <button
                     onClick={() => setCurrentBoard(b)}
                     onContextMenu={(e) => handleRightClick(e, b)}
